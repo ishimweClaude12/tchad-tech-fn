@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="4em" height="4em" viewBox="0 0 256 256">
+  <!-- Background circle -->
+  <circle cx="128" cy="128" r="120" fill="#003d7a"/>
+  
+  <!-- Inner circle accent -->
+  <circle cx="128" cy="128" r="100" fill="none" stroke="#0066cc" stroke-width="2" opacity="0.4"/>
+  
+  <!-- African continent silhouette (simplified) -->
+  <path d="M 128 70
+           L 135 72 Q 145 75 148 85
+           L 152 95 Q 155 105 158 110
+           L 162 120 Q 165 130 168 140
+           L 170 155 Q 172 165 170 175
+           L 165 185 Q 160 192 152 195
+           L 140 198 Q 130 200 122 198
+           L 110 195 Q 100 190 95 182
+           L 88 170 Q 85 160 83 150
+           L 80 135 Q 78 125 80 115
+           L 85 100 Q 90 88 98 80
+           L 108 72 Q 118 68 128 70 Z"
+           fill="#fdb714" opacity="0.9"/>
+  
+  <!-- North Africa detail -->
+  <path d="M 128 70 Q 140 68 148 75 L 152 85" fill="#fdb714" opacity="0.8"/>
+  
+  <!-- Madagascar island -->
+  <ellipse cx="172" cy="170" rx="5" ry="12" fill="#fdb714" opacity="0.9"/>
+  
+  <!-- Growth arrows/bars (representing development) -->
+  <g fill="#ffffff" opacity="0.85">
+    <!-- Rising bar chart -->
+    <rect x="95" y="140" width="8" height="20" rx="1"/>
+    <rect x="107" y="130" width="8" height="30" rx="1"/>
+    <rect x="119" y="120" width="8" height="40" rx="1"/>
+    <rect x="131" y="108" width="8" height="52" rx="1"/>
+    <rect x="143" y="95" width="8" height="65" rx="1"/>
+  </g>
+  
+  <!-- Upward arrow (progress) -->
+  <path d="M 70 110 L 70 145" stroke="#fdb714" stroke-width="4" stroke-linecap="round"/>
+  <path d="M 70 110 L 60 120 M 70 110 L 80 120" stroke="#fdb714" stroke-width="4" stroke-linecap="round" fill="none"/>
+  
+  <!-- Stars representing African nations/unity -->
+  <g fill="#ffffff" opacity="0.7">
+    <path d="M 50 80 L 52 86 L 58 86 L 53 90 L 55 96 L 50 92 L 45 96 L 47 90 L 42 86 L 48 86 Z"/>
+    <path d="M 190 95 L 192 101 L 198 101 L 193 105 L 195 111 L 190 107 L 185 111 L 187 105 L 182 101 L 188 101 Z"/>
+    <path d="M 75 190 L 77 196 L 83 196 L 78 200 L 80 206 L 75 202 L 70 206 L 72 200 L 67 196 L 73 196 Z"/>
+    <path d="M 175 50 L 177 56 L 183 56 L 178 60 L 180 66 L 175 62 L 170 66 L 172 60 L 167 56 L 173 56 Z"/>
+  </g>
+  
+  <!-- Circular connection lines (network/connectivity) -->
+  <circle cx="128" cy="128" r="85" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.2" stroke-dasharray="5,5"/>
+  
+  <!-- Wheat/prosperity symbol at bottom -->
+  <g stroke="#fdb714" stroke-width="2.5" fill="none" opacity="0.7">
+    <path d="M 120 205 Q 122 195 124 190" stroke-linecap="round"/>
+    <path d="M 136 205 Q 134 195 132 190" stroke-linecap="round"/>
+    <circle cx="122" cy="195" r="2" fill="#fdb714"/>
+    <circle cx="126" cy="192" r="2" fill="#fdb714"/>
+    <circle cx="130" cy="192" r="2" fill="#fdb714"/>
+    <circle cx="134" cy="195" r="2" fill="#fdb714"/>
+  </g>
+  
+  <!-- Outer ring -->
+  <circle cx="128" cy="128" r="120" fill="none" stroke="#001f47" stroke-width="3"/>
+</svg>

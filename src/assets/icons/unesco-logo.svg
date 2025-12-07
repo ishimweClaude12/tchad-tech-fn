@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="4em" height="4em" viewBox="0 0 256 256">
+  <!-- Background circle -->
+  <circle cx="128" cy="128" r="120" fill="#0077c8"/>
+  
+  <!-- Temple base platform -->
+  <rect x="50" y="175" width="156" height="8" fill="#ffffff" rx="1"/>
+  <rect x="55" y="183" width="146" height="5" fill="#ffffff" opacity="0.9"/>
+  
+  <!-- Temple columns (Parthenon style) -->
+  <rect x="65" y="115" width="12" height="60" fill="#ffffff" rx="1"/>
+  <rect x="90" y="115" width="12" height="60" fill="#ffffff" rx="1"/>
+  <rect x="115" y="115" width="12" height="60" fill="#ffffff" rx="1"/>
+  <rect x="140" y="115" width="12" height="60" fill="#ffffff" rx="1"/>
+  <rect x="165" y="115" width="12" height="60" fill="#ffffff" rx="1"/>
+  
+  <!-- Temple pediment (triangular top) -->
+  <path d="M 45 115 L 128 75 L 211 115 Z" fill="#ffffff"/>
+  <path d="M 50 115 L 128 80 L 206 115 Z" fill="#0077c8" opacity="0.3"/>
+  
+  <!-- Temple roof line -->
+  <rect x="40" y="108" width="176" height="7" fill="#ffffff" rx="1"/>
+  
+  <!-- Educational symbols inside pediment -->
+  <g opacity="0.8">
+    <!-- Book symbol (left) -->
+    <rect x="85" y="95" width="15" height="10" fill="#ffffff" stroke="#0077c8" stroke-width="1"/>
+    <line x1="92.5" y1="95" x2="92.5" y2="105" stroke="#0077c8" stroke-width="1"/>
+    
+    <!-- Atom symbol (center) -->
+    <circle cx="128" cy="98" r="4" fill="#ffffff"/>
+    <ellipse cx="128" cy="98" rx="10" ry="5" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+    <ellipse cx="128" cy="98" rx="5" ry="10" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+    
+    <!-- Gear/cog symbol (right) -->
+    <circle cx="158" cy="98" r="5" fill="#ffffff"/>
+    <circle cx="158" cy="98" r="8" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+    <rect x="156.5" y="90" width="3" height="3" fill="#ffffff"/>
+    <rect x="156.5" y="103" width="3" height="3" fill="#ffffff"/>
+  </g>
+  
+  <!-- Globe meridians behind temple -->
+  <g opacity="0.3">
+    <ellipse cx="128" cy="140" rx="100" ry="35" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+    <ellipse cx="128" cy="140" rx="35" ry="100" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+  </g>
+  
+  <!-- Decorative laurel wreath elements at bottom -->
+  <path d="M 60 195 Q 70 200 80 198" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.6"/>
+  <path d="M 196 195 Q 186 200 176 198" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.6"/>
+  
+  <!-- Outer ring -->
+  <circle cx="128" cy="128" r="120" fill="none" stroke="#005a9c" stroke-width="3"/>
+</svg>

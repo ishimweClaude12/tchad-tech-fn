@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="4em" height="4em" viewBox="0 0 256 256">
+  <!-- Background circle (globe) -->
+  <circle cx="128" cy="128" r="120" fill="#0071bc"/>
+  
+  <!-- Outer ring -->
+  <circle cx="128" cy="128" r="120" fill="none" stroke="#003d71" stroke-width="4"/>
+  
+  <!-- Latitude lines -->
+  <ellipse cx="128" cy="128" rx="120" ry="40" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.6"/>
+  <ellipse cx="128" cy="128" rx="120" ry="80" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.6"/>
+  <line x1="8" y1="128" x2="248" y2="128" stroke="#ffffff" stroke-width="2" opacity="0.6"/>
+  
+  <!-- Longitude lines -->
+  <ellipse cx="128" cy="128" rx="40" ry="120" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.6"/>
+  <ellipse cx="128" cy="128" rx="80" ry="120" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.6"/>
+  <line x1="128" y1="8" x2="128" y2="248" stroke="#ffffff" stroke-width="2" opacity="0.6"/>
+  
+  <!-- Center highlight -->
+  <circle cx="128" cy="128" r="25" fill="#ffffff" opacity="0.2"/>
+  
+  <!-- Inner accent circle -->
+  <circle cx="128" cy="128" r="90" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.3"/>
+</svg>

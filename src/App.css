@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+@theme static {
+  --color-primary: var(--color-red-500);
+  --color-secondary: var(--color-blue-500);
+
+  /* Chad Tech Hub Brand Colors */
+  --color-chad-blue: #2e68dd;
+  --color-chad-gold: #f59e0b;
+  --color-chad-green: #059669;
+  --color-purple: #3a0293;
+  --color-dark-gray: #1b1b2d;
+}

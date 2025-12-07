@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="4em" height="4em" viewBox="0 0 256 256">
+  <!-- Background circle -->
+  <circle cx="128" cy="128" r="120" fill="#1cabe2"/>
+  
+  <!-- Globe grid lines -->
+  <circle cx="128" cy="128" r="90" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.4"/>
+  <ellipse cx="128" cy="128" rx="90" ry="30" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.4"/>
+  <ellipse cx="128" cy="128" rx="30" ry="90" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.4"/>
+  <line x1="38" y1="128" x2="218" y2="128" stroke="#ffffff" stroke-width="1.5" opacity="0.4"/>
+  <line x1="128" y1="38" x2="128" y2="218" stroke="#ffffff" stroke-width="1.5" opacity="0.4"/>
+  
+  <!-- Mother and child silhouette (simplified) -->
+  <g fill="#ffffff">
+    <!-- Mother figure -->
+    <circle cx="115" cy="95" r="12"/>
+    <path d="M 115 110 Q 100 115 95 135 L 95 160 Q 95 165 100 165 L 130 165 Q 135 165 135 160 L 135 120 Q 133 112 115 110 Z"/>
+    
+    <!-- Child figure (smaller, protected) -->
+    <circle cx="140" cy="115" r="9"/>
+    <path d="M 140 126 Q 130 128 128 140 L 128 158 Q 128 162 132 162 L 148 162 Q 152 162 152 158 L 152 135 Q 150 128 140 126 Z"/>
+    
+    <!-- Protective arm gesture -->
+    <path d="M 120 120 Q 135 118 142 122" stroke="#ffffff" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.9"/>
+  </g>
+  
+  <!-- Olive/wheat branches (UN symbol element) -->
+  <path d="M 45 200 Q 50 190 55 185 Q 60 180 65 178" stroke="#ffffff" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.7"/>
+  <path d="M 211 200 Q 206 190 201 185 Q 196 180 191 178" stroke="#ffffff" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.7"/>
+  
+  <!-- Branch leaves -->
+  <circle cx="52" cy="188" r="3" fill="#ffffff" opacity="0.7"/>
+  <circle cx="58" cy="182" r="3" fill="#ffffff" opacity="0.7"/>
+  <circle cx="204" cy="188" r="3" fill="#ffffff" opacity="0.7"/>
+  <circle cx="198" cy="182" r="3" fill="#ffffff" opacity="0.7"/>
+  
+  <!-- Outer ring -->
+  <circle cx="128" cy="128" r="120" fill="none" stroke="#0066a1" stroke-width="3"/>
+</svg>
