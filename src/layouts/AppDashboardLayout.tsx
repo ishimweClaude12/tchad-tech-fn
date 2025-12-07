@@ -689,7 +689,10 @@ const DashboardLayout: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-gray-100 flex overflow-hidden">
+    <div
+      className="h-screen bg-gray-100 flex overflow-hidden"
+      style={{ width: "100vw", maxWidth: "100vw" }}
+    >
       {/* Sidebar */}
       <div
         className={`${
@@ -869,9 +872,7 @@ const DashboardLayout: React.FC = () => {
 
         {/* Main Content - Scrollable */}
         <main className="flex-1 overflow-y-auto p-6 bg-gray-100">
-          <div className="max-w-7xl mx-auto">
-            <Outlet />
-          </div>
+          <Outlet />
         </main>
       </div>
 

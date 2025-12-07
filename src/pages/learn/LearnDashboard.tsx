@@ -1,5 +1,5 @@
 const LearnDashboard: React.FC = () => {
-  return <div>Learn Dashboard Content</div>;
+  return <div className="w-full">Learn Dashboard Content</div>;
 };
 
 export default LearnDashboard;

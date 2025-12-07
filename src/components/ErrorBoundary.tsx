@@ -66,7 +66,7 @@ class ErrorBoundary extends Component<Props, State> {
             </p>
 
             {/* Show error details in development */}
-            {process.env.NODE_ENV === "development" && (
+            {import.meta.env.DEV && (
               <details className="mb-4 text-left">
                 <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
                   Show error details

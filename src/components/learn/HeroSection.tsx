@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 import { useLanguage } from "../../contexts/LanguageContext";
 
@@ -116,39 +116,6 @@ export const Hero: React.FC<HeroProps> = ({
 
   // Use asset utility for the image path
   const imageSrc = heroImageSrc ?? "assets/images/hero-image.jpg";
-
-  // Debug logging
-  useEffect(() => {
-    console.log("Hero image source:", imageSrc);
-    console.log("Current location:", window.location.href);
-
-    // Test if the image actually exists
-    const testImage = new Image();
-    testImage.onload = () => {
-      console.log("✅ Image loaded successfully:", imageSrc);
-    };
-    testImage.onerror = () => {
-      console.error("❌ Image failed to load:", imageSrc);
-      console.log("Trying alternative paths...");
-
-      // Test alternative paths
-      const alternatives = [
-        "./assets/images/hero-image.jpg",
-        "/public/assets/images/hero-image.jpg",
-        `${window.location.origin}/assets/images/hero-image.jpg`,
-      ];
-
-      alternatives.forEach((alt, index) => {
-        const altImg = new Image();
-        altImg.onload = () =>
-          console.log(`✅ Alternative ${index + 1} works:`, alt);
-        altImg.onerror = () =>
-          console.log(`❌ Alternative ${index + 1} failed:`, alt);
-        altImg.src = alt;
-      });
-    };
-    testImage.src = imageSrc;
-  }, [imageSrc]);
 
   const handleExploreCourses = () => {
     onExploreClick?.();

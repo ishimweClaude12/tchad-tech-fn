@@ -1,7 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 
 import MainLayout from "./layouts/MainLayout";
-import ShopLayout from "./layouts/ShopLayout";
 
 import LearnDashboardLayout from "./layouts/LearnDashboardLayout";
 import ShopDashboardLayout from "./layouts/ShopDashboardLayout";
@@ -18,41 +17,38 @@ import Home from "./pages/home/Home";
 import AboutUsPage from "./pages/home/AboutPage";
 import ContactUsPage from "./pages/home/ContactUsPage";
 import NotFound from "./pages/shared/NotFound";
+import DashboardOverview from "./pages/learn/DashboardOverview";
+import E_LearningUsersAdmin from "./pages/learn/E_LearningUsers";
 
 export default function AppRouter() {
   return (
     <Routes>
       {/* Main App Layout */}
       <Route element={<MainLayout />}>
-        {/* Global dashboard */}
         <Route index element={<Home />} />
         <Route path="/learn" element={<LearnHome />} />
         <Route path="/shop" element={<ShopHome />} />
         <Route path="/about-us" element={<AboutUsPage />} />
         <Route path="/contact-us" element={<ContactUsPage />} />
-        <Route element={<AppDashboardLayout />}>
-          <Route path="/dashboard" element={<AppDashboard />} />
-        </Route>
       </Route>
 
-      {/* E-Learning Public Section */}
+      {/* Main App Dashboard - /dashboard */}
+      <Route path="/dashboard" element={<AppDashboardLayout />}>
+        <Route index element={<AppDashboard />} />
+      </Route>
+
+      {/* E-Learning Dashboard - /learn/dashboard */}
       <Route path="/learn/dashboard" element={<LearnDashboardLayout />}>
-        <Route index element={<LearnHome />} />
-
-        {/* E-Learning Dashboard */}
-        <Route element={<LearnDashboardLayout />}>
-          <Route path="dashboard" element={<LearnDashboard />} />
-        </Route>
+        <Route index element={<DashboardOverview />} />
+        <Route path="overview" element={<LearnDashboard />} />
+        <Route path="courses" element={<div>Courses Page</div>} />
+        <Route path="users" element={<E_LearningUsersAdmin />} />
+        <Route path="my-learning" element={<div>My Learning Page</div>} />
       </Route>
 
-      {/* E-Commerce Public Section */}
-      <Route path="/shop" element={<ShopLayout />}>
-        <Route index element={<ShopHome />} />
-
-        {/* E-Commerce Dashboard */}
-        <Route element={<ShopDashboardLayout />}>
-          <Route path="dashboard" element={<ShopDashboard />} />
-        </Route>
+      {/* E-Commerce Dashboard - /shop/dashboard */}
+      <Route path="/shop/dashboard" element={<ShopDashboardLayout />}>
+        <Route index element={<ShopDashboard />} />
       </Route>
 
       {/* Fallback: redirect unmatched routes to NotFound */}

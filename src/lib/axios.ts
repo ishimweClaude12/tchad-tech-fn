@@ -2,7 +2,8 @@ import axios from "axios";
 
 const axiosInstance = axios.create({
   baseURL:
-    process.env.API_BASE_URL || "https://tech-hub-eleaning.onrender.com/api/v1",
+    import.meta.env.VITE_API_BASE_URL ||
+    "https://tech-hub-eleaning.onrender.com/api/v1",
   timeout: 10000,
   headers: { "Content-Type": "application/json" },
 });

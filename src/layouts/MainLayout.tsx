@@ -17,16 +17,6 @@ const MainLayout: React.FC = () => {
   const { language, setLanguage } = useLanguage();
   const location = useLocation();
 
-  const navigationItems = [
-    { name: "Home", href: "/" },
-    { name: "Tech Products", href: "/shop" },
-    { name: "Learn", href: "/learn" },
-    { name: "Hub", href: "/hub" },
-    { name: "Community", href: "/community" },
-    { name: "About Us", href: "/about-us" },
-    { name: "Contact Us", href: "/contact-us" },
-  ];
-
   // Check if current path contains 'dashboard'
   const isDashboardRoute = location.pathname.includes("/dashboard");
 
@@ -45,7 +35,6 @@ const MainLayout: React.FC = () => {
 
               {/* Navigation Component */}
               <Navigation
-                navigationItems={navigationItems}
                 currentLanguage={language}
                 onLanguageChange={(lang: string) =>
                   setLanguage(lang as "en" | "fr" | "ar")
