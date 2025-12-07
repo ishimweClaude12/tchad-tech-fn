@@ -8,7 +8,7 @@ import { useMemo } from "react";
 const createAxiosInstance = (): AxiosInstance => {
   return axios.create({
     baseURL:
-      process.env.API_BASE_URL ||
+      import.meta.env.VITE_API_BASE_URL ||
       "https://tech-hub-eleaning.onrender.com/api/v1",
     timeout: 10000,
     headers: {

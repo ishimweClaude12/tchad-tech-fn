@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 
+
 interface NavigationItem {
   name: string;
   href: string;
@@ -14,7 +15,6 @@ interface Language {
 }
 
 interface NavigationProps {
-  navigationItems: NavigationItem[];
   onLanguageChange?: (language: string) => void;
   currentLanguage?: string;
 }
@@ -63,7 +63,6 @@ const translations = {
 };
 
 const Navigation: React.FC<NavigationProps> = ({
-  navigationItems,
   onLanguageChange,
   currentLanguage = "en",
 }) => {
@@ -86,19 +85,21 @@ const Navigation: React.FC<NavigationProps> = ({
   // Determine dashboard route based on current location
   const getDashboardRoute = () => {
     const path = location.pathname;
-    if (path.startsWith("/learn")) {
+    console.log("Current path:", path);
+    if (path.includes("/learn")) {
+      console.log("Navigating to Learn Dashboard");
       return "/learn/dashboard";
-    } else if (path.startsWith("/shop")) {
+    } else if (path.includes("/shop")) {
       return "/shop/dashboard";
-    } else if (path.startsWith("/hub")) {
+    } else if (path.includes("/hub")) {
       return "/hub/dashboard";
-    } else if (path.startsWith("/tech")) {
+    } else if (path.includes("/tech")) {
       return "/tech/dashboard";
     }
-    return "/admin";
+    return "/dashboard";
   };
 
-  // Default navigation with translations
+  // Default navigation with translations - recalculate on location change
   const defaultNavigation: NavigationItem[] = [
     { name: t.home, href: "/" },
     { name: t.techProducts, href: "/shop" },
@@ -113,7 +114,7 @@ const Navigation: React.FC<NavigationProps> = ({
     },
   ];
 
-  const navigation = navigationItems || defaultNavigation;
+  const navigation = defaultNavigation;
   const selectedLanguage =
     languages.find((lang) => lang.code === currentLanguage) || languages[0];
 

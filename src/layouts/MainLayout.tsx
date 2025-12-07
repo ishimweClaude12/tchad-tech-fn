@@ -25,6 +25,7 @@ const MainLayout: React.FC = () => {
     { name: "Community", href: "/community" },
     { name: "About Us", href: "/about-us" },
     { name: "Contact Us", href: "/contact-us" },
+    { name: "Dashboard", href: "/dashboard" },
   ];
 
   // Check if current path contains 'dashboard'
@@ -45,7 +46,7 @@ const MainLayout: React.FC = () => {
 
               {/* Navigation Component */}
               <Navigation
-                navigationItems={navigationItems}
+                // navigationItems={navigationItems}
                 currentLanguage={language}
                 onLanguageChange={(lang: string) =>
                   setLanguage(lang as "en" | "fr" | "ar")
