@@ -1,4 +1,6 @@
-import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
+import axios from "axios";
+import type { InternalAxiosRequestConfig } from "axios";
+import type { AxiosInstance } from "axios";
 import { useAuth } from "@clerk/clerk-react";
 import { useMemo } from "react";
 

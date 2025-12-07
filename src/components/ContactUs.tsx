@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Mail } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
+ 
 
 interface FormData {
   firstName: string;
@@ -102,7 +103,7 @@ const translations: Translations = {
 };
 
 const ContactUsSection: React.FC = () => {
-  const { language, setLanguage, isRTL } = useLanguage();
+  const { language, isRTL } = useLanguage();
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
     lastName: "",
@@ -112,7 +113,7 @@ const ContactUsSection: React.FC = () => {
   });
 
   const t = (key: string): string => {
-    return translations[key]?.[language] || key;
+    return translations[key]?.[language as "en" | "fr" | "ar"] || key;
   };
 
   const handleInputChange = (
