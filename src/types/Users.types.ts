@@ -15,11 +15,13 @@ export interface UserListResponse {
 // User & Role Interfaces
 // ============================================================================
 
-export enum UserRole {
-  STUDENT = "STUDENT",
-  ADMIN = "ADMIN",
-  SUPPER_ADMIN = "SUPPER_ADMIN",
-}
+export const UserRole = {
+  STUDENT: "STUDENT",
+  ADMIN: "ADMIN",
+  SUPPER_ADMIN: "SUPPER_ADMIN",
+} as const;
+
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
 export interface User {
   id: string;

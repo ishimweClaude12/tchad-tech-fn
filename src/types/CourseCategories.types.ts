@@ -1,23 +1,29 @@
-export enum ApiResponseStatus {
-  SUCCESS = "success",
-  ERROR = "error",
-  PENDING = "pending",
-}
- 
-export enum CategorySortField {
-  NAME = "name",
-  SORT_ORDER = "sortOrder",
-  CREATED_AT = "createdAt",
-  UPDATED_AT = "updatedAt",
-}
+export const ApiResponseStatus = {
+  SUCCESS: "success",
+  ERROR: "error",
+  PENDING: "pending",
+} as const;
 
- 
-export enum SortDirection {
-  ASC = "asc",
-  DESC = "desc",
-}
+export type ApiResponseStatus =
+  (typeof ApiResponseStatus)[keyof typeof ApiResponseStatus];
 
- 
+export const CategorySortField = {
+  NAME: "name",
+  SORT_ORDER: "sortOrder",
+  CREATED_AT: "createdAt",
+  UPDATED_AT: "updatedAt",
+} as const;
+
+export type CategorySortField =
+  (typeof CategorySortField)[keyof typeof CategorySortField];
+
+export const SortDirection = {
+  ASC: "asc",
+  DESC: "desc",
+} as const;
+
+export type SortDirection = (typeof SortDirection)[keyof typeof SortDirection];
+
 export interface CourseCategory {
   id: string;
   name: string;
@@ -31,7 +37,6 @@ export interface CourseCategory {
   updatedAt: string;
 }
 
- 
 export interface CourseCategoryData {
   categories: CourseCategory[];
 }
@@ -39,7 +44,7 @@ export interface CourseCategoryData {
 export interface CourseSubCategoryData {
   subCategories: CourseCategory[];
 }
- 
+
 export interface CourseCategoryResponse {
   success: boolean;
   message: string;
@@ -52,7 +57,6 @@ export interface CourseSubCategoryResponse {
   data: CourseSubCategoryData;
 }
 
- 
 export interface CourseCategoryErrorResponse {
   success: false;
   message: string;
@@ -73,8 +77,8 @@ export interface CourseCategoryErrorResponse {
 export type CourseCategoryApiResponse =
   | CourseCategoryResponse
   | CourseCategoryErrorResponse;
-  
-  export type CourseSubCategoryApiResponse =
+
+export type CourseSubCategoryApiResponse =
   | CourseSubCategoryResponse
   | CourseCategoryErrorResponse;
 

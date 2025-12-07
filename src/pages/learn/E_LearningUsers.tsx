@@ -24,7 +24,7 @@ const E_LearningUsersAdmin: React.FC = () => {
   const [currentPage] = useState(1);
 
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
-  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [, setOpenDropdownId] = useState<string | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
