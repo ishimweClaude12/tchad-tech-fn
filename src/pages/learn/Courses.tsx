@@ -9,7 +9,6 @@ import {
   Button,
   TextField,
   InputAdornment,
-  IconButton,
   Chip,
   Pagination,
   Menu,
@@ -261,7 +260,7 @@ const CoursesAdmin: React.FC = () => {
 
   // Filter and sort logic
   const filteredAndSortedCourses = useMemo(() => {
-    let filtered = courses.filter((course) => {
+    const filtered = courses.filter((course) => {
       const matchesSearch =
         course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         course.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -393,6 +392,7 @@ const CoursesAdmin: React.FC = () => {
     console.log("Modal state set to true");
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleCourseSubmit = async (data: any) => {
     try {
       if (modalMode === "create") {
@@ -400,7 +400,7 @@ const CoursesAdmin: React.FC = () => {
       } else if (selectedCourse) {
         await updateCourseMutation.mutateAsync({
           id: selectedCourse.id,
-          ...data,
+          data: data,
         });
       }
       setCourseModalOpen(false);
@@ -818,7 +818,7 @@ const CoursesAdmin: React.FC = () => {
                     <Chip
                       label={course.status}
                       size="small"
-                      color={getStatusColor(course.status) as any}
+                      color={getStatusColor(course.status)}
                     />
                     <Chip
                       label={course.difficultyLevel}

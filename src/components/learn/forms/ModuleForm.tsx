@@ -144,6 +144,7 @@ const ModuleFormModal: React.FC<ModuleFormModalProps> = ({
   // Handle input changes
   const handleChange =
     (field: keyof ModuleFormData) =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | any) => {
       const value =
         e.target.type === "checkbox" ? e.target.checked : e.target.value;
