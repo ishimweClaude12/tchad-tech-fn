@@ -1,15 +1,9 @@
-// ============================================================================
-// Main Response Interfaces
-// ============================================================================
+import type { ApiResponse, PaginationMeta } from "./Api.types";
 
-export interface UserListResponse {
-  success: boolean;
-  message: string;
-  data: {
-    users: User[];
-    meta: PaginationMeta;
-  };
-}
+export type UserListResponse = ApiResponse<{
+  users: User[];
+  meta: PaginationMeta;
+}>;
 
 // ============================================================================
 // User & Role Interfaces
@@ -348,12 +342,3 @@ export interface ClerkRawLinkedAccount {
 // ============================================================================
 // Pagination Interfaces
 // ============================================================================
-
-export interface PaginationMeta {
-  currentPage: number;
-  nextPage: number | null;
-  prevPage: number | null;
-  itemsPerPage: number;
-  totalPages: number;
-  totalItems: number;
-}

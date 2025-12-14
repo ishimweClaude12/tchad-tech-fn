@@ -21,6 +21,8 @@ import DashboardOverview from "./pages/learn/DashboardOverview";
 import E_LearningUsersAdmin from "./pages/learn/E_LearningUsers";
 import CourseCategoriesAdmin from "./pages/learn/CourseCategories";
 import CourseSubCategoriesAdmin from "./pages/learn/CourseSubCategories";
+import CoursesAdmin from "./pages/learn/Courses";
+import Modules from "./pages/learn/Modules";
 
 export default function AppRouter() {
   return (
@@ -43,12 +45,12 @@ export default function AppRouter() {
       <Route path="/learn/dashboard" element={<LearnDashboardLayout />}>
         <Route index element={<DashboardOverview />} />
         <Route path="overview" element={<LearnDashboard />} />
-        <Route path="courses" element={<div>Courses Page</div>} />
+        <Route path="courses" element={<CoursesAdmin />} />
         <Route path="users" element={<E_LearningUsersAdmin />} />
         <Route path="my-learning" element={<div>My Learning Page</div>} />
         <Route path="categories" element={<CourseCategoriesAdmin />} />
         <Route path="sub-categories" element={<CourseSubCategoriesAdmin />} />
-        <Route path="modules" element={<div>Modules Page</div>} />
+        <Route path="modules" element={<Modules />} />
         <Route path="lessons" element={<div>Lessons Page</div>} />
         <Route path="assignments" element={<div>Assignments Page</div>} />
         <Route path="quizes" element={<div>Quizes Page</div>} />

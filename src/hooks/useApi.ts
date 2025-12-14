@@ -5,11 +5,14 @@ import {
   categoriesApi,
   coursesApi,
   instructorsApi,
+  modulesApi,
   myLearningApi,
   subCategoriesApi,
   usersApi,
-  type Course,
 } from "../services/api";
+import type { Course } from "../types/Course.types";
+import { toast } from "react-hot-toast";
+import type { ModuleFormData } from "../types/Module.types";
 // ============================================
 // Query Keys
 // ============================================
@@ -69,6 +72,7 @@ export const useCreateCourse = () => {
     mutationFn: coursesApi.create,
     onSuccess: () => {
       // Invalidate courses list to refetch
+      toast.success("Course created successfully");
       queryClient.invalidateQueries({ queryKey: queryKeys.courses.all });
     },
   });
@@ -83,6 +87,7 @@ export const useUpdateCourse = () => {
       coursesApi.update(id, data),
     onSuccess: (_, variables) => {
       // Invalidate both list and specific course
+      toast.success("Course updated successfully");
       queryClient.invalidateQueries({ queryKey: queryKeys.courses.all });
       queryClient.invalidateQueries({
         queryKey: queryKeys.courses.detail(variables.id),
@@ -98,6 +103,7 @@ export const useDeleteCourse = () => {
   return useMutation({
     mutationFn: coursesApi.delete,
     onSuccess: () => {
+      toast.success("Course deleted successfully");
       queryClient.invalidateQueries({ queryKey: queryKeys.courses.all });
     },
   });
@@ -322,6 +328,53 @@ export const useUpdateUser = () => {
       usersApi.updateUser(id, role),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+};
+
+// ============================================
+// Module Hooks
+// ============================================
+export const useModules = () => {
+  return useQuery({
+    queryKey: ["modules"],
+    queryFn: async () => {
+      const response = await modulesApi.getAll();
+      return response.success ? response.data.modules : [];
+    },
+  });
+};
+
+export const useCreateModule = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (module: ModuleFormData) => modulesApi.create(module),
+    onSuccess: () => {
+      toast.success("Module created successfully");
+      queryClient.invalidateQueries({ queryKey: ["modules"] });
+    },
+  });
+};
+
+export const useDeleteModule = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => modulesApi.delete(id),
+    onSuccess: () => {
+      toast.success("Module deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["modules"] });
+    },
+  });
+};
+
+export const useToggleModulePublished = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, isPublished }: { id: string; isPublished: boolean }) =>
+      modulesApi.toggleIsPublished(id, isPublished),
+    onSuccess: () => {
+      toast.success("Module publication status updated");
+      queryClient.invalidateQueries({ queryKey: ["modules"] });
     },
   });
 };
