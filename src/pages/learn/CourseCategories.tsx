@@ -13,6 +13,7 @@ import {
 import type { CourseCategory } from "../../types/CourseCategories.types";
 import CategoryForm from "../../components/learn/forms/CategoryForm";
 import DeleteConfirmModal from "../../components/learn/forms/DeleteConfirmModal";
+import { EmptyState } from "../../components/shared/EmptyState";
 
 type ModalMode = "create" | "edit" | null;
 
@@ -267,30 +268,7 @@ const CourseCategoriesAdmin: React.FC = () => {
 
         {/* Categories Table/Cards */}
         {categories && categories.length === 0 ? (
-          <div className="card text-center py-20">
-            <svg
-              className="w-24 h-24 mx-auto mb-6 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            <h2 className="font-heading text-2xl font-semibold text-gray-700 mb-2">
-              {text.noCategories}
-            </h2>
-            <p className="font-body text-gray-600 mb-6">
-              {text.noCategoriesDesc}
-            </p>
-            <button onClick={handleCreate} className="btn-primary">
-              {text.createNew}
-            </button>
-          </div>
+          <EmptyState message="No categories found. Click 'Create New Category' to get started." />
         ) : (
           <div className="card overflow-hidden">
             {/* Desktop Table */}

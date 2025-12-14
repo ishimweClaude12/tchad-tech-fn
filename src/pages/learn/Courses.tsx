@@ -34,6 +34,7 @@ import MoreVertOutlinedIcon from "@mui/icons-material/MoreVertOutlined";
 import { useUser } from "@clerk/clerk-react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import CourseForm from "../../components/learn/forms/CourseForm";
+import { EmptyState } from "../../components/shared/EmptyState";
 import {
   useCourses,
   useCreateCourse,
@@ -756,7 +757,9 @@ const CoursesAdmin: React.FC = () => {
       </Typography>
 
       {/* Courses Grid */}
-      {paginatedCourses.length === 0 ? (
+      {courses.length === 0 ? (
+        <EmptyState message="No courses available. Click 'Add New Course' to create your first course." />
+      ) : paginatedCourses.length === 0 ? (
         <Paper
           elevation={0}
           sx={{ p: 6, textAlign: "center", borderRadius: 2 }}

@@ -32,6 +32,7 @@ import ModuleFormModal from "../../components/learn/forms/ModuleForm";
 import React from "react";
 import { CheckIcon, Delete, Edit } from "lucide-react";
 import CloseIcon from "@mui/icons-material/Close";
+import { EmptyState } from "../../components/shared/EmptyState";
 
 export default function Modules() {
   const { data: modules = [], isLoading } = useModules();
@@ -41,7 +42,9 @@ export default function Modules() {
   const [openDelete, setOpenDelete] = useState<boolean>(false);
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const [toggleModuleId, setToggleModuleId] = useState<string | number | null>(null);
+  const [toggleModuleId, setToggleModuleId] = useState<string | number | null>(
+    null
+  );
   const open = Boolean(anchorEl);
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -94,6 +97,10 @@ export default function Modules() {
           {isLoading ? (
             <div className="flex justify-center items-center py-10">
               <CircularProgress />
+            </div>
+          ) : modules.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16">
+              <EmptyState message="No modules found. Click 'Add Module' to create one." />
             </div>
           ) : (
             <Table className="min-w-full">
