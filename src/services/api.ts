@@ -1,38 +1,26 @@
 import axiosInstance from "../lib/axios";
+import type {
+  Course,
+  GetCoursesApiResponse,
+  Instructor,
+} from "../types/Course.types";
 import {
   type CourseCategoryApiResponse,
   type CourseSubCategoryApiResponse,
 } from "../types/CourseCategories.types";
 import { type UserListResponse, UserRole } from "../types/Users.types";
+import type {
+  GetModulesApiResponse,
+  Module,
+  ModuleFormData,
+} from "../types/Module.types";
+import type { ApiResponse } from "../types/Api.types";
 
 // ============================================
 // API Service Functions for E-learning
 // ============================================
 
 // Types
-export interface Course {
-  id: string;
-  title: string;
-  description: string;
-  instructor: string;
-  duration: string;
-  level: string;
-  thumbnail: string;
-  price: number;
-  rating: number;
-  studentsEnrolled: number;
-}
-
-export interface Instructor {
-  id: string;
-  name: string;
-  bio: string;
-  expertise: string[];
-  rating: number;
-  studentsCount: number;
-  coursesCount: number;
-  avatar: string;
-}
 
 export interface Enrollment {
   id: string;
@@ -53,7 +41,10 @@ export const coursesApi = {
     level?: string;
     search?: string;
   }) => {
-    const { data } = await axiosInstance.get<Course[]>("/courses", { params });
+    const { data } = await axiosInstance.get<GetCoursesApiResponse>(
+      "/courses",
+      { params }
+    );
     return data;
   },
 
@@ -234,6 +225,37 @@ export const usersApi = {
     const { data } = await axiosInstance.patch<any>(`/users/${id}`, {
       role,
     });
+    return data;
+  },
+};
+
+// ============================================
+// Module ApiResponse
+// ============================================
+
+export const modulesApi = {
+  getAll: async () => {
+    const { data } = await axiosInstance.get<GetModulesApiResponse>("/modules");
+    return data;
+  },
+
+  create: async (module: ModuleFormData) => {
+    const { data } = await axiosInstance.post<ApiResponse<Module>>(
+      "/modules",
+      module
+    );
+    return data;
+  },
+
+  delete: async (id: string) => {
+    const { data } = await axiosInstance.delete(`/modules/${id}`);
+    return data;
+  },
+  toggleIsPublished: async (id: string, isPublished: boolean) => {
+    const { data } = await axiosInstance.patch<ApiResponse<Module>>(
+      `/modules/${id}/publish`,
+      { isPublished }
+    );
     return data;
   },
 };
