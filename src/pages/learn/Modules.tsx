@@ -22,7 +22,6 @@ import {
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import type { Module, ModuleFormData } from "../../types/Module.types";
 import {
-  useCourses,
   useCreateModule,
   useDeleteModule,
   useModules,
@@ -33,6 +32,7 @@ import React from "react";
 import { CheckIcon, Delete, Edit } from "lucide-react";
 import CloseIcon from "@mui/icons-material/Close";
 import { EmptyState } from "../../components/shared/EmptyState";
+import { useCourses } from "../../hooks/learn/useCourseApi";
 
 export default function Modules() {
   const { data: modules = [], isLoading } = useModules();

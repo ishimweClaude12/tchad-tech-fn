@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { useNavigate, Outlet, useParams } from "react-router-dom";
 import {
   Box,
   Card,
@@ -35,14 +36,7 @@ import { useUser } from "@clerk/clerk-react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import CourseForm from "../../components/learn/forms/CourseForm";
 import { EmptyState } from "../../components/shared/EmptyState";
-import {
-  useCourses,
-  useCreateCourse,
-  useUpdateCourse,
-  useDeleteCourse,
-  useCategories,
-  useSubCategories,
-} from "../../hooks/useApi";
+import { useCategories, useSubCategories } from "../../hooks/useApi";
 import {
   CheckCircleIcon,
   StarIcon,
@@ -54,6 +48,12 @@ import {
 } from "lucide-react";
 import type { Course } from "../../types/Course.types";
 import { CourseDetails } from "../../components/learn/CourseDetails";
+import {
+  useCourses,
+  useCreateCourse,
+  useUpdateCourse,
+  useDeleteCourse,
+} from "../../hooks/learn/useCourseApi";
 
 // Translations
 const translations = {
@@ -222,9 +222,11 @@ const translations = {
 };
 
 const CoursesAdmin: React.FC = () => {
+  const navigate = useNavigate();
   const { language, isRTL } = useLanguage();
   const t = translations[language];
   const { user } = useUser();
+  const { courseId } = useParams<{ courseId: string }>();
   const { data: coursesData, isLoading, error, refetch } = useCourses();
   const { data: categoriesData } = useCategories();
   const { data: subcategoriesData } = useSubCategories();
@@ -401,7 +403,8 @@ const CoursesAdmin: React.FC = () => {
       } else if (selectedCourse) {
         await updateCourseMutation.mutateAsync({
           id: selectedCourse.id,
-          data: data,
+          // remove instructorId from data if present
+          data: { ...data, instructorId: undefined },
         });
       }
       setCourseModalOpen(false);
@@ -420,11 +423,9 @@ const CoursesAdmin: React.FC = () => {
     }
   };
 
-  const handleView = () => {
-    console.log("View course:", selectedCourse);
-    setCourseDetailsModalOpen(true);
-    handleMenuClose();
-    // TODO: Navigate to course details
+  const handleView = (course: Course) => {
+    if (!course) return;
+    navigate(`/learn/dashboard/courses/${course.id}`);
   };
 
   const getStatusColor = (status: string) => {
@@ -440,11 +441,7 @@ const CoursesAdmin: React.FC = () => {
     }
   };
 
-  const formatDuration = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-  };
+ 
 
   const formatPrice = (price: string, currency: string) => {
     const priceNum = parseFloat(price);
@@ -452,6 +449,11 @@ const CoursesAdmin: React.FC = () => {
   };
 
   // Loading state
+  // If courseId is present in the URL, render the nested Outlet for CourseDetails
+  if (courseId) {
+    return <Outlet />;
+  }
+
   if (isLoading) {
     return (
       <Box sx={{ p: 3 }}>
@@ -876,7 +878,7 @@ const CoursesAdmin: React.FC = () => {
                       sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
                     >
                       <Typography variant="caption">
-                        {formatDuration(course.totalDurationMinutes)}
+                        Estimated Duration: { course.estimatedDurationHours } hrs
                       </Typography>
                     </Box>
                     <Box
@@ -918,7 +920,7 @@ const CoursesAdmin: React.FC = () => {
                   <Button
                     size="small"
                     startIcon={<ViewIcon />}
-                    onClick={handleView}
+                    onClick={() => handleView(course)}
                   >
                     {t.view}
                   </Button>
@@ -956,12 +958,6 @@ const CoursesAdmin: React.FC = () => {
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
       >
-        <MenuItem onClick={handleView}>
-          <ListItemIcon>
-            <ViewIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>{t.view}</ListItemText>
-        </MenuItem>
         <MenuItem onClick={handleEdit}>
           <ListItemIcon>
             <EditIcon fontSize="small" />
@@ -1112,6 +1108,11 @@ const CoursesAdmin: React.FC = () => {
       </Modal>
     </Box>
   );
+
+  // If courseId is present in the URL, render the nested Outlet for CourseDetails
+  if (courseId) {
+    return <Outlet />;
+  }
 };
 
 export default CoursesAdmin;

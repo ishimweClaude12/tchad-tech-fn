@@ -1,8 +1,9 @@
 import type { ApiResponse, PaginationMeta } from "./Api.types";
+import type { BaseLesson } from "./CourseLessons.types";
 
 export interface ModulesResponse {
   modules: Module[];
-  meata: PaginationMeta; // API typo kept intentionally for exact mapping
+  meta: PaginationMeta;
 }
 
 export interface Module {
@@ -16,34 +17,18 @@ export interface Module {
   isPublished: boolean;
   createdAt: string;
   updatedAt: string;
-  course: ModuleCourse;
-  lessons: Lesson[];
+  course: BaseCourse;
+  lessons: BaseLesson[];
 }
 
-export interface ModuleCourse {
+export interface BaseCourse {
   id: string;
   title: string;
   slug: string;
+  instructorId?: string;
 }
 
-export interface Lesson {
-  id: string;
-  courseId: string;
-  moduleId: string;
-  title: string;
-  description: string;
-  contentType: LessonContentType;
-  contentUrl: string;
-  muxVideoId: string | null;
-  textContent: string | null;
-  durationMinutes: number;
-  sortOrder: number;
-  isPublished: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export type LessonContentType = "VIDEO" | "TEXT";
+ 
 
 export type GetModulesApiResponse = ApiResponse<ModulesResponse>;
 
