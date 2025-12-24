@@ -9,6 +9,7 @@ import {
   Rating,
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 import {
   useCourseById,
@@ -53,6 +54,15 @@ export const CourseDetails = () => {
 
   return (
     <div className="space-y-10">
+      <div>
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate(-1)}
+          variant="text"
+        >
+          Back
+        </Button>
+      </div>
       {/* Header */}
       <Card>
         <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -169,7 +179,7 @@ export const CourseDetails = () => {
       {/* Modules */}
       <div className="space-y-4">
         <Typography variant="h5" fontWeight={600}>
-          Modules
+          Course Modules
         </Typography>
 
         {modules.length === 0 ? (

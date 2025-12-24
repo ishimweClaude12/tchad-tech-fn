@@ -23,4 +23,10 @@ export const modulesApi = {
     if (!data.success) return Promise.reject("Module not found");
     return data.data.module;
   },
+  publish: async (moduleId: string) => {
+    const { data } = await axiosInstance.patch<ApiResponse<{ module: Module }>>(
+      `/modules/${moduleId}/publish`
+    );
+    return data;
+  },
 };

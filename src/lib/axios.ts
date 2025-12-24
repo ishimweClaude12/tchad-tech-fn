@@ -5,7 +5,6 @@ const axiosInstance = axios.create({
     import.meta.env.VITE_API_BASE_URL ||
     "https://tech-hub-eleaning.onrender.com/api/v1",
   timeout: 10000,
-  headers: { "Content-Type": "application/json" },
 });
 
 axiosInstance.interceptors.request.use(
@@ -26,6 +25,11 @@ axiosInstance.interceptors.request.use(
 
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
+      }
+
+      // Only set Content-Type to application/json if data is not FormData
+      if (!(config.data instanceof FormData)) {
+        config.headers["Content-Type"] = "application/json";
       }
 
       return config;
