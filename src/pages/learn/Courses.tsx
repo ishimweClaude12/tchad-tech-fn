@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { useNavigate, Outlet, useParams } from "react-router-dom";
 import {
   Box,
   Card,
@@ -7,17 +8,12 @@ import {
   CardActions,
   Typography,
   Button,
-  TextField,
-  InputAdornment,
   Chip,
   Pagination,
   Menu,
   MenuItem,
   ListItemIcon,
   ListItemText,
-  FormControl,
-  InputLabel,
-  Select,
   Stack,
   Avatar,
   Rating,
@@ -35,14 +31,7 @@ import { useUser } from "@clerk/clerk-react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import CourseForm from "../../components/learn/forms/CourseForm";
 import { EmptyState } from "../../components/shared/EmptyState";
-import {
-  useCourses,
-  useCreateCourse,
-  useUpdateCourse,
-  useDeleteCourse,
-  useCategories,
-  useSubCategories,
-} from "../../hooks/useApi";
+import { useCategories, useSubCategories } from "../../hooks/useApi";
 import {
   CheckCircleIcon,
   StarIcon,
@@ -54,6 +43,12 @@ import {
 } from "lucide-react";
 import type { Course } from "../../types/Course.types";
 import { CourseDetails } from "../../components/learn/CourseDetails";
+import {
+  useCourses,
+  useCreateCourse,
+  useUpdateCourse,
+  useDeleteCourse,
+} from "../../hooks/learn/useCourseApi";
 
 // Translations
 const translations = {
@@ -222,9 +217,11 @@ const translations = {
 };
 
 const CoursesAdmin: React.FC = () => {
+  const navigate = useNavigate();
   const { language, isRTL } = useLanguage();
   const t = translations[language];
   const { user } = useUser();
+  const { courseId } = useParams<{ courseId: string }>();
   const { data: coursesData, isLoading, error, refetch } = useCourses();
   const { data: categoriesData } = useCategories();
   const { data: subcategoriesData } = useSubCategories();
@@ -232,12 +229,6 @@ const CoursesAdmin: React.FC = () => {
   const updateCourseMutation = useUpdateCourse();
   const deleteCourseMutation = useDeleteCourse();
 
-  // State management
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedStatus, setSelectedStatus] = useState("all");
-  const [selectedLevel, setSelectedLevel] = useState("all");
-  const [sortBy, setSortBy] = useState("newest");
   const [page, setPage] = useState(1);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
@@ -252,69 +243,8 @@ const CoursesAdmin: React.FC = () => {
   const apiCategories = categoriesData || [];
   const apiSubcategories = subcategoriesData || [];
 
-  const categories = useMemo(() => {
-    const uniqueCategories = new Set(
-      courses.map((c) => c.category?.name).filter(Boolean)
-    );
-    return Array.from(uniqueCategories);
-  }, [courses]);
-
-  // Filter and sort logic
-  const filteredAndSortedCourses = useMemo(() => {
-    const filtered = courses.filter((course) => {
-      const matchesSearch =
-        course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        course.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        course.instructor?.userId
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase());
-
-      const matchesCategory =
-        selectedCategory === "all" ||
-        course.category?.name === selectedCategory;
-
-      const matchesStatus =
-        selectedStatus === "all" || course.status === selectedStatus;
-
-      const matchesLevel =
-        selectedLevel === "all" || course.difficultyLevel === selectedLevel;
-
-      return matchesSearch && matchesCategory && matchesStatus && matchesLevel;
-    });
-
-    // Sort
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case "newest":
-          return (
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
-        case "oldest":
-          return (
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-          );
-        case "mostEnrolled":
-          return b.enrollmentCount - a.enrollmentCount;
-        case "highestRated":
-          return (b.ratingAverage || 0) - (a.ratingAverage || 0);
-        case "priceHighLow":
-          return parseFloat(b.price) - parseFloat(a.price);
-        case "priceLowHigh":
-          return parseFloat(a.price) - parseFloat(b.price);
-        default:
-          return 0;
-      }
-    });
-
-    return filtered;
-  }, [
-    courses,
-    searchQuery,
-    selectedCategory,
-    selectedStatus,
-    selectedLevel,
-    sortBy,
-  ]);
+  // No search/filters: use all courses as-is
+  const filteredAndSortedCourses = courses;
 
   // Pagination
   const paginatedCourses = useMemo(() => {
@@ -401,7 +331,8 @@ const CoursesAdmin: React.FC = () => {
       } else if (selectedCourse) {
         await updateCourseMutation.mutateAsync({
           id: selectedCourse.id,
-          data: data,
+          // remove instructorId from data if present
+          data: { ...data, instructorId: undefined },
         });
       }
       setCourseModalOpen(false);
@@ -420,11 +351,9 @@ const CoursesAdmin: React.FC = () => {
     }
   };
 
-  const handleView = () => {
-    console.log("View course:", selectedCourse);
-    setCourseDetailsModalOpen(true);
-    handleMenuClose();
-    // TODO: Navigate to course details
+  const handleView = (course: Course) => {
+    if (!course) return;
+    navigate(`/learn/dashboard/courses/${course.id}`);
   };
 
   const getStatusColor = (status: string) => {
@@ -440,18 +369,212 @@ const CoursesAdmin: React.FC = () => {
     }
   };
 
-  const formatDuration = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-  };
-
   const formatPrice = (price: string, currency: string) => {
-    const priceNum = parseFloat(price);
+    const priceNum = Number.parseFloat(price);
     return priceNum === 0 ? t.free : `${priceNum} ${currency}`;
   };
 
+  // Determine content to display based on courses state
+  const getCoursesContent = () => {
+    if (courses.length === 0) {
+      return (
+        <EmptyState message="No courses available. Click 'Add New Course' to create your first course." />
+      );
+    }
+
+    if (paginatedCourses.length === 0) {
+      return (
+        <Paper
+          elevation={0}
+          sx={{ p: 6, textAlign: "center", borderRadius: 2 }}
+        >
+          <SearchIcon />
+          <Typography variant="h6" gutterBottom>
+            {t.noResults}
+          </Typography>
+          <Typography color="text.secondary">{t.noResultsDesc}</Typography>
+        </Paper>
+      );
+    }
+
+    return (
+      <>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              sm: "repeat(2, 1fr)",
+              md: "repeat(3, 1fr)",
+            },
+            gap: 3,
+          }}
+        >
+          {paginatedCourses.map((course) => (
+            <Card
+              key={course.id}
+              elevation={0}
+              sx={{
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                borderRadius: 2,
+                border: "1px solid",
+                borderColor: "divider",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  transform: "translateY(-4px)",
+                  boxShadow: 4,
+                },
+              }}
+            >
+              <CardMedia
+                component="img"
+                height="200"
+                image={
+                  course.thumbnailUrl || "https://via.placeholder.com/400x200"
+                }
+                alt={course.title}
+                sx={{ objectFit: "cover" }}
+              />
+              <CardContent sx={{ flexGrow: 1 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    mb: 1,
+                  }}
+                >
+                  <Chip
+                    label={course.status}
+                    size="small"
+                    color={getStatusColor(course.status)}
+                  />
+                  <Chip
+                    label={course.difficultyLevel}
+                    size="small"
+                    variant="outlined"
+                  />
+                </Box>
+
+                <Typography variant="h6" gutterBottom noWrap>
+                  {course.title}
+                </Typography>
+
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{
+                    mb: 2,
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                  }}
+                >
+                  {course.shortDescription}
+                </Typography>
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    mb: 1,
+                  }}
+                >
+                  <Avatar sx={{ width: 24, height: 24, fontSize: 12 }}>
+                    {course.instructor?.userId[0].toUpperCase()}
+                  </Avatar>
+                  <Typography variant="caption" color="text.secondary">
+                    {course.instructor?.userId}
+                  </Typography>
+                </Box>
+
+                <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                    <Typography variant="caption">
+                      {course.enrollmentCount}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                    <Typography variant="caption">
+                      Estimated Duration: {course.estimatedDurationHours} hrs
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                    <PlayIcon />
+                    <Typography variant="caption">
+                      {course.totalLessons}
+                    </Typography>
+                  </Box>
+                </Stack>
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    mb: 2,
+                  }}
+                >
+                  <Rating
+                    value={course.ratingAverage || 0}
+                    readOnly
+                    size="small"
+                  />
+                  <Typography variant="caption" color="text.secondary">
+                    ({course.ratingCount})
+                  </Typography>
+                </Box>
+
+                <Typography variant="h6" color="primary" fontWeight="bold">
+                  {formatPrice(course.price, course.currency)}
+                </Typography>
+              </CardContent>
+
+              <CardActions
+                sx={{ justifyContent: "space-between", px: 2, pb: 2 }}
+              >
+                <Button
+                  size="small"
+                  startIcon={<ViewIcon />}
+                  onClick={() => handleView(course)}
+                >
+                  {t.view}
+                </Button>
+                <Button size="small" onClick={(e) => handleMenuOpen(e, course)}>
+                  <MoreVertOutlinedIcon />
+                </Button>
+              </CardActions>
+            </Card>
+          ))}
+        </Box>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+            <Pagination
+              count={totalPages}
+              page={page}
+              onChange={(_, value) => setPage(value)}
+              color="primary"
+              size="large"
+              showFirstButton
+              showLastButton
+            />
+          </Box>
+        )}
+      </>
+    );
+  };
+
   // Loading state
+  // If courseId is present in the URL, render the nested Outlet for CourseDetails
+  if (courseId) {
+    return <Outlet />;
+  }
+
   if (isLoading) {
     return (
       <Box sx={{ p: 3 }}>
@@ -648,307 +771,16 @@ const CoursesAdmin: React.FC = () => {
         </Paper>
       </Box>
 
-      {/* Search and Filters */}
-      <Paper elevation={0} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-        <Stack
-          direction={{ xs: "column", md: "row" }}
-          spacing={2}
-          alignItems="stretch"
-        >
-          <Box sx={{ flex: { xs: "1 1 100%", md: "1 1 33%" } }}>
-            <TextField
-              fullWidth
-              placeholder={t.searchPlaceholder}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Box>
-
-          <Box
-            sx={{ flex: { xs: "1 1 100%", sm: "1 1 50%", md: "1 1 16.67%" } }}
-          >
-            <FormControl fullWidth>
-              <InputLabel>{t.category}</InputLabel>
-              <Select
-                value={selectedCategory}
-                label={t.category}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-              >
-                <MenuItem value="all">{t.allCategories}</MenuItem>
-                {categories.map((cat) => (
-                  <MenuItem key={cat} value={cat}>
-                    {cat}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
-
-          <Box
-            sx={{ flex: { xs: "1 1 100%", sm: "1 1 50%", md: "1 1 16.67%" } }}
-          >
-            <FormControl fullWidth>
-              <InputLabel>{t.status}</InputLabel>
-              <Select
-                value={selectedStatus}
-                label={t.status}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-              >
-                <MenuItem value="all">{t.allStatuses}</MenuItem>
-                <MenuItem value="published">{t.published}</MenuItem>
-                <MenuItem value="draft">{t.draft}</MenuItem>
-                <MenuItem value="archived">{t.archived}</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-
-          <Box
-            sx={{ flex: { xs: "1 1 100%", sm: "1 1 50%", md: "1 1 16.67%" } }}
-          >
-            <FormControl fullWidth>
-              <InputLabel>{t.level}</InputLabel>
-              <Select
-                value={selectedLevel}
-                label={t.level}
-                onChange={(e) => setSelectedLevel(e.target.value)}
-              >
-                <MenuItem value="all">{t.allLevels}</MenuItem>
-                <MenuItem value="beginner">{t.beginner}</MenuItem>
-                <MenuItem value="intermediate">{t.intermediate}</MenuItem>
-                <MenuItem value="advanced">{t.advanced}</MenuItem>
-                <MenuItem value="expert">{t.expert}</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-
-          <Box
-            sx={{ flex: { xs: "1 1 100%", sm: "1 1 50%", md: "1 1 16.67%" } }}
-          >
-            <FormControl fullWidth>
-              <InputLabel>{t.sortBy}</InputLabel>
-              <Select
-                value={sortBy}
-                label={t.sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-              >
-                <MenuItem value="newest">{t.newest}</MenuItem>
-                <MenuItem value="oldest">{t.oldest}</MenuItem>
-                <MenuItem value="mostEnrolled">{t.mostEnrolled}</MenuItem>
-                <MenuItem value="highestRated">{t.highestRated}</MenuItem>
-                <MenuItem value="priceHighLow">{t.priceHighLow}</MenuItem>
-                <MenuItem value="priceLowHigh">{t.priceLowHigh}</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-        </Stack>
-      </Paper>
-
       {/* Results count */}
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Showing {paginatedCourses.length} of {filteredAndSortedCourses.length}{" "}
-        courses
-      </Typography>
+      {courses.length > 0 && paginatedCourses.length > 0 && (
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Showing {paginatedCourses.length} of {filteredAndSortedCourses.length}{" "}
+          courses
+        </Typography>
+      )}
 
       {/* Courses Grid */}
-      {courses.length === 0 ? (
-        <EmptyState message="No courses available. Click 'Add New Course' to create your first course." />
-      ) : paginatedCourses.length === 0 ? (
-        <Paper
-          elevation={0}
-          sx={{ p: 6, textAlign: "center", borderRadius: 2 }}
-        >
-          <SearchIcon />
-          <Typography variant="h6" gutterBottom>
-            {t.noResults}
-          </Typography>
-          <Typography color="text.secondary">{t.noResultsDesc}</Typography>
-        </Paper>
-      ) : (
-        <>
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "1fr",
-                sm: "repeat(2, 1fr)",
-                md: "repeat(3, 1fr)",
-              },
-              gap: 3,
-            }}
-          >
-            {paginatedCourses.map((course) => (
-              <Card
-                key={course.id}
-                elevation={0}
-                sx={{
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  borderRadius: 2,
-                  border: "1px solid",
-                  borderColor: "divider",
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    transform: "translateY(-4px)",
-                    boxShadow: 4,
-                  },
-                }}
-              >
-                <CardMedia
-                  component="img"
-                  height="200"
-                  image={
-                    course.thumbnailUrl || "https://via.placeholder.com/400x200"
-                  }
-                  alt={course.title}
-                  sx={{ objectFit: "cover" }}
-                />
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      mb: 1,
-                    }}
-                  >
-                    <Chip
-                      label={course.status}
-                      size="small"
-                      color={getStatusColor(course.status)}
-                    />
-                    <Chip
-                      label={course.difficultyLevel}
-                      size="small"
-                      variant="outlined"
-                    />
-                  </Box>
-
-                  <Typography variant="h6" gutterBottom noWrap>
-                    {course.title}
-                  </Typography>
-
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{
-                      mb: 2,
-                      display: "-webkit-box",
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                    }}
-                  >
-                    {course.shortDescription}
-                  </Typography>
-
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
-                      mb: 1,
-                    }}
-                  >
-                    <Avatar sx={{ width: 24, height: 24, fontSize: 12 }}>
-                      {course.instructor?.userId[0].toUpperCase()}
-                    </Avatar>
-                    <Typography variant="caption" color="text.secondary">
-                      {course.instructor?.userId}
-                    </Typography>
-                  </Box>
-
-                  <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-                    <Box
-                      sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-                    >
-                      <Typography variant="caption">
-                        {course.enrollmentCount}
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-                    >
-                      <Typography variant="caption">
-                        {formatDuration(course.totalDurationMinutes)}
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-                    >
-                      <PlayIcon />
-                      <Typography variant="caption">
-                        {course.totalLessons}
-                      </Typography>
-                    </Box>
-                  </Stack>
-
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
-                      mb: 2,
-                    }}
-                  >
-                    <Rating
-                      value={course.ratingAverage || 0}
-                      readOnly
-                      size="small"
-                    />
-                    <Typography variant="caption" color="text.secondary">
-                      ({course.ratingCount})
-                    </Typography>
-                  </Box>
-
-                  <Typography variant="h6" color="primary" fontWeight="bold">
-                    {formatPrice(course.price, course.currency)}
-                  </Typography>
-                </CardContent>
-
-                <CardActions
-                  sx={{ justifyContent: "space-between", px: 2, pb: 2 }}
-                >
-                  <Button
-                    size="small"
-                    startIcon={<ViewIcon />}
-                    onClick={handleView}
-                  >
-                    {t.view}
-                  </Button>
-                  <Button
-                    size="small"
-                    onClick={(e) => handleMenuOpen(e, course)}
-                  >
-                    <MoreVertOutlinedIcon />
-                  </Button>
-                </CardActions>
-              </Card>
-            ))}
-          </Box>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-              <Pagination
-                count={totalPages}
-                page={page}
-                onChange={(_, value) => setPage(value)}
-                color="primary"
-                size="large"
-                showFirstButton
-                showLastButton
-              />
-            </Box>
-          )}
-        </>
-      )}
+      {getCoursesContent()}
 
       {/* Context Menu */}
       <Menu
@@ -956,12 +788,6 @@ const CoursesAdmin: React.FC = () => {
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
       >
-        <MenuItem onClick={handleView}>
-          <ListItemIcon>
-            <ViewIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>{t.view}</ListItemText>
-        </MenuItem>
         <MenuItem onClick={handleEdit}>
           <ListItemIcon>
             <EditIcon fontSize="small" />
@@ -1057,8 +883,8 @@ const CoursesAdmin: React.FC = () => {
                       | "EXPERT",
                     estimatedDurationHours:
                       selectedCourse.totalDurationMinutes / 60,
-                    price: parseFloat(selectedCourse.price),
-                    discountPrice: parseFloat(
+                    price: Number.parseFloat(selectedCourse.price),
+                    discountPrice: Number.parseFloat(
                       selectedCourse.discountPrice || "0"
                     ),
                     currency: selectedCourse.currency,

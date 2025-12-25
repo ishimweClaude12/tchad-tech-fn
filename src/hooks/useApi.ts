@@ -3,14 +3,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { UserRole } from "../types/Users.types";
 import {
   categoriesApi,
-  coursesApi,
   instructorsApi,
   modulesApi,
   myLearningApi,
   subCategoriesApi,
   usersApi,
 } from "../services/api";
-import type { Course } from "../types/Course.types";
+
 import { toast } from "react-hot-toast";
 import type { ModuleFormData } from "../types/Module.types";
 // ============================================
@@ -23,6 +22,9 @@ export const queryKeys = {
     list: (filters?: Record<string, unknown>) =>
       [...queryKeys.courses.all, "list", filters] as const,
     detail: (id: string) => [...queryKeys.courses.all, "detail", id] as const,
+    slug: (slug: string) => [...queryKeys.courses.all, "slug", slug] as const,
+    modules: (courseId: string) =>
+      [...queryKeys.courses.all, "modules", courseId] as const,
   },
   instructors: {
     all: ["instructors"] as const,
@@ -37,89 +39,6 @@ export const queryKeys = {
     all: ["my-learning"] as const,
     enrollments: () => [...queryKeys.myLearning.all, "enrollments"] as const,
   },
-};
-
-// ============================================
-// Courses Hooks
-// ============================================
-
-// Get all courses
-export const useCourses = (filters?: {
-  category?: string;
-  level?: string;
-  search?: string;
-}) => {
-  return useQuery({
-    queryKey: queryKeys.courses.list(filters),
-    queryFn: () => coursesApi.getAll(filters),
-  });
-};
-
-// Get course by ID
-export const useCourse = (id: string) => {
-  return useQuery({
-    queryKey: queryKeys.courses.detail(id),
-    queryFn: () => coursesApi.getById(id),
-    enabled: !!id,
-  });
-};
-
-// Create course
-export const useCreateCourse = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: coursesApi.create,
-    onSuccess: () => {
-      // Invalidate courses list to refetch
-      toast.success("Course created successfully");
-      queryClient.invalidateQueries({ queryKey: queryKeys.courses.all });
-    },
-  });
-};
-
-// Update course
-export const useUpdateCourse = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Course> }) =>
-      coursesApi.update(id, data),
-    onSuccess: (_, variables) => {
-      // Invalidate both list and specific course
-      toast.success("Course updated successfully");
-      queryClient.invalidateQueries({ queryKey: queryKeys.courses.all });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.courses.detail(variables.id),
-      });
-    },
-  });
-};
-
-// Delete course
-export const useDeleteCourse = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: coursesApi.delete,
-    onSuccess: () => {
-      toast.success("Course deleted successfully");
-      queryClient.invalidateQueries({ queryKey: queryKeys.courses.all });
-    },
-  });
-};
-
-// Enroll in course
-export const useEnrollCourse = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: coursesApi.enroll,
-    onSuccess: () => {
-      // Invalidate my learning to show new enrollment
-      queryClient.invalidateQueries({ queryKey: queryKeys.myLearning.all });
-    },
-  });
 };
 
 // ============================================
@@ -351,7 +270,13 @@ export const useCreateModule = () => {
     mutationFn: (module: ModuleFormData) => modulesApi.create(module),
     onSuccess: () => {
       toast.success("Module created successfully");
-      queryClient.invalidateQueries({ queryKey: ["modules"] });
+
+      queryClient.invalidateQueries({
+        queryKey: ["modules"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.courses.all,
+      });
     },
   });
 };
@@ -375,6 +300,9 @@ export const useToggleModulePublished = () => {
     onSuccess: () => {
       toast.success("Module publication status updated");
       queryClient.invalidateQueries({ queryKey: ["modules"] });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.courses.all,
+      });
     },
   });
 };

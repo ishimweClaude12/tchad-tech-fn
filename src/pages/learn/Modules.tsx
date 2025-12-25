@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -22,17 +21,17 @@ import {
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import type { Module, ModuleFormData } from "../../types/Module.types";
 import {
-  useCourses,
   useCreateModule,
   useDeleteModule,
   useModules,
   useToggleModulePublished,
 } from "../../hooks/useApi";
 import ModuleFormModal from "../../components/learn/forms/ModuleForm";
-import React from "react";
+import React, { useState } from "react";
 import { CheckIcon, Delete, Edit } from "lucide-react";
 import CloseIcon from "@mui/icons-material/Close";
 import { EmptyState } from "../../components/shared/EmptyState";
+import { useCourses } from "../../hooks/learn/useCourseApi";
 
 export default function Modules() {
   const { data: modules = [], isLoading } = useModules();
@@ -73,6 +72,141 @@ export default function Modules() {
     setSelectedModule(null);
   };
 
+  const renderModulesContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex justify-center items-center py-10">
+          <CircularProgress />
+        </div>
+      );
+    }
+
+    if (modules.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center py-16">
+          <EmptyState message="No modules found. Click 'Add Module' to create one." />
+        </div>
+      );
+    }
+
+    return (
+      <Table className="min-w-full">
+        <TableHead>
+          <TableRow className="bg-gray-100">
+            <TableCell className="font-semibold">Title</TableCell>
+            <TableCell className="font-semibold">Duration</TableCell>
+            <TableCell className="font-semibold">Lessons</TableCell>
+            <TableCell className="font-semibold">Published</TableCell>
+            <TableCell className="font-semibold" align="right">
+              Actions
+            </TableCell>
+          </TableRow>
+        </TableHead>
+
+        <TableBody>
+          {modules.map((mod) => {
+            let publishedIcon;
+            if (toggleModuleId === mod.id) {
+              publishedIcon = <CircularProgress size={24} />;
+            } else if (mod.isPublished) {
+              publishedIcon = <CheckIcon />;
+            } else {
+              publishedIcon = <CloseIcon />;
+            }
+
+            return (
+              <TableRow key={mod.id} className="hover:bg-gray-50">
+                <TableCell>{mod.title}</TableCell>
+                <TableCell>{mod.estimatedDurationMinutes} min</TableCell>
+                <TableCell>{mod.lessons.length}</TableCell>
+                <TableCell>
+                  <ToggleButton
+                    value="check"
+                    selected={mod.isPublished}
+                    onChange={() => {
+                      setToggleModuleId(mod.id);
+                      toggleModulePublishMutation.mutate(
+                        {
+                          id: mod.id,
+                          isPublished: !mod.isPublished,
+                        },
+                        {
+                          onSuccess: () => {
+                            setToggleModuleId(null);
+                          },
+                          onError: () => {
+                            setToggleModuleId(null);
+                          },
+                        }
+                      );
+                    }}
+                  >
+                    {publishedIcon}
+                  </ToggleButton>
+                </TableCell>
+
+                <TableCell align="right">
+                  <div>
+                    <Button
+                      id="basic-button"
+                      aria-controls={open ? "basic-menu" : undefined}
+                      aria-haspopup="true"
+                      aria-expanded={open ? "true" : undefined}
+                      onClick={(e: React.MouseEvent<HTMLElement>) => {
+                        e.stopPropagation();
+                        handleClick(e);
+                      }}
+                      sx={{ zIndex: 2000, position: "relative" }}
+                    >
+                      <MoreVertIcon />
+                    </Button>
+                    <Menu
+                      id="basic-menu"
+                      anchorEl={anchorEl}
+                      open={open}
+                      onClose={handleClose}
+                      onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                      slotProps={{
+                        list: {
+                          "aria-labelledby": "basic-button",
+                        },
+                      }}
+                      PaperProps={{ sx: { zIndex: 2100 } }}
+                    >
+                      <MenuItem
+                        onClick={(e: React.MouseEvent) => {
+                          e.stopPropagation();
+                          handleEdit(mod);
+                        }}
+                      >
+                        <IconButton aria-label="edit" color="primary">
+                          <Edit />
+                        </IconButton>{" "}
+                        Edit
+                      </MenuItem>
+                      <MenuItem
+                        onClick={(e: React.MouseEvent) => {
+                          e.stopPropagation();
+                          setSelectedModule(mod);
+                          setOpenDelete(true);
+                        }}
+                      >
+                        <IconButton color="error">
+                          <Delete />
+                        </IconButton>
+                        Delete
+                      </MenuItem>
+                    </Menu>
+                  </div>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    );
+  };
+
   return (
     <div className="p-6">
       <Card className="shadow-md">
@@ -93,115 +227,7 @@ export default function Modules() {
           }
         />
 
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center items-center py-10">
-              <CircularProgress />
-            </div>
-          ) : modules.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16">
-              <EmptyState message="No modules found. Click 'Add Module' to create one." />
-            </div>
-          ) : (
-            <Table className="min-w-full">
-              <TableHead>
-                <TableRow className="bg-gray-100">
-                  <TableCell className="font-semibold">Title</TableCell>
-                  <TableCell className="font-semibold">Duration</TableCell>
-                  <TableCell className="font-semibold">Lessons</TableCell>
-                  <TableCell className="font-semibold">Published</TableCell>
-                  <TableCell className="font-semibold" align="right">
-                    Actions
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-
-              <TableBody>
-                {modules.map((mod) => (
-                  <TableRow key={mod.id} className="hover:bg-gray-50">
-                    <TableCell>{mod.title}</TableCell>
-                    <TableCell>{mod.estimatedDurationMinutes} min</TableCell>
-                    <TableCell>{mod.lessons.length}</TableCell>
-                    <TableCell>
-                      <ToggleButton
-                        value="check"
-                        selected={mod.isPublished}
-                        onChange={() => {
-                          setToggleModuleId(mod.id);
-                          toggleModulePublishMutation.mutate(
-                            {
-                              id: mod.id,
-                              isPublished: !mod.isPublished,
-                            },
-                            {
-                              onSuccess: () => {
-                                setToggleModuleId(null);
-                              },
-                              onError: () => {
-                                setToggleModuleId(null);
-                              },
-                            }
-                          );
-                        }}
-                      >
-                        {toggleModuleId === mod.id ? (
-                          <CircularProgress size={24} />
-                        ) : mod.isPublished ? (
-                          <CheckIcon />
-                        ) : (
-                          <CloseIcon />
-                        )}
-                      </ToggleButton>
-                    </TableCell>
-
-                    <TableCell align="right">
-                      <div>
-                        <Button
-                          id="basic-button"
-                          aria-controls={open ? "basic-menu" : undefined}
-                          aria-haspopup="true"
-                          aria-expanded={open ? "true" : undefined}
-                          onClick={handleClick}
-                        >
-                          <MoreVertIcon />
-                        </Button>
-                        <Menu
-                          id="basic-menu"
-                          anchorEl={anchorEl}
-                          open={open}
-                          onClose={handleClose}
-                          slotProps={{
-                            list: {
-                              "aria-labelledby": "basic-button",
-                            },
-                          }}
-                        >
-                          <MenuItem onClick={() => handleEdit(mod)}>
-                            <IconButton aria-label="edit" color="primary">
-                              <Edit />
-                            </IconButton>{" "}
-                            Edit
-                          </MenuItem>
-                          <MenuItem
-                            onClick={() => {
-                              setSelectedModule(mod);
-                              setOpenDelete(true);
-                            }}
-                          >
-                            <IconButton color="error">
-                              <Delete />
-                            </IconButton>
-                            Delete
-                          </MenuItem>
-                        </Menu>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
+        <CardContent>{renderModulesContent()}</CardContent>
       </Card>
 
       {/* Edit Dialog */}
