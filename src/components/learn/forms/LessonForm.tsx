@@ -89,6 +89,8 @@ const LessonForm: React.FC<LessonFormProps> = ({ initialLesson, onClose }) => {
   const uploadVideoMutation = useVideoUpload();
 
   const contentType = watch("contentType");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const muxId = watch("muxId");
 
   useEffect(() => {
     if (courseId) setValue("courseId", courseId);
@@ -169,7 +171,19 @@ const LessonForm: React.FC<LessonFormProps> = ({ initialLesson, onClose }) => {
 
     uploadVideoMutation.mutate(file, {
       onSuccess: (response: { assetId: string }) => {
-        setValue("muxId", response.assetId);
+        setValue("muxId", response.assetId, { shouldDirty: true });
+        setVideoError(null);
+        toast.success("Video uploaded successfully");
+      },
+      onError: (error) => {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Failed to upload video. Please try again.";
+        setVideoError(errorMessage);
+        setSelectedFile(null);
+        toast.error(errorMessage);
+        console.error("Video upload error:", error);
       },
     });
   };
@@ -201,6 +215,9 @@ const LessonForm: React.FC<LessonFormProps> = ({ initialLesson, onClose }) => {
               {...register("description")}
             />
           </div>
+
+          {/* Hidden muxId field to ensure it's registered with the form */}
+          <input type="hidden" {...register("muxId")} />
 
           {/* Content Type */}
           <div>
@@ -280,12 +297,6 @@ const LessonForm: React.FC<LessonFormProps> = ({ initialLesson, onClose }) => {
 
               {uploadVideoMutation.isPending && <LinearProgress />}
 
-              {uploadVideoMutation.isSuccess && !videoError && (
-                <Typography variant="body2" className="text-green-600">
-                  Video uploaded successfully
-                </Typography>
-              )}
-
               {videoError && (
                 <Typography variant="body2" color="error">
                   {videoError}
@@ -335,9 +346,13 @@ const LessonForm: React.FC<LessonFormProps> = ({ initialLesson, onClose }) => {
             <Button variant="contained" type="submit">
               {(() => {
                 if (initialLesson) {
-                  return updateLessonMutation.isPending ? "Updating..." : "Update Lesson";
+                  return updateLessonMutation.isPending
+                    ? "Updating..."
+                    : "Update Lesson";
                 }
-                return createLessonMutation.isPending ? "Creating..." : "Create Lesson";
+                return createLessonMutation.isPending
+                  ? "Creating..."
+                  : "Create Lesson";
               })()}
             </Button>
           </div>

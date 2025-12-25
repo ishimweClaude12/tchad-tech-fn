@@ -29,4 +29,17 @@ export const modulesApi = {
     );
     return data;
   },
+  delete: async (id: string) => {
+    const { data } = await axiosInstance.delete<ApiResponse<null>>(
+      `/modules/${id}`
+    );
+    return data;
+  },
+  update: async (id: string, data: Partial<Module>) => {
+    const response = await axiosInstance.put<ApiResponse<{ module: Module }>>(
+      `/modules/${id}`,
+      data
+    );
+    return response.data;
+  },
 };

@@ -41,8 +41,6 @@ export const queryKeys = {
   },
 };
 
-
- 
 // ============================================
 // Instructors Hooks
 // ============================================
@@ -272,7 +270,13 @@ export const useCreateModule = () => {
     mutationFn: (module: ModuleFormData) => modulesApi.create(module),
     onSuccess: () => {
       toast.success("Module created successfully");
-      queryClient.invalidateQueries({ queryKey: ["modules"] });
+
+      queryClient.invalidateQueries({
+        queryKey: ["modules"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.courses.all,
+      });
     },
   });
 };
@@ -296,6 +300,9 @@ export const useToggleModulePublished = () => {
     onSuccess: () => {
       toast.success("Module publication status updated");
       queryClient.invalidateQueries({ queryKey: ["modules"] });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.courses.all,
+      });
     },
   });
 };
