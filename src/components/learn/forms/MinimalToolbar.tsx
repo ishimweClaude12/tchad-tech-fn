@@ -1,6 +1,5 @@
 import { useContext } from "react";
 import { EditorContext } from "@tiptap/react";
-import { Button } from "@/components/tiptap-ui-primitive/button";
 import {
   Toolbar,
   ToolbarGroup,

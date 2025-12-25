@@ -89,8 +89,6 @@ const LessonForm: React.FC<LessonFormProps> = ({ initialLesson, onClose }) => {
   const uploadVideoMutation = useVideoUpload();
 
   const contentType = watch("contentType");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const muxId = watch("muxId");
 
   useEffect(() => {
     if (courseId) setValue("courseId", courseId);

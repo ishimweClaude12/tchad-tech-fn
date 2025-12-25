@@ -20,7 +20,7 @@ export const modulesApi = {
     const { data } = await axiosInstance.get<ApiResponse<{ module: Module }>>(
       `/modules/${moduleId}`
     );
-    if (!data.success) return Promise.reject("Module not found");
+    if (!data.success) throw new Error("Module not found");
     return data.data.module;
   },
   publish: async (moduleId: string) => {

@@ -250,7 +250,7 @@ export const ModuleDetails = () => {
                 </Typography>
               </div>
 
-              <div c>
+              <div className="flex items-center gap-2">
                 <Chip
                   label={lesson.isPublished ? "Published" : "Draft"}
                   color={lesson.isPublished ? "success" : "default"}
