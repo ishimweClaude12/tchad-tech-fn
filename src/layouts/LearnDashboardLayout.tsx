@@ -27,8 +27,7 @@ const LearnDashboardLayout: React.FC = () => {
         subCategories: "Sub-Categories",
         modules: "Modules",
         lessons: "Lessons",
-        assignments: "Assignments",
-        quizes: "Quizes",
+
         analytics: "Analytics",
         settings: "Settings",
         backToHome: "Back to Home",
@@ -46,8 +45,7 @@ const LearnDashboardLayout: React.FC = () => {
         subCategories: "Sous-Catégories",
         modules: "Modules",
         lessons: "Leçons",
-        assignments: "Devoirs",
-        quizes: "Quiz",
+
         analytics: "Analytiques",
         settings: "Paramètres",
         backToHome: "Retour à l'Accueil",
@@ -64,8 +62,7 @@ const LearnDashboardLayout: React.FC = () => {
         subCategories: "الفئات الفرعية",
         modules: "الوحدات",
         lessons: "الدروس",
-        assignments: "الواجبات",
-        quizes: "الاختبارات",
+
         categories: "الفئات",
         analytics: "التحليلات",
         settings: "الإعدادات",
@@ -139,18 +136,6 @@ const LearnDashboardLayout: React.FC = () => {
       href: "/learn/dashboard/lessons",
       icon: FolderOpen,
       current: currentPath === "/learn/dashboard/lessons",
-    },
-    {
-      name: currentContent.nav.assignments,
-      href: "/learn/dashboard/assignments",
-      icon: FolderOpen,
-      current: currentPath === "/learn/dashboard/assignments",
-    },
-    {
-      name: currentContent.nav.quizes,
-      href: "/learn/dashboard/quizes",
-      icon: FolderOpen,
-      current: currentPath === "/learn/dashboard/quizes",
     },
   ];
 

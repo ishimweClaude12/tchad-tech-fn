@@ -27,6 +27,7 @@ import { useState } from "react";
 import type { ModuleFormData, Module } from "src/types/Module.types";
 
 import ModuleFormModal from "./forms/ModuleForm";
+import QuizCreateModal from "./forms/QuizForm";
 import {
   queryKeys,
   useCreateModule,
@@ -41,6 +42,14 @@ import { useUpdateModule } from "../../hooks/learn/useModulesApi";
 import PublishIcon from "@mui/icons-material/PublishOutlined";
 import UnpublishIcon from "@mui/icons-material/UnpublishedOutlined";
 import toast from "react-hot-toast";
+import {
+  useCourseQuizzes,
+  useCreateQuiz,
+  useDeleteQuiz,
+  useUpdateQuiz,
+} from "../../hooks/learn/useQuizApi";
+import QuizCard from "./QuizCard";
+import type { Quiz } from "src/types/Quiz.types";
 
 export const CourseDetails = () => {
   const queryClient = useQueryClient();
@@ -50,9 +59,17 @@ export const CourseDetails = () => {
   const [openCreate, setOpenCreate] = useState<boolean>(false);
   const [openDelete, setOpenDelete] = useState<boolean>(false);
   const [openPublishConfirm, setOpenPublishConfirm] = useState<boolean>(false);
+  const [openQuizForm, setOpenQuizForm] = useState<boolean>(false);
+  const [openQuizDelete, setOpenQuizDelete] = useState<boolean>(false);
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
+  const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const { data: modulesData, isLoading, error } = useCourseModules(courseId);
+  const {
+    data: quizzesData,
+    isLoading: isQuizzesLoading,
+    error: quizzesError,
+  } = useCourseQuizzes(courseId);
   const {
     data: courseData,
     isLoading: isCourseLoading,
@@ -62,6 +79,9 @@ export const CourseDetails = () => {
   const deleteModuleMutation = useDeleteModule();
   const toggleModulePublishMutation = useToggleModulePublished();
   const updateModuleMutation = useUpdateModule();
+  const createQuizMutation = useCreateQuiz();
+  const updateQuizMutation = useUpdateQuiz();
+  const deleteQuizMutation = useDeleteQuiz();
 
   const handleMenuClose = () => {
     setAnchorEl(null);
@@ -144,6 +164,9 @@ export const CourseDetails = () => {
               <Button variant="outlined" onClick={() => setOpenCreate(true)}>
                 Add Module
               </Button>
+              <Button variant="outlined" onClick={() => setOpenQuizForm(true)}>
+                Add Quiz
+              </Button>
             </div>
           </div>
         </CardContent>
@@ -225,7 +248,7 @@ export const CourseDetails = () => {
 
         {modules.length === 0 ? (
           <Card>
-            <CardContent className="text-center text-gray-500">
+            <CardContent className="text-center text-gray-500 mt-2">
               No modules added yet.
             </CardContent>
           </Card>
@@ -234,7 +257,7 @@ export const CourseDetails = () => {
             <Card
               key={module.id}
               onClick={() => navigate(`module/${module.id}`)}
-              className="cursor-pointer transition hover:shadow-lg"
+              className="cursor-pointer transition hover:shadow-lg mt-2"
             >
               <CardContent className="flex justify-between items-start gap-4">
                 <div className="space-y-1">
@@ -273,6 +296,48 @@ export const CourseDetails = () => {
         )}
       </div>
 
+      {/* Quizes */}
+
+      {quizzesError && (
+        <div className="text-center text-red-500">
+          Failed to load course quizzes.
+        </div>
+      )}
+
+      {isQuizzesLoading && (
+        <div className="flex justify-center items-center h-64">
+          <CircularProgress />
+        </div>
+      )}
+
+      <Typography variant="h5" fontWeight={600}>
+        Course Quizzes
+      </Typography>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+        {quizzesData?.data.quizzes.length === 0 && (
+          <div className="text-gray-600">
+            No quizzes available for this course.
+          </div>
+        )}
+
+        {quizzesData?.data.quizzes.map((quiz) => (
+          <QuizCard
+            key={quiz.id}
+            quiz={quiz}
+            onClick={() => {
+              navigate(`quiz/${quiz.id}`);
+            }}
+            onEdit={(quiz) => {
+              setSelectedQuiz(quiz);
+              setOpenQuizForm(true);
+            }}
+            onDelete={(quiz) => {
+              setSelectedQuiz(quiz);
+              setOpenQuizDelete(true);
+            }}
+          />
+        ))}
+      </div>
       {/* Context Menu */}
       <Menu
         anchorEl={anchorEl}
@@ -515,6 +580,78 @@ export const CourseDetails = () => {
           </Dialog>
         );
       })()}
+
+      {/* Quiz Delete Confirmation Dialog */}
+      <Dialog
+        open={openQuizDelete}
+        onClose={() => setOpenQuizDelete(false)}
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent className="py-4">
+          <Typography>
+            Are you sure you want to delete the quiz "{selectedQuiz?.title}"?
+          </Typography>
+          <div className="mt-4 flex justify-end space-x-2 gap-2">
+            <Button
+              onClick={() => setOpenQuizDelete(false)}
+              variant="outlined"
+              disabled={deleteQuizMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (selectedQuiz) {
+                  deleteQuizMutation.mutate(selectedQuiz.id, {
+                    onSuccess: () => {
+                      setOpenQuizDelete(false);
+                      setSelectedQuiz(null);
+                      queryClient.invalidateQueries({
+                        queryKey: ["courseQuizzes", courseId],
+                      });
+                      toast.success("Quiz deleted successfully");
+                    },
+                    onError: (error) => {
+                      toast.error("Failed to delete quiz");
+                      console.error("Error deleting quiz:", error);
+                    },
+                  });
+                }
+              }}
+              variant="contained"
+              color="error"
+              disabled={deleteQuizMutation.isPending}
+            >
+              {deleteQuizMutation.isPending ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : (
+                "Delete"
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Quiz Form Modal */}
+      <QuizCreateModal
+        open={openQuizForm}
+        onClose={() => {
+          setOpenQuizForm(false);
+          setSelectedQuiz(null);
+        }}
+        courseId={courseId}
+        quiz={selectedQuiz}
+        createQuizMutation={createQuizMutation}
+        updateQuizMutation={updateQuizMutation}
+        queryClient={queryClient}
+        onSuccessCallback={() => {
+          queryClient.invalidateQueries({
+            queryKey: ["courseQuizzes", courseId],
+          });
+        }}
+      />
     </div>
   );
 };
