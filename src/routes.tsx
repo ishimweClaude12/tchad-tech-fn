@@ -18,7 +18,7 @@ import AboutUsPage from "./pages/home/AboutPage";
 import ContactUsPage from "./pages/home/ContactUsPage";
 import NotFound from "./pages/shared/NotFound";
 import DashboardOverview from "./pages/learn/DashboardOverview";
-import E_LearningUsersAdmin from "./pages/learn/E_LearningUsers";
+import ELearningUsersAdmin from "./pages/learn/E_LearningUsers";
 import CourseCategoriesAdmin from "./pages/learn/CourseCategories";
 import CourseSubCategoriesAdmin from "./pages/learn/CourseSubCategories";
 import CoursesAdmin from "./pages/learn/Courses";
@@ -26,6 +26,7 @@ import Modules from "./pages/learn/Modules";
 import CourseLessons from "./pages/learn/CourseLessons";
 import { CourseDetails } from "./components/learn/CourseDetails";
 import { ModuleDetails } from "./pages/learn/ModuleDetails";
+import QuizDetails from "./pages/learn/QuizDetails";
 
 export default function AppRouter() {
   return (
@@ -51,10 +52,18 @@ export default function AppRouter() {
         <Route path="courses" element={<CoursesAdmin />} />
         <Route path="courses/:courseId" element={<CourseDetails />} />
         <Route
+          path="courses/:courseId/quiz/:quizId"
+          element={<QuizDetails />}
+        />
+        <Route
           path="courses/:courseId/module/:moduleId"
           element={<ModuleDetails />}
         />
-        <Route path="users" element={<E_LearningUsersAdmin />} />
+        <Route
+          path="courses/:courseId/module/:moduleId/quiz/:quizId"
+          element={<QuizDetails />}
+        />
+        <Route path="users" element={<ELearningUsersAdmin />} />
         <Route path="my-learning" element={<div>My Learning Page</div>} />
         <Route path="categories" element={<CourseCategoriesAdmin />} />
         <Route path="sub-categories" element={<CourseSubCategoriesAdmin />} />

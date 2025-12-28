@@ -19,7 +19,7 @@ import Modal from "@mui/material/Modal";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 
-const E_LearningUsersAdmin: React.FC = () => {
+const ELearningUsersAdmin: React.FC = () => {
   const { language, isRTL } = useLanguage();
   const [currentPage] = useState(1);
 
@@ -790,4 +790,4 @@ const E_LearningUsersAdmin: React.FC = () => {
   );
 };
 
-export default E_LearningUsersAdmin;
+export default ELearningUsersAdmin;

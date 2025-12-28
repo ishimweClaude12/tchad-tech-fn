@@ -29,6 +29,17 @@ import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { EditIcon } from "lucide-react";
 import type { Lesson } from "src/types/CourseLessons.types";
+import {
+  useModuleQuizzes,
+  useCreateQuiz,
+  useUpdateQuiz,
+  useDeleteQuiz,
+  useLessonQuizzes,
+} from "../../hooks/learn/useQuizApi";
+import QuizCard from "../../components/learn/QuizCard";
+import QuizFormModal from "../../components/learn/forms/QuizForm";
+import type { Quiz } from "src/types/Quiz.types";
+import { useQueryClient } from "@tanstack/react-query";
 const style = {
   position: "absolute",
   top: "50%",
@@ -40,9 +51,13 @@ const style = {
   p: 4,
 };
 
+const videoUrl =
+  "https://stream.mux.com/aTuXVCeIRFsp028hxTqp3YC1ATGKrhUinhQ2bHN002wzs.m3u8?token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhVHVYVkNlSVJGc3AwMjhoeFRxcDNZQzFBVEdLcmhVaW5oUTJiSE4wMDJ3enMiLCJhdWQiOiJ2IiwiZXhwIjoxNzY2NzY0Nzc1LCJraWQiOiJhQ2lJVWV5aHcwMlRWY0pFYkMyRmVYbDU5TlNBYWtDSHZZVXZicHRESFFFZyIsImlhdCI6MTc2Njc1NzU3NX0.eDZoBfXc3AIdROinNqgvgRuxKl_D8YspwYpLXm_ikRRtXXQPs_3zGufTYF5AEAID87QbP9cxwAmKcaXDSaO0fBEuxAr6F1kMBoSoSfwsbroN-I7RO2grCR0PyefG3oUxYvTB92Uiv9Kxsg5hCEv_2fyynZI02-256KU2mijRGo0aUeQkj9Bup11ltsaFkV1x_qsrFCT0so4dpzqE9yoIiiG2jZ5oCL5uGynQ6Bl6jli_m5w2aRsEKx_yQ6DSuzCPrg2MyrMf0UjSII58h5Z4hjkXRvz7GzUqEul38iqV7wM40RJHC5GkuYmBsOTQ_bomAhPN9yQf5ijzP57NYo3wlQ";
+
 export const ModuleDetails = () => {
   const { moduleId } = useParams<{ moduleId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [menuTargetLesson, setMenuTargetLesson] = useState<Lesson | null>(null);
@@ -52,6 +67,17 @@ export const ModuleDetails = () => {
   const [lessonToDelete, setLessonToDelete] = useState<Lesson | null>(null);
   const [publishConfirmOpen, setPublishConfirmOpen] = useState(false);
   const [lessonToPublish, setLessonToPublish] = useState<Lesson | null>(null);
+  const [openQuizForm, setOpenQuizForm] = useState<boolean>(false);
+  const [openQuizDelete, setOpenQuizDelete] = useState<boolean>(false);
+  const [editingQuiz, setEditingQuiz] = useState<Quiz | null>(null);
+  const [quizToDelete, setQuizToDelete] = useState<Quiz | null>(null);
+  const [openLessonQuizForm, setOpenLessonQuizForm] = useState<boolean>(false);
+  const [editingLessonQuiz, setEditingLessonQuiz] = useState<Quiz | null>(null);
+  const [lessonQuizToDelete, setLessonQuizToDelete] = useState<Quiz | null>(
+    null
+  );
+  const [openLessonQuizDelete, setOpenLessonQuizDelete] =
+    useState<boolean>(false);
   // Handlers
   const handleOpen = () => {
     setEditingLesson(null);
@@ -104,6 +130,65 @@ export const ModuleDetails = () => {
     setSelectedLesson(lesson);
   };
 
+  // Quiz handlers
+  const handleOpenQuizForm = () => {
+    setEditingQuiz(null);
+    setOpenQuizForm(true);
+  };
+
+  const handleEditQuiz = (quiz: Quiz) => {
+    setEditingQuiz(quiz);
+    setOpenQuizForm(true);
+  };
+
+  const handleDeleteQuiz = (quiz: Quiz) => {
+    setQuizToDelete(quiz);
+    setOpenQuizDelete(true);
+  };
+
+  const handleConfirmDeleteQuiz = () => {
+    if (!quizToDelete) return;
+    deleteQuizMutation.mutate(quizToDelete.id, {
+      onSuccess: () => {
+        setOpenQuizDelete(false);
+        setQuizToDelete(null);
+        queryClient.invalidateQueries({
+          queryKey: ["moduleQuizzes", moduleId],
+        });
+      },
+    });
+  };
+
+  // Lesson-specific quiz handlers
+  const handleOpenLessonQuizForm = () => {
+    setEditingLessonQuiz(null);
+
+    setOpenLessonQuizForm(true);
+  };
+
+  const handleEditLessonQuiz = (quiz: Quiz) => {
+    setEditingLessonQuiz(quiz);
+    setOpenLessonQuizForm(true);
+  };
+
+  const handleDeleteLessonQuiz = (quiz: Quiz) => {
+    setLessonQuizToDelete(quiz);
+    setOpenLessonQuizDelete(true);
+  };
+
+  const handleConfirmDeleteLessonQuiz = () => {
+    if (!lessonQuizToDelete) return;
+    deleteQuizMutation.mutate(lessonQuizToDelete.id, {
+      onSuccess: () => {
+        setOpenLessonQuizDelete(false);
+        setLessonQuizToDelete(null);
+        queryClient.invalidateQueries({
+          queryKey: ["lessonQuizzes", selectedLesson?.id],
+        });
+      },
+    });
+  };
+
   const {
     data: moduleData,
     isLoading,
@@ -116,8 +201,20 @@ export const ModuleDetails = () => {
     isError: lessonsError,
   } = useLessonsByModuleId(moduleId || "");
 
+  const {
+    data: quizzesData,
+    isLoading: isQuizzesLoading,
+    error: quizzesError,
+  } = useModuleQuizzes(moduleId || "");
+
+  const { data: lessonQuizes, isLoading: lessonQuizesLoading } =
+    useLessonQuizzes(selectedLesson?.id || "");
+
   const deleteLessonMutation = useDeleteLesson();
   const publishLessonMutation = usePublishLesson();
+  const createQuizMutation = useCreateQuiz();
+  const updateQuizMutation = useUpdateQuiz();
+  const deleteQuizMutation = useDeleteQuiz();
 
   if (isLoading || lessonsLoading) {
     return (
@@ -202,6 +299,9 @@ export const ModuleDetails = () => {
             <Button variant="outlined" onClick={handleOpen}>
               Add Lesson
             </Button>
+            <Button variant="contained" onClick={handleOpenQuizForm}>
+              Add Quiz
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -271,6 +371,51 @@ export const ModuleDetails = () => {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* Quizes */}
+      <div style={{ position: "relative", zIndex: 1 }}>
+        <Typography variant="h5" fontWeight={600}>
+          Module Quizzes
+        </Typography>
+
+        {quizzesError && (
+          <div className="text-center text-red-500 mt-2">
+            Failed to load module quizzes.
+          </div>
+        )}
+
+        {isQuizzesLoading && (
+          <div className="flex justify-center items-center h-64 mt-4">
+            <CircularProgress />
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+          {quizzesData?.data.quizzes.length === 0 && (
+            <div className="text-gray-600">
+              No quizzes available for this course.
+            </div>
+          )}
+
+          {quizzesData?.data.quizzes.map((quiz) => (
+            <QuizCard
+              key={quiz.id}
+              quiz={quiz}
+              onClick={() => {
+                navigate(
+                  `/learn/dashboard/courses/${module.courseId}/module/${moduleId}/quiz/${quiz.id}`
+                );
+              }}
+              onEdit={(quiz) => {
+                handleEditQuiz(quiz);
+              }}
+              onDelete={(quiz) => {
+                handleDeleteQuiz(quiz);
+              }}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Context Menu */}
@@ -434,10 +579,50 @@ export const ModuleDetails = () => {
           />
         </Box>
       </Modal>
-      {selectedLesson && (
+
+      {/* Quiz Form Modal */}
+      <QuizFormModal
+        open={openQuizForm}
+        onClose={() => {
+          setOpenQuizForm(false);
+          setEditingQuiz(null);
+        }}
+        quiz={editingQuiz}
+        createQuizMutation={createQuizMutation}
+        updateQuizMutation={updateQuizMutation}
+        queryClient={queryClient}
+        moduleId={moduleId}
+        onSuccessCallback={() => {
+          queryClient.invalidateQueries({
+            queryKey: ["moduleQuizzes", moduleId],
+          });
+        }}
+      />
+
+      {/* Lesson-specific Quiz Form Modal */}
+      <QuizFormModal
+        open={openLessonQuizForm}
+        onClose={() => {
+          setOpenLessonQuizForm(false);
+          setEditingLessonQuiz(null);
+        }}
+        quiz={editingLessonQuiz}
+        createQuizMutation={createQuizMutation}
+        updateQuizMutation={updateQuizMutation}
+        queryClient={queryClient}
+        lessonId={selectedLesson?.id}
+        onSuccessCallback={() => {
+          queryClient.invalidateQueries({
+            queryKey: ["lessonQuizzes", selectedLesson?.id],
+          });
+        }}
+      />
+
+      {selectedLesson && !openLessonQuizForm && (
         <Modal
           open={Boolean(selectedLesson)}
           onClose={() => setSelectedLesson(null)}
+          sx={{ zIndex: 1500 }}
         >
           <Box
             sx={{
@@ -451,6 +636,7 @@ export const ModuleDetails = () => {
               boxShadow: 24,
               borderRadius: 2,
               overflowY: "auto",
+              zIndex: 1500,
             }}
           >
             <Card elevation={0}>
@@ -535,21 +721,61 @@ export const ModuleDetails = () => {
                       Video Lesson
                     </Typography>
 
-                    {selectedLesson.contentUrl ? (
-                      <video
-                        controls
-                        className="w-full rounded-lg border"
-                        src={selectedLesson.contentUrl}
-                      >
-                        <track kind="captions" src="" label="English" />
-                      </video>
-                    ) : (
-                      <Typography className="text-gray-500">
-                        Video uploaded via Mux
-                      </Typography>
-                    )}
+                    <video
+                      controls
+                      className="w-full rounded-lg border"
+                      src={videoUrl}
+                    >
+                      <track kind="captions" src="" label="English" />
+                    </video>
                   </div>
                 )}
+
+                {/* Quizzes Section */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Typography variant="h6" fontWeight={600}>
+                      Associated Quizzes
+                    </Typography>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      onClick={handleOpenLessonQuizForm}
+                    >
+                      Add Quiz
+                    </Button>
+                  </div>
+                  {lessonQuizesLoading && (
+                    <div className="flex justify-center items-center h-32">
+                      <CircularProgress />
+                    </div>
+                  )}
+                  {!lessonQuizesLoading &&
+                    lessonQuizes?.data.quizzes.length === 0 && (
+                      <Typography className="text-gray-600">
+                        No quizzes associated with this lesson.
+                      </Typography>
+                    )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {lessonQuizes?.data.quizzes.map((quiz) => (
+                      <QuizCard
+                        key={quiz.id}
+                        quiz={quiz}
+                        onClick={() => {
+                          navigate(
+                            `/learn/dashboard/courses/${module.courseId}/module/${moduleId}/quiz/${quiz.id}`
+                          );
+                        }}
+                        onEdit={(quiz) => {
+                          handleEditLessonQuiz(quiz);
+                        }}
+                        onDelete={(quiz) => {
+                          handleDeleteLessonQuiz(quiz);
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
 
                 {/* Footer Actions */}
                 <div className="flex justify-end gap-3 pt-4">
@@ -565,6 +791,86 @@ export const ModuleDetails = () => {
           </Box>
         </Modal>
       )}
+
+      {/* Quiz Delete Confirmation Modal */}
+      <Modal
+        open={openQuizDelete}
+        onClose={() => {
+          setOpenQuizDelete(false);
+          setQuizToDelete(null);
+        }}
+      >
+        <Box sx={{ ...style, width: 480 }}>
+          <Typography variant="h6" fontWeight={600} gutterBottom>
+            Delete Quiz
+          </Typography>
+
+          <Typography className="mb-4">
+            Are you sure you want to delete "{quizToDelete?.title}"? This action
+            cannot be undone.
+          </Typography>
+
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setOpenQuizDelete(false);
+                setQuizToDelete(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              disabled={deleteQuizMutation.isPending}
+              onClick={handleConfirmDeleteQuiz}
+            >
+              {deleteQuizMutation.isPending ? "Deleting..." : "Delete"}
+            </Button>
+          </div>
+        </Box>
+      </Modal>
+
+      {/* Lesson Quiz Delete Confirmation Modal */}
+      <Modal
+        open={openLessonQuizDelete}
+        onClose={() => {
+          setOpenLessonQuizDelete(false);
+          setLessonQuizToDelete(null);
+        }}
+      >
+        <Box sx={{ ...style, width: 480 }}>
+          <Typography variant="h6" fontWeight={600} gutterBottom>
+            Delete Quiz
+          </Typography>
+
+          <Typography className="mb-4">
+            Are you sure you want to delete "{lessonQuizToDelete?.title}"? This
+            action cannot be undone.
+          </Typography>
+
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setOpenLessonQuizDelete(false);
+                setLessonQuizToDelete(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              disabled={deleteQuizMutation.isPending}
+              onClick={handleConfirmDeleteLessonQuiz}
+            >
+              {deleteQuizMutation.isPending ? "Deleting..." : "Delete"}
+            </Button>
+          </div>
+        </Box>
+      </Modal>
     </div>
   );
 };
