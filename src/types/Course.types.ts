@@ -2,8 +2,10 @@ import type { ApiResponse, PaginationMeta } from "./Api.types";
 import type { CourseCategory } from "./CourseCategories.types";
 
 export interface CourseResponse {
-  courses: Course[];
-  meta: PaginationMeta;
+  courses: {
+    data: Course[];
+    meta: PaginationMeta;
+  };
 }
 
 export interface Course {
@@ -27,7 +29,7 @@ export interface Course {
   categoryId: string;
   subcategoryId: string;
   tags: string[];
-  status: string;
+  status: CourseStatus;
   publicationDate: string | null;
   lastUpdatedDate: string | null;
   enrollmentCount: number;
@@ -52,6 +54,11 @@ export interface Instructor {
   id: string;
   userId: string;
   role: string;
+}
+
+export enum CourseStatus {
+  DRAFT = "DRAFT",
+  PUBLISHED = "PUBLISHED",
 }
 
 export interface MuxVideo {

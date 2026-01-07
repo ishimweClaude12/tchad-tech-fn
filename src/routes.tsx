@@ -27,6 +27,7 @@ import CourseLessons from "./pages/learn/CourseLessons";
 import { CourseDetails } from "./components/learn/CourseDetails";
 import { ModuleDetails } from "./pages/learn/ModuleDetails";
 import QuizDetails from "./pages/learn/QuizDetails";
+import MoreCourseDetails from "./components/learn/MoreCourseDetails";
 
 export default function AppRouter() {
   return (
@@ -35,6 +36,7 @@ export default function AppRouter() {
       <Route element={<MainLayout />}>
         <Route index element={<Home />} />
         <Route path="/learn" element={<LearnHome />} />
+        <Route path="/learn/course/:slug" element={<MoreCourseDetails />} />
         <Route path="/shop" element={<ShopHome />} />
         <Route path="/about-us" element={<AboutUsPage />} />
         <Route path="/contact-us" element={<ContactUsPage />} />

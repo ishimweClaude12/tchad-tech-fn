@@ -21,7 +21,7 @@ export const useCourses = (filters?: {
 };
 
 // Get course by ID
-export const useCourse = (id: string) => {
+export const useCourseById = (id: string) => {
   return useQuery({
     queryKey: queryKeys.courses.detail(id),
     queryFn: () => coursesApi.getById(id),
@@ -58,6 +58,9 @@ export const useUpdateCourse = () => {
         queryKey: queryKeys.courses.detail(variables.id),
       });
     },
+    onError: () => {
+      toast.error("Failed to update course");
+    },
   });
 };
 
@@ -71,6 +74,9 @@ export const useDeleteCourse = () => {
       toast.success("Course deleted successfully");
       queryClient.invalidateQueries({ queryKey: queryKeys.courses.all });
     },
+    onError: () => {
+      toast.error("Failed to delete course");
+    },
   });
 };
 
@@ -83,12 +89,11 @@ export const useCourseBySlug = (slug: string) => {
   });
 };
 
-// Get course by ID
-export const useCourseById = (id: string) => {
+// Get Published courses
+export const usePublishedCourses = () => {
   return useQuery({
-    queryKey: queryKeys.courses.detail(id),
-    queryFn: () => coursesApi.getById(id),
-    enabled: !!id,
+    queryKey: queryKeys.courses.published(),
+    queryFn: () => coursesApi.getPublishedCourses(),
   });
 };
 
@@ -98,5 +103,23 @@ export const useCourseModules = (courseId: string) => {
     queryKey: queryKeys.courses.modules(courseId),
     queryFn: () => coursesApi.getAllCourseModules(courseId),
     enabled: !!courseId,
+  });
+};
+
+// publish or unpublish course
+export const usePublishCourse = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, publish }: { id: string; publish: boolean }) =>
+      coursesApi.publish(id, publish),
+    onSuccess: (_, variables) => {
+      toast.success(
+        `Course ${variables.publish ? "published" : "unpublished"} successfully`
+      );
+      queryClient.invalidateQueries({ queryKey: queryKeys.courses.all });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.courses.detail(variables.id),
+      });
+    },
   });
 };

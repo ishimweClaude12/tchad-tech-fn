@@ -36,7 +36,18 @@ export const coursesApi = {
 
   // Update course
   update: async (id: string, course: Partial<Course>) => {
-    const { data } = await axiosInstance.put<Course>(`/courses/${id}`, course);
+    const { data } = await axiosInstance.put<Course>(`/courses/${id}`, {
+      ...course,
+      estimatedDurationHours: Number(course.estimatedDurationHours),
+    });
+    return data;
+  },
+
+  // Publish or unpublish course
+  publish: async (id: string, publish: boolean) => {
+    const { data } = await axiosInstance.put<Course>(`/courses/${id}`, {
+      status: publish ? "PUBLISHED" : "DRAFT",
+    });
     return data;
   },
 
@@ -60,6 +71,12 @@ export const coursesApi = {
   getAllCourseModules: async (courseId: string) => {
     const { data } = await axiosInstance.get<GetCourseModulesApiResponse>(
       `/modules/course/${courseId}/all`
+    );
+    return data;
+  },
+  getPublishedCourses: async () => {
+    const { data } = await axiosInstance.get<GetCoursesApiResponse>(
+      "/courses/published"
     );
     return data;
   },

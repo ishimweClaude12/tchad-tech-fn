@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { X, Plus, Trash2, Upload, Video } from "lucide-react";
+import { X, Plus, Trash2, Upload, Video, AlertCircle } from "lucide-react";
 import { Button } from "@mui/material";
+import { useImageUpload } from "../../../hooks/learn/useVideoApi";
 
 // Types
 interface CourseFormData {
@@ -15,8 +16,7 @@ interface CourseFormData {
   learningObjectives: string[];
   prerequisites: string;
   targetAudience: string;
-  difficultyLevel: "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "EXPERT";
-  estimatedDurationHours: number;
+  difficultyLevel: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
   price: number;
   discountPrice: number;
   currency: string;
@@ -33,251 +33,23 @@ interface CourseFormProps {
   categories: Array<{ id: string; name: string }>;
   subcategories: Array<{ id: string; name: string; categoryId: string }>;
   instructorId: string;
-  language?: "en" | "fr" | "ar";
 }
 
 interface FormErrors {
   [key: string]: string;
 }
 
-// Translations
-const translations = {
-  en: {
-    createCourse: "Create New Course",
-    editCourse: "Edit Course",
-    basicInformation: "Basic Information",
-    courseTitle: "Course Title",
-    courseTitlePlaceholder: "Enter course title",
-    slug: "URL Slug",
-    slugPlaceholder: "course-url-slug",
-    subtitle: "Subtitle",
-    subtitlePlaceholder: "Brief subtitle for the course",
-    description: "Full Description",
-    descriptionPlaceholder: "Detailed course description...",
-    shortDescription: "Short Description",
-    shortDescriptionPlaceholder: "Brief overview (max 200 characters)",
-
-    mediaAssets: "Media Assets",
-    thumbnailUrl: "Thumbnail URL",
-    thumbnailPlaceholder: "https://example.com/thumbnail.jpg",
-    previewVideo: "Preview Video URL",
-    previewVideoPlaceholder: "https://example.com/preview.mp4",
-    uploadThumbnail: "Upload Thumbnail",
-    uploadVideo: "Upload Video",
-
-    learningContent: "Learning Content",
-    learningObjectives: "Learning Objectives",
-    addObjective: "Add Objective",
-    objectivePlaceholder: "What will students learn?",
-    prerequisites: "Prerequisites",
-    prerequisitesPlaceholder: "Required knowledge or skills",
-    targetAudience: "Target Audience",
-    targetAudiencePlaceholder: "Who is this course for?",
-
-    courseDetails: "Course Details",
-    difficultyLevel: "Difficulty Level",
-    beginner: "Beginner",
-    intermediate: "Intermediate",
-    advanced: "Advanced",
-    expert: "Expert",
-    estimatedDuration: "Estimated Duration (hours)",
-    durationPlaceholder: "0.0",
-
-    pricingCategory: "Pricing & Category",
-    price: "Regular Price",
-    pricePlaceholder: "0.00",
-    discountPrice: "Discount Price",
-    discountPlaceholder: "0.00",
-    currency: "Currency",
-    category: "Category",
-    selectCategory: "Select a category",
-    subcategory: "Subcategory",
-    selectSubcategory: "Select a subcategory",
-
-    additionalInfo: "Additional Information",
-    tags: "Tags",
-    addTag: "Add Tag",
-    tagPlaceholder: "Enter tag and press Enter",
-    hasCertificate: "Offers Certificate",
-    certificateDescription:
-      "Students will receive a certificate upon completion",
-
-    submit: "Create Course",
-    update: "Update Course",
-    cancel: "Cancel",
-    submitting: "Submitting...",
-
-    errors: {
-      required: "This field is required",
-      minLength: "Must be at least {{min}} characters",
-      maxLength: "Must not exceed {{max}} characters",
-      invalidUrl: "Please enter a valid URL",
-      invalidNumber: "Please enter a valid number",
-      minValue: "Must be greater than {{min}}",
-      maxValue: "Must not exceed {{max}}",
-      invalidSlug:
-        "Slug can only contain lowercase letters, numbers, and hyphens",
-      discountGreaterThanPrice:
-        "Discount price cannot be greater than regular price",
-    },
-  },
-  fr: {
-    createCourse: "Créer un Nouveau Cours",
-    editCourse: "Modifier le Cours",
-    basicInformation: "Informations de Base",
-    courseTitle: "Titre du Cours",
-    courseTitlePlaceholder: "Entrez le titre du cours",
-    slug: "URL Slug",
-    slugPlaceholder: "url-du-cours",
-    subtitle: "Sous-titre",
-    subtitlePlaceholder: "Bref sous-titre pour le cours",
-    description: "Description Complète",
-    descriptionPlaceholder: "Description détaillée du cours...",
-    shortDescription: "Description Courte",
-    shortDescriptionPlaceholder: "Aperçu bref (max 200 caractères)",
-
-    mediaAssets: "Médias",
-    thumbnailUrl: "URL de la Vignette",
-    thumbnailPlaceholder: "https://exemple.com/vignette.jpg",
-    previewVideo: "URL de la Vidéo de Prévisualisation",
-    previewVideoPlaceholder: "https://exemple.com/preview.mp4",
-    uploadThumbnail: "Télécharger la Vignette",
-    uploadVideo: "Télécharger la Vidéo",
-
-    learningContent: "Contenu d'Apprentissage",
-    learningObjectives: "Objectifs d'Apprentissage",
-    addObjective: "Ajouter un Objectif",
-    objectivePlaceholder: "Qu'apprendront les étudiants?",
-    prerequisites: "Prérequis",
-    prerequisitesPlaceholder: "Connaissances ou compétences requises",
-    targetAudience: "Public Cible",
-    targetAudiencePlaceholder: "À qui s'adresse ce cours?",
-
-    courseDetails: "Détails du Cours",
-    difficultyLevel: "Niveau de Difficulté",
-    beginner: "Débutant",
-    intermediate: "Intermédiaire",
-    advanced: "Avancé",
-    expert: "Expert",
-    estimatedDuration: "Durée Estimée (heures)",
-    durationPlaceholder: "0.0",
-
-    pricingCategory: "Prix et Catégorie",
-    price: "Prix Normal",
-    pricePlaceholder: "0.00",
-    discountPrice: "Prix Réduit",
-    discountPlaceholder: "0.00",
-    currency: "Devise",
-    category: "Catégorie",
-    selectCategory: "Sélectionnez une catégorie",
-    subcategory: "Sous-catégorie",
-    selectSubcategory: "Sélectionnez une sous-catégorie",
-
-    additionalInfo: "Informations Supplémentaires",
-    tags: "Étiquettes",
-    addTag: "Ajouter une Étiquette",
-    tagPlaceholder: "Entrez l'étiquette et appuyez sur Entrée",
-    hasCertificate: "Offre un Certificat",
-    certificateDescription:
-      "Les étudiants recevront un certificat à l'achèvement",
-
-    submit: "Créer le Cours",
-    update: "Mettre à Jour le Cours",
-    cancel: "Annuler",
-    submitting: "Envoi en cours...",
-
-    errors: {
-      required: "Ce champ est requis",
-      minLength: "Doit contenir au moins {{min}} caractères",
-      maxLength: "Ne doit pas dépasser {{max}} caractères",
-      invalidUrl: "Veuillez entrer une URL valide",
-      invalidNumber: "Veuillez entrer un nombre valide",
-      minValue: "Doit être supérieur à {{min}}",
-      maxValue: "Ne doit pas dépasser {{max}}",
-      invalidSlug:
-        "Le slug ne peut contenir que des lettres minuscules, des chiffres et des tirets",
-      discountGreaterThanPrice:
-        "Le prix réduit ne peut pas être supérieur au prix normal",
-    },
-  },
-  ar: {
-    createCourse: "إنشاء دورة جديدة",
-    editCourse: "تعديل الدورة",
-    basicInformation: "المعلومات الأساسية",
-    courseTitle: "عنوان الدورة",
-    courseTitlePlaceholder: "أدخل عنوان الدورة",
-    slug: "الرابط المختصر",
-    slugPlaceholder: "رابط-الدورة",
-    subtitle: "العنوان الفرعي",
-    subtitlePlaceholder: "عنوان فرعي موجز للدورة",
-    description: "الوصف الكامل",
-    descriptionPlaceholder: "وصف تفصيلي للدورة...",
-    shortDescription: "وصف مختصر",
-    shortDescriptionPlaceholder: "نظرة عامة موجزة (بحد أقصى 200 حرف)",
-
-    mediaAssets: "ملفات الوسائط",
-    thumbnailUrl: "رابط الصورة المصغرة",
-    thumbnailPlaceholder: "https://example.com/thumbnail.jpg",
-    previewVideo: "رابط فيديو المعاينة",
-    previewVideoPlaceholder: "https://example.com/preview.mp4",
-    uploadThumbnail: "تحميل الصورة المصغرة",
-    uploadVideo: "تحميل الفيديو",
-
-    learningContent: "محتوى التعلم",
-    learningObjectives: "أهداف التعلم",
-    addObjective: "إضافة هدف",
-    objectivePlaceholder: "ماذا سيتعلم الطلاب؟",
-    prerequisites: "المتطلبات الأساسية",
-    prerequisitesPlaceholder: "المعرفة أو المهارات المطلوبة",
-    targetAudience: "الجمهور المستهدف",
-    targetAudiencePlaceholder: "لمن هذه الدورة؟",
-
-    courseDetails: "تفاصيل الدورة",
-    difficultyLevel: "مستوى الصعوبة",
-    beginner: "مبتدئ",
-    intermediate: "متوسط",
-    advanced: "متقدم",
-    expert: "خبير",
-    estimatedDuration: "المدة المقدرة (ساعات)",
-    durationPlaceholder: "0.0",
-
-    pricingCategory: "السعر والفئة",
-    price: "السعر العادي",
-    pricePlaceholder: "0.00",
-    discountPrice: "السعر المخفض",
-    discountPlaceholder: "0.00",
-    currency: "العملة",
-    category: "الفئة",
-    selectCategory: "اختر فئة",
-    subcategory: "الفئة الفرعية",
-    selectSubcategory: "اختر فئة فرعية",
-
-    additionalInfo: "معلومات إضافية",
-    tags: "الوسوم",
-    addTag: "إضافة وسم",
-    tagPlaceholder: "أدخل الوسم واضغط Enter",
-    hasCertificate: "تقدم شهادة",
-    certificateDescription: "سيحصل الطلاب على شهادة عند الإكمال",
-
-    submit: "إنشاء الدورة",
-    update: "تحديث الدورة",
-    cancel: "إلغاء",
-    submitting: "جاري الإرسال...",
-
-    errors: {
-      required: "هذا الحقل مطلوب",
-      minLength: "يجب أن يكون على الأقل {{min}} حرفًا",
-      maxLength: "يجب ألا يتجاوز {{max}} حرفًا",
-      invalidUrl: "الرجاء إدخال رابط صالح",
-      invalidNumber: "الرجاء إدخال رقم صالح",
-      minValue: "يجب أن يكون أكبر من {{min}}",
-      maxValue: "يجب ألا يتجاوز {{max}}",
-      invalidSlug:
-        "يمكن أن يحتوي الرابط المختصر على أحرف صغيرة وأرقام وشرطات فقط",
-      discountGreaterThanPrice:
-        "لا يمكن أن يكون السعر المخفض أكبر من السعر العادي",
-    },
-  },
+// Error Messages Configuration
+const ERROR_MESSAGES = {
+  required: "This field is required",
+  minLength: (min: number) => `Must be at least ${min} characters`,
+  maxLength: (max: number) => `Must not exceed ${max} characters`,
+  invalidSlug: "Slug can only contain lowercase letters, numbers, and hyphens",
+  invalidUrl: "Please enter a valid URL (starting with http:// or https://)",
+  minValue: (min: number) => `Must be at least ${min}`,
+  discountGreaterThanPrice:
+    "Discount price cannot be greater than regular price",
+  invalidNumber: "Please enter a valid number",
 };
 
 const CourseForm: React.FC<CourseFormProps> = ({
@@ -287,10 +59,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
   categories,
   subcategories,
   instructorId,
-  language = "en",
 }) => {
-  const t = translations[language];
-  const isRTL = language === "ar";
   const isEditMode = !!initialData;
 
   // Form state
@@ -307,7 +76,6 @@ const CourseForm: React.FC<CourseFormProps> = ({
     prerequisites: "",
     targetAudience: "",
     difficultyLevel: "BEGINNER",
-    estimatedDurationHours: 0,
     price: 0,
     discountPrice: 0,
     currency: "CFA",
@@ -319,10 +87,20 @@ const CourseForm: React.FC<CourseFormProps> = ({
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
+  const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentTag, setCurrentTag] = useState("");
-  const [filteredSubcategories, setFilteredSubcategories] =
-    useState(subcategories);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
+  const thumbnailFileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const imageUploadMutation = useImageUpload();
+
+  // Set initial thumbnail preview
+  useEffect(() => {
+    if (initialData?.thumbnailUrl) {
+      setThumbnailPreview(initialData.thumbnailUrl);
+    }
+  }, [initialData?.thumbnailUrl]);
 
   // Auto-generate slug from title
   useEffect(() => {
@@ -335,117 +113,104 @@ const CourseForm: React.FC<CourseFormProps> = ({
     }
   }, [formData.title, isEditMode]);
 
-  // Filter subcategories based on selected category
-  useEffect(() => {
-    if (formData.categoryId) {
-      const filtered = subcategories.filter(
-        (sub) => sub.categoryId === formData.categoryId
-      );
-      setFilteredSubcategories(filtered);
+  // Validation function
+  const validateField = (name: string, value: any): string => {
+    switch (name) {
+      case "title":
+        if (!value.trim()) return ERROR_MESSAGES.required;
+        if (value.length < 10) return ERROR_MESSAGES.minLength(10);
+        if (value.length > 200) return ERROR_MESSAGES.maxLength(200);
+        break;
 
-      // Reset subcategory if it doesn't belong to the new category
-      if (!filtered.find((sub) => sub.id === formData.subcategoryId)) {
-        setFormData((prev) => ({ ...prev, subcategoryId: "" }));
-      }
-    } else {
-      setFilteredSubcategories(subcategories);
+      case "slug":
+        if (!value.trim()) return ERROR_MESSAGES.required;
+        if (!/^[a-z0-9-]+$/.test(value)) return ERROR_MESSAGES.invalidSlug;
+        break;
+
+      case "subtitle":
+        if (!value.trim()) return ERROR_MESSAGES.required;
+        if (value.length > 250) return ERROR_MESSAGES.maxLength(250);
+        break;
+
+      case "description":
+        if (!value.trim()) return ERROR_MESSAGES.required;
+        if (value.length < 100) return ERROR_MESSAGES.minLength(100);
+        break;
+
+      case "shortDescription":
+        if (!value.trim()) return ERROR_MESSAGES.required;
+        if (value.length > 200) return ERROR_MESSAGES.maxLength(200);
+        break;
+
+      case "thumbnailUrl":
+      case "previewVideo":
+        if (value && !/^https?:\/\/.+/.test(value)) {
+          return ERROR_MESSAGES.invalidUrl;
+        }
+        break;
+
+      case "prerequisites":
+      case "targetAudience":
+        if (!value.trim()) return ERROR_MESSAGES.required;
+        break;
+
+      case "discountPrice":
+        if (value && value > formData.price) {
+          return ERROR_MESSAGES.discountGreaterThanPrice;
+        }
+        break;
+
+      case "categoryId":
+        if (!value) return ERROR_MESSAGES.required;
+        break;
     }
-  }, [formData.categoryId, subcategories]);
+    return "";
+  };
 
-  // Validation
+  // Validate all fields
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    // Title validation
-    if (!formData.title.trim()) {
-      newErrors.title = t.errors.required;
-    } else if (formData.title.length < 10) {
-      newErrors.title = t.errors.minLength.replace("{{min}}", "10");
-    } else if (formData.title.length > 200) {
-      newErrors.title = t.errors.maxLength.replace("{{max}}", "200");
-    }
+    // Validate basic fields
+    Object.keys(formData).forEach((key) => {
+      const error = validateField(key, formData[key as keyof CourseFormData]);
+      if (error) newErrors[key] = error;
+    });
 
-    // Slug validation
-    if (!formData.slug.trim()) {
-      newErrors.slug = t.errors.required;
-    } else if (!/^[a-z0-9-]+$/.test(formData.slug)) {
-      newErrors.slug = t.errors.invalidSlug;
-    }
-
-    // Subtitle validation
-    if (!formData.subtitle.trim()) {
-      newErrors.subtitle = t.errors.required;
-    } else if (formData.subtitle.length > 250) {
-      newErrors.subtitle = t.errors.maxLength.replace("{{max}}", "250");
-    }
-
-    // Description validation
-    if (!formData.description.trim()) {
-      newErrors.description = t.errors.required;
-    } else if (formData.description.length < 100) {
-      newErrors.description = t.errors.minLength.replace("{{min}}", "100");
-    }
-
-    // Short description validation
-    if (!formData.shortDescription.trim()) {
-      newErrors.shortDescription = t.errors.required;
-    } else if (formData.shortDescription.length > 200) {
-      newErrors.shortDescription = t.errors.maxLength.replace("{{max}}", "200");
-    }
-
-    // URL validations
-    const urlRegex = /^https?:\/\/.+/;
-    if (formData.thumbnailUrl && !urlRegex.test(formData.thumbnailUrl)) {
-      newErrors.thumbnailUrl = t.errors.invalidUrl;
-    }
-    if (formData.previewVideo && !urlRegex.test(formData.previewVideo)) {
-      newErrors.previewVideo = t.errors.invalidUrl;
-    }
-
-    // Learning objectives validation
+    // Special validation for learning objectives
     const validObjectives = formData.learningObjectives.filter((obj) =>
       obj.trim()
     );
     if (validObjectives.length === 0) {
-      newErrors.learningObjectives = t.errors.required;
-    }
-
-    // Prerequisites validation
-    if (!formData.prerequisites.trim()) {
-      newErrors.prerequisites = t.errors.required;
-    }
-
-    // Target audience validation
-    if (!formData.targetAudience.trim()) {
-      newErrors.targetAudience = t.errors.required;
-    }
-
-    // Duration validation
-    if (formData.estimatedDurationHours <= 0) {
-      newErrors.estimatedDurationHours = t.errors.minValue.replace(
-        "{{min}}",
-        "0"
-      );
-    }
-
-    // Price validation
-    if (formData.price < 0) {
-      newErrors.price = t.errors.minValue.replace("{{min}}", "0");
-    }
-    if (formData.discountPrice < 0) {
-      newErrors.discountPrice = t.errors.minValue.replace("{{min}}", "0");
-    }
-    if (formData.discountPrice > formData.price) {
-      newErrors.discountPrice = t.errors.discountGreaterThanPrice;
-    }
-
-    // Category validation
-    if (!formData.categoryId) {
-      newErrors.categoryId = t.errors.required;
+      newErrors.learningObjectives =
+        "At least one learning objective is required";
     }
 
     setErrors(newErrors);
+
+    // Mark all fields as touched
+    const allTouched: { [key: string]: boolean } = {};
+    Object.keys(formData).forEach((key) => {
+      allTouched[key] = true;
+    });
+    setTouched(allTouched);
+
     return Object.keys(newErrors).length === 0;
+  };
+
+  // Handle field blur
+  const handleBlur = (name: string) => {
+    setTouched((prev) => ({ ...prev, [name]: true }));
+    const error = validateField(name, formData[name as keyof CourseFormData]);
+    setErrors((prev) => {
+      if (error) {
+        return { ...prev, [name]: error };
+      } else {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      }
+    });
   };
 
   // Handlers
@@ -458,15 +223,24 @@ const CourseForm: React.FC<CourseFormProps> = ({
 
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "number" ? parseFloat(value) || 0 : value,
+      [name]:
+        type === "number" ? (value === "" ? 0 : parseFloat(value)) : value,
     }));
 
-    // Clear error for this field
-    if (errors[name]) {
+    // Validate on change if field has been touched
+    if (touched[name]) {
+      const error = validateField(
+        name,
+        type === "number" ? (value === "" ? 0 : parseFloat(value)) : value
+      );
       setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
+        if (error) {
+          return { ...prev, [name]: error };
+        } else {
+          const newErrors = { ...prev };
+          delete newErrors[name];
+          return newErrors;
+        }
       });
     }
   };
@@ -481,7 +255,8 @@ const CourseForm: React.FC<CourseFormProps> = ({
     newObjectives[index] = value;
     setFormData((prev) => ({ ...prev, learningObjectives: newObjectives }));
 
-    if (errors.learningObjectives) {
+    // Clear error if we have at least one non-empty objective
+    if (newObjectives.some((obj) => obj.trim())) {
       setErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors.learningObjectives;
@@ -526,16 +301,70 @@ const CourseForm: React.FC<CourseFormProps> = ({
     }));
   };
 
+  const handleThumbnailUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image size must be less than 5MB");
+      return;
+    }
+
+    // Upload image
+    imageUploadMutation.mutate(file, {
+      onSuccess: (response) => {
+        // Assuming the response has a url property
+        const uploadedUrl = response.data.url;
+        setFormData((prev) => ({ ...prev, thumbnailUrl: uploadedUrl }));
+        // Update preview with the uploaded URL
+        setThumbnailPreview(uploadedUrl);
+      },
+      onError: (error) => {
+        console.error("Upload error:", error);
+        alert("Failed to upload image. Please try again.");
+        // Keep the preview even if upload fails, don't clear it
+      },
+    });
+  };
+
+  const handleThumbnailUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const url = e.target.value;
+    setFormData((prev) => ({ ...prev, thumbnailUrl: url }));
+    setThumbnailPreview(url);
+  };
+
+  const removeThumbnail = () => {
+    setFormData((prev) => ({ ...prev, thumbnailUrl: "" }));
+    setThumbnailPreview("");
+    if (thumbnailFileInputRef.current) {
+      thumbnailFileInputRef.current.value = "";
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validateForm()) {
+      // Scroll to first error
+      const firstErrorField = Object.keys(errors)[0];
+      const element = document.getElementById(firstErrorField);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
       return;
     }
 
     setIsSubmitting(true);
     try {
-      // Clean up learning objectives (remove empty ones)
       const cleanedData = {
         ...formData,
         learningObjectives: formData.learningObjectives.filter((obj) =>
@@ -551,23 +380,52 @@ const CourseForm: React.FC<CourseFormProps> = ({
     }
   };
 
+  // Error display component
+  const ErrorMessage: React.FC<{ message: string }> = ({ message }) => (
+    <div className="flex items-center gap-1 mt-1 text-sm text-red-600">
+      <AlertCircle size={14} />
+      <span>{message}</span>
+    </div>
+  );
+
   return (
-    <div
-      className={`w-full max-w-5xl mx-auto ${isRTL ? "rtl" : "ltr"}`}
-      dir={isRTL ? "rtl" : "ltr"}
-    >
+    <div className="w-full max-w-5xl mx-auto p-6 bg-white rounded-lg shadow-md">
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-gray-900">
-            {isEditMode ? t.editCourse : t.createCourse}
+            {isEditMode ? "Edit Course" : "Create New Course"}
           </h2>
         </div>
+
+        {/* Error Summary */}
+        {Object.keys(errors).length > 0 && Object.keys(touched).length > 0 && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="text-red-600 mt-0.5" size={20} />
+              <div>
+                <h3 className="font-semibold text-red-900 mb-1">
+                  Please fix the following errors:
+                </h3>
+                <ul className="list-disc list-inside text-sm text-red-700 space-y-1">
+                  {Object.entries(errors).map(([field, message]) => (
+                    <li key={field}>
+                      <span className="font-medium capitalize">
+                        {field.replace(/([A-Z])/g, " $1").trim()}
+                      </span>
+                      : {message}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Basic Information */}
         <section className="bg-white rounded-lg border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            {t.basicInformation}
+            Basic Information
           </h3>
 
           <div className="space-y-4">
@@ -577,7 +435,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 htmlFor="title"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                {t.courseTitle} <span className="text-red-500">*</span>
+                Course Title <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -585,38 +443,20 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 name="title"
                 value={formData.title}
                 onChange={handleInputChange}
-                placeholder={t.courseTitlePlaceholder}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.title ? "border-red-500" : "border-gray-300"
+                onBlur={() => handleBlur("title")}
+                placeholder='e.g., "Mastering React: From Beginner to Pro"'
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                  errors.title && touched.title
+                    ? "border-red-500 bg-red-50"
+                    : "border-gray-300"
                 }`}
               />
-              {errors.title && (
-                <p className="mt-1 text-sm text-red-600">{errors.title}</p>
+              {errors.title && touched.title && (
+                <ErrorMessage message={errors.title} />
               )}
-            </div>
-
-            {/* Slug */}
-            <div>
-              <label
-                htmlFor="slug"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                {t.slug} <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="slug"
-                name="slug"
-                value={formData.slug}
-                onChange={handleInputChange}
-                placeholder={t.slugPlaceholder}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm ${
-                  errors.slug ? "border-red-500" : "border-gray-300"
-                }`}
-              />
-              {errors.slug && (
-                <p className="mt-1 text-sm text-red-600">{errors.slug}</p>
-              )}
+              <p className="mt-1 text-xs text-gray-500">
+                {formData.title.length}/200 characters
+              </p>
             </div>
 
             {/* Subtitle */}
@@ -625,7 +465,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 htmlFor="subtitle"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                {t.subtitle} <span className="text-red-500">*</span>
+                Subtitle <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -633,14 +473,20 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 name="subtitle"
                 value={formData.subtitle}
                 onChange={handleInputChange}
-                placeholder={t.subtitlePlaceholder}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.subtitle ? "border-red-500" : "border-gray-300"
+                onBlur={() => handleBlur("subtitle")}
+                placeholder="e.g., A comprehensive guide to mastering React.js"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                  errors.subtitle && touched.subtitle
+                    ? "border-red-500 bg-red-50"
+                    : "border-gray-300"
                 }`}
               />
-              {errors.subtitle && (
-                <p className="mt-1 text-sm text-red-600">{errors.subtitle}</p>
+              {errors.subtitle && touched.subtitle && (
+                <ErrorMessage message={errors.subtitle} />
               )}
+              <p className="mt-1 text-xs text-gray-500">
+                {formData.subtitle.length}/250 characters
+              </p>
             </div>
 
             {/* Description */}
@@ -649,24 +495,28 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 htmlFor="description"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                {t.description} <span className="text-red-500">*</span>
+                Description <span className="text-red-500">*</span>
               </label>
               <textarea
                 id="description"
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
-                placeholder={t.descriptionPlaceholder}
+                onBlur={() => handleBlur("description")}
+                placeholder="Provide a detailed description of your course (minimum 100 characters)"
                 rows={6}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
-                  errors.description ? "border-red-500" : "border-gray-300"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-colors ${
+                  errors.description && touched.description
+                    ? "border-red-500 bg-red-50"
+                    : "border-gray-300"
                 }`}
               />
-              {errors.description && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.description}
-                </p>
+              {errors.description && touched.description && (
+                <ErrorMessage message={errors.description} />
               )}
+              <p className="mt-1 text-xs text-gray-500">
+                {formData.description.length} characters (minimum 100)
+              </p>
             </div>
 
             {/* Short Description */}
@@ -675,7 +525,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 htmlFor="shortDescription"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                {t.shortDescription} <span className="text-red-500">*</span>
+                Short Description <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -683,20 +533,21 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 name="shortDescription"
                 value={formData.shortDescription}
                 onChange={handleInputChange}
-                placeholder={t.shortDescriptionPlaceholder}
+                onBlur={() => handleBlur("shortDescription")}
+                placeholder="A brief overview for search results and previews"
                 maxLength={200}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.shortDescription ? "border-red-500" : "border-gray-300"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                  errors.shortDescription && touched.shortDescription
+                    ? "border-red-500 bg-red-50"
+                    : "border-gray-300"
                 }`}
               />
-              <p className="mt-1 text-sm text-gray-500">
-                {formData.shortDescription.length}/200
-              </p>
-              {errors.shortDescription && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.shortDescription}
-                </p>
+              {errors.shortDescription && touched.shortDescription && (
+                <ErrorMessage message={errors.shortDescription} />
               )}
+              <p className="mt-1 text-xs text-gray-500">
+                {formData.shortDescription.length}/200 characters
+              </p>
             </div>
           </div>
         </section>
@@ -704,52 +555,111 @@ const CourseForm: React.FC<CourseFormProps> = ({
         {/* Media Assets */}
         <section className="bg-white rounded-lg border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            {t.mediaAssets}
+            Media Assets
           </h3>
 
-          <div className="space-y-4">
-            {/* Thumbnail URL */}
+          <div className="space-y-6">
+            {/* Thumbnail Image */}
             <div>
-              <label
-                htmlFor="thumbnailUrl"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                {t.thumbnailUrl}
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Course Thumbnail
               </label>
-              <div className="flex gap-2">
-                <input
-                  type="url"
-                  id="thumbnailUrl"
-                  name="thumbnailUrl"
-                  value={formData.thumbnailUrl}
-                  onChange={handleInputChange}
-                  placeholder={t.thumbnailPlaceholder}
-                  className={`flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.thumbnailUrl ? "border-red-500" : "border-gray-300"
-                  }`}
-                />
-                <button
-                  type="button"
-                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors flex items-center gap-2"
-                >
-                  <Upload size={16} />
-                  {t.uploadThumbnail}
-                </button>
+
+              {/* Thumbnail Preview or Upload Area */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Upload/Preview Area */}
+                <div>
+                  {thumbnailPreview ? (
+                    <div className="relative group">
+                      <img
+                        src={thumbnailPreview}
+                        alt="Thumbnail preview"
+                        className="w-full h-auto object-contain rounded-lg border-2 border-gray-200"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src =
+                            'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EInvalid Image%3C/text%3E%3C/svg%3E';
+                        }}
+                      />
+                      <div className="absolute inset-0  bg-opacity-0 group-hover:bg-opacity-40 transition-all rounded-lg flex items-center justify-center">
+                        <button
+                          type="button"
+                          onClick={removeThumbnail}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center gap-2"
+                        >
+                          <Trash2 size={16} />
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => thumbnailFileInputRef.current?.click()}
+                      className="w-full h-48 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors"
+                    >
+                      <Upload className="text-gray-400 mb-2" size={32} />
+                      <p className="text-sm font-medium text-gray-700">
+                        Click to upload thumbnail
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        PNG, JPG up to 5MB
+                      </p>
+                    </div>
+                  )}
+                  <input
+                    ref={thumbnailFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleThumbnailUpload}
+                    className="hidden"
+                  />
+                  {imageUploadMutation.isPending && (
+                    <div className="mt-2 text-sm text-blue-600 flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                      Uploading...
+                    </div>
+                  )}
+                </div>
+
+                {/* URL Input Alternative */}
+                <div className="flex flex-col justify-center">
+                  <label
+                    htmlFor="thumbnailUrl"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Or enter image URL
+                  </label>
+                  <input
+                    type="url"
+                    id="thumbnailUrl"
+                    name="thumbnailUrl"
+                    value={formData.thumbnailUrl}
+                    onChange={handleThumbnailUrlChange}
+                    onBlur={() => handleBlur("thumbnailUrl")}
+                    placeholder="https://example.com/thumbnail.jpg"
+                    disabled={imageUploadMutation.isPending}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                      errors.thumbnailUrl && touched.thumbnailUrl
+                        ? "border-red-500 bg-red-50"
+                        : "border-gray-300"
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  />
+                  {errors.thumbnailUrl && touched.thumbnailUrl && (
+                    <ErrorMessage message={errors.thumbnailUrl} />
+                  )}
+                  <p className="mt-2 text-xs text-gray-500">
+                    Recommended size: 1280x720px (16:9 ratio)
+                  </p>
+                </div>
               </div>
-              {errors.thumbnailUrl && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.thumbnailUrl}
-                </p>
-              )}
             </div>
 
             {/* Preview Video */}
             <div>
               <label
                 htmlFor="previewVideo"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-gray-700 mb-2"
               >
-                {t.previewVideo}
+                Preview Video URL
               </label>
               <div className="flex gap-2">
                 <input
@@ -758,9 +668,12 @@ const CourseForm: React.FC<CourseFormProps> = ({
                   name="previewVideo"
                   value={formData.previewVideo}
                   onChange={handleInputChange}
-                  placeholder={t.previewVideoPlaceholder}
-                  className={`flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.previewVideo ? "border-red-500" : "border-gray-300"
+                  onBlur={() => handleBlur("previewVideo")}
+                  placeholder="https://example.com/preview.mp4"
+                  className={`flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                    errors.previewVideo && touched.previewVideo
+                      ? "border-red-500 bg-red-50"
+                      : "border-gray-300"
                   }`}
                 />
                 <button
@@ -768,14 +681,15 @@ const CourseForm: React.FC<CourseFormProps> = ({
                   className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors flex items-center gap-2"
                 >
                   <Video size={16} />
-                  {t.uploadVideo}
+                  Upload
                 </button>
               </div>
-              {errors.previewVideo && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.previewVideo}
-                </p>
+              {errors.previewVideo && touched.previewVideo && (
+                <ErrorMessage message={errors.previewVideo} />
               )}
+              <p className="mt-1 text-xs text-gray-500">
+                Optional: Add a promotional video to showcase your course
+              </p>
             </div>
           </div>
         </section>
@@ -783,14 +697,14 @@ const CourseForm: React.FC<CourseFormProps> = ({
         {/* Learning Content */}
         <section className="bg-white rounded-lg border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            {t.learningContent}
+            Learning Content
           </h3>
 
           <div className="space-y-4">
             {/* Learning Objectives */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t.learningObjectives} <span className="text-red-500">*</span>
+                Learning Objectives <span className="text-red-500">*</span>
               </label>
               <div className="space-y-2">
                 {formData.learningObjectives.map((objective, index) => (
@@ -801,7 +715,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                       onChange={(e) =>
                         handleObjectiveChange(index, e.target.value)
                       }
-                      placeholder={`${t.objectivePlaceholder} ${index + 1}`}
+                      placeholder={`Learning objective ${index + 1}`}
                       className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                     {formData.learningObjectives.length > 1 && (
@@ -822,12 +736,10 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 className="mt-2 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex items-center gap-2"
               >
                 <Plus size={16} />
-                {t.addObjective}
+                Add Objective
               </button>
               {errors.learningObjectives && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.learningObjectives}
-                </p>
+                <ErrorMessage message={errors.learningObjectives} />
               )}
             </div>
 
@@ -837,23 +749,24 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 htmlFor="prerequisites"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                {t.prerequisites} <span className="text-red-500">*</span>
+                Prerequisites <span className="text-red-500">*</span>
               </label>
               <textarea
                 id="prerequisites"
                 name="prerequisites"
                 value={formData.prerequisites}
                 onChange={handleInputChange}
-                placeholder={t.prerequisitesPlaceholder}
+                onBlur={() => handleBlur("prerequisites")}
+                placeholder="What knowledge or skills should students have before taking this course?"
                 rows={3}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
-                  errors.prerequisites ? "border-red-500" : "border-gray-300"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-colors ${
+                  errors.prerequisites && touched.prerequisites
+                    ? "border-red-500 bg-red-50"
+                    : "border-gray-300"
                 }`}
               />
-              {errors.prerequisites && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.prerequisites}
-                </p>
+              {errors.prerequisites && touched.prerequisites && (
+                <ErrorMessage message={errors.prerequisites} />
               )}
             </div>
 
@@ -863,23 +776,24 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 htmlFor="targetAudience"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                {t.targetAudience} <span className="text-red-500">*</span>
+                Target Audience <span className="text-red-500">*</span>
               </label>
               <textarea
                 id="targetAudience"
                 name="targetAudience"
                 value={formData.targetAudience}
                 onChange={handleInputChange}
-                placeholder={t.targetAudiencePlaceholder}
+                onBlur={() => handleBlur("targetAudience")}
+                placeholder="Who is this course for? (e.g., Beginners, Developers, Designers)"
                 rows={3}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
-                  errors.targetAudience ? "border-red-500" : "border-gray-300"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-colors ${
+                  errors.targetAudience && touched.targetAudience
+                    ? "border-red-500 bg-red-50"
+                    : "border-gray-300"
                 }`}
               />
-              {errors.targetAudience && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.targetAudience}
-                </p>
+              {errors.targetAudience && touched.targetAudience && (
+                <ErrorMessage message={errors.targetAudience} />
               )}
             </div>
           </div>
@@ -888,7 +802,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
         {/* Course Details */}
         <section className="bg-white rounded-lg border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            {t.courseDetails}
+            Course Details
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -898,7 +812,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 htmlFor="difficultyLevel"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                {t.difficultyLevel} <span className="text-red-500">*</span>
+                Difficulty Level <span className="text-red-500">*</span>
               </label>
               <select
                 id="difficultyLevel"
@@ -907,41 +821,10 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 onChange={handleInputChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="BEGINNER">{t.beginner}</option>
-                <option value="INTERMEDIATE">{t.intermediate}</option>
-                <option value="ADVANCED">{t.advanced}</option>
-                <option value="EXPERT">{t.expert}</option>
+                <option value="BEGINNER">Beginner</option>
+                <option value="INTERMEDIATE">Intermediate</option>
+                <option value="ADVANCED">Advanced</option>
               </select>
-            </div>
-
-            {/* Estimated Duration */}
-            <div>
-              <label
-                htmlFor="estimatedDurationHours"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                {t.estimatedDuration} <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                id="estimatedDurationHours"
-                name="estimatedDurationHours"
-                value={formData.estimatedDurationHours}
-                onChange={handleInputChange}
-                placeholder={t.durationPlaceholder}
-                step="0.5"
-                min="0"
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.estimatedDurationHours
-                    ? "border-red-500"
-                    : "border-gray-300"
-                }`}
-              />
-              {errors.estimatedDurationHours && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.estimatedDurationHours}
-                </p>
-              )}
             </div>
           </div>
         </section>
@@ -949,7 +832,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
         {/* Pricing & Category */}
         <section className="bg-white rounded-lg border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            {t.pricingCategory}
+            Pricing & Category
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -959,23 +842,25 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 htmlFor="price"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                {t.price} <span className="text-red-500">*</span>
+                Price (CFA) <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
                 id="price"
                 name="price"
-                value={formData.price}
+                value={formData.price || ""}
                 onChange={handleInputChange}
-                placeholder={t.pricePlaceholder}
-                step="0.01"
+                onBlur={() => handleBlur("price")}
+                placeholder="e.g., 49000"
                 min="0"
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.price ? "border-red-500" : "border-gray-300"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                  errors.price && touched.price
+                    ? "border-red-500 bg-red-50"
+                    : "border-gray-300"
                 }`}
               />
-              {errors.price && (
-                <p className="mt-1 text-sm text-red-600">{errors.price}</p>
+              {errors.price && touched.price && (
+                <ErrorMessage message={errors.price} />
               )}
             </div>
 
@@ -985,45 +870,26 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 htmlFor="discountPrice"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                {t.discountPrice}
+                Discount Price (CFA)
               </label>
               <input
                 type="number"
                 id="discountPrice"
                 name="discountPrice"
-                value={formData.discountPrice}
+                value={formData.discountPrice || ""}
                 onChange={handleInputChange}
-                placeholder={t.discountPlaceholder}
-                step="0.01"
+                onBlur={() => handleBlur("discountPrice")}
+                placeholder="e.g., 29000"
                 min="0"
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.discountPrice ? "border-red-500" : "border-gray-300"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                  errors.discountPrice && touched.discountPrice
+                    ? "border-red-500 bg-red-50"
+                    : "border-gray-300"
                 }`}
               />
-              {errors.discountPrice && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.discountPrice}
-                </p>
+              {errors.discountPrice && touched.discountPrice && (
+                <ErrorMessage message={errors.discountPrice} />
               )}
-            </div>
-
-            {/* Currency */}
-            <div>
-              <label
-                htmlFor="currency"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                {t.currency} <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="currency"
-                name="currency"
-                value={formData.currency}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                readOnly
-              />
             </div>
 
             {/* Category */}
@@ -1032,7 +898,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 htmlFor="categoryId"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                {t.category} <span className="text-red-500">*</span>
+                Category <span className="text-red-500">*</span>
               </label>
               <select
                 id="categoryId"
@@ -1043,7 +909,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                   errors.categoryId ? "border-red-500" : "border-gray-300"
                 }`}
               >
-                <option value="">{t.selectCategory}</option>
+                <option value="">Select Category</option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}
@@ -1061,7 +927,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 htmlFor="subcategoryId"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                {t.subcategory}
+                Subcategory
               </label>
               <select
                 id="subcategoryId"
@@ -1071,8 +937,8 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 disabled={!formData.categoryId}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
-                <option value="">{t.selectSubcategory}</option>
-                {filteredSubcategories.map((sub) => (
+                <option value="">Select Subcategory</option>
+                {subcategories.map((sub) => (
                   <option key={sub.id} value={sub.id}>
                     {sub.name}
                   </option>
@@ -1085,7 +951,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
         {/* Additional Information */}
         <section className="bg-white rounded-lg border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            {t.additionalInfo}
+            Additional Information
           </h3>
 
           <div className="space-y-4">
@@ -1095,7 +961,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 htmlFor="tags"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                {t.tags}
+                Tags
               </label>
               <input
                 type="text"
@@ -1103,7 +969,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 value={currentTag}
                 onChange={(e) => setCurrentTag(e.target.value)}
                 onKeyDown={handleTagKeyDown}
-                placeholder={t.tagPlaceholder}
+                placeholder="Type a tag and press Enter"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               {formData.tags.length > 0 && (
@@ -1142,10 +1008,11 @@ const CourseForm: React.FC<CourseFormProps> = ({
                   htmlFor="hasCertificate"
                   className="text-sm font-medium text-gray-700 cursor-pointer"
                 >
-                  {t.hasCertificate}
+                  Provide Certificate of Completion
                 </label>
                 <p className="text-sm text-gray-500 mt-1">
-                  {t.certificateDescription}
+                  Certificate will be issued upon successful completion of the
+                  course.
                 </p>
               </div>
             </div>
@@ -1161,7 +1028,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
             disabled={isSubmitting}
             className="px-6 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {t.cancel}
+            Cancel
           </Button>
           <Button
             type="submit"
@@ -1169,16 +1036,17 @@ const CourseForm: React.FC<CourseFormProps> = ({
             disabled={isSubmitting}
             className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            {isSubmitting ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                {t.submitting}
-              </>
-            ) : isEditMode ? (
-              t.update
-            ) : (
-              t.submit
-            )}
+            {(() => {
+              if (isSubmitting) {
+                return (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Submitting
+                  </>
+                );
+              }
+              return isEditMode ? "Update" : "Create";
+            })()}
           </Button>
         </div>
       </form>
