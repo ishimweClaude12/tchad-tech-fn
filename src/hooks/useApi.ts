@@ -163,7 +163,7 @@ export const useUsers = (page: string, limit: string) => {
     queryKey: ["users", page, limit],
     queryFn: async () => {
       const response = await usersApi.getAll(page, limit);
-      return response.success ? response.data.users : [];
+      return response.success ? response.data : { users: [], meta: null };
     },
   });
 };
@@ -176,6 +176,16 @@ export const useUpdateUser = () => {
       usersApi.updateUser(id, role),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+};
+
+export const useELearningUser = (id: string) => {
+  return useQuery({
+    queryKey: ["user", id],
+    queryFn: async () => {
+      const response = await usersApi.getUserProfile(id);
+      return response.success ? response.data.user : null;
     },
   });
 };

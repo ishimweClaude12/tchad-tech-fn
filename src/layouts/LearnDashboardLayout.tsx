@@ -1,5 +1,4 @@
 import React from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import {
   BookOpen,
   Users,
@@ -9,133 +8,72 @@ import {
   Settings,
   Home,
 } from "lucide-react";
-import { Outlet } from "react-router-dom";
+import { Outlet, Link, useLocation } from "react-router-dom";
 
 const LearnDashboardLayout: React.FC = () => {
-  const { language } = useLanguage();
-  const currentPath = window.location.pathname;
-
-  const content = {
-    en: {
-      title: "E-Learning Dashboard",
-      nav: {
-        overview: "Dashboard",
-        courses: "Courses",
-        users: "Users",
-        myLearning: "My Learning",
-        categories: "Categories",
-        subCategories: "Sub-Categories",
-        modules: "Modules",
-        lessons: "Lessons",
-
-        analytics: "Analytics",
-        settings: "Settings",
-        backToHome: "Back to Home",
-      },
-    },
-    fr: {
-      title: "Tableau de Bord E-Learning",
-      nav: {
-        overview: "Tableau de Bord",
-        users: "Utilisateurs",
-        courses: "Cours",
-        instructors: "Instructeurs",
-        myLearning: "Mon Apprentissage",
-        categories: "Catégories",
-        subCategories: "Sous-Catégories",
-        modules: "Modules",
-        lessons: "Leçons",
-
-        analytics: "Analytiques",
-        settings: "Paramètres",
-        backToHome: "Retour à l'Accueil",
-      },
-    },
-    ar: {
-      title: "لوحة تحكم التعليم الإلكتروني",
-      nav: {
-        overview: "لوحة التحكم",
-        users: "المستخدمون",
-        courses: "الدورات",
-        instructors: "المدرسون",
-        myLearning: "تعلمي",
-        subCategories: "الفئات الفرعية",
-        modules: "الوحدات",
-        lessons: "الدروس",
-
-        categories: "الفئات",
-        analytics: "التحليلات",
-        settings: "الإعدادات",
-        backToHome: "العودة للرئيسية",
-      },
-    },
-  };
-
-  const currentContent = content[language] || content.en;
+  const location = useLocation();
+  const currentPath = location.pathname;
 
   const navigation = [
     {
-      name: currentContent.nav.overview,
+      name: "Dashboard",
       href: "/learn/dashboard",
       icon: BarChart3,
       current: currentPath === "/learn/dashboard",
     },
-
     {
-      name: currentContent.nav.users,
+      name: "Users",
       href: "/learn/dashboard/users",
       icon: Users,
       current: currentPath === "/learn/dashboard/users",
     },
-
     {
-      name: currentContent.nav.courses,
+      name: "Courses",
       href: "/learn/dashboard/courses",
       icon: BookOpen,
       current: currentPath === "/learn/dashboard/courses",
     },
-
     {
-      name: currentContent.nav.myLearning,
+      name: "My Learning",
       href: "/learn/dashboard/my-learning",
       icon: GraduationCap,
       current: currentPath === "/learn/dashboard/my-learning",
     },
     {
-      name: currentContent.nav.categories,
+      name: "Categories",
       href: "/learn/dashboard/categories",
       icon: FolderOpen,
       current: currentPath === "/learn/dashboard/categories",
     },
     {
-      name: currentContent.nav.subCategories,
+      name: "Sub-Categories",
       href: "/learn/dashboard/sub-categories",
       icon: FolderOpen,
       current: currentPath === "/learn/dashboard/sub-categories",
     },
     {
-      name: currentContent.nav.analytics,
-      href: "/learn/dashboard/analytics",
-      icon: BarChart3,
-      current: currentPath === "/learn/dashboard/analytics",
-    },
-    {
-      name: currentContent.nav.settings,
-      href: "/learn/dashboard/settings",
-      icon: Settings,
-      current: currentPath === "/learn/dashboard/settings",
-    },
-    {
-      name: currentContent.nav.modules,
+      name: "Modules",
       href: "/learn/dashboard/modules",
       icon: FolderOpen,
       current: currentPath === "/learn/dashboard/modules",
     },
     {
-      name: currentContent.nav.lessons,
+      name: "Lessons",
       href: "/learn/dashboard/lessons",
       icon: FolderOpen,
       current: currentPath === "/learn/dashboard/lessons",
+    },
+    {
+      name: "Analytics",
+      href: "/learn/dashboard/analytics",
+      icon: BarChart3,
+      current: currentPath === "/learn/dashboard/analytics",
+    },
+    {
+      name: "Settings",
+      href: "/learn/dashboard/settings",
+      icon: Settings,
+      current: currentPath === "/learn/dashboard/settings",
     },
   ];
 
@@ -145,12 +83,12 @@ const LearnDashboardLayout: React.FC = () => {
       style={{ width: "100vw", maxWidth: "100vw" }}
     >
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg  shrink-0">
+      <div className="w-64 bg-white shadow-lg shrink-0">
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-center h-16 px-4 bg-blue-600 text-white">
             <GraduationCap className="w-8 h-8 mr-2" />
-            <h4 className="text-lg font-semibold">{currentContent.title}</h4>
+            <h4 className="text-lg font-semibold">E-Learning Dashboard</h4>
           </div>
 
           {/* Navigation */}
@@ -158,9 +96,9 @@ const LearnDashboardLayout: React.FC = () => {
             {navigation.map((item) => {
               const Icon = item.icon;
               return (
-                <a
+                <Link
                   key={item.name}
-                  href={item.href}
+                  to={item.href}
                   className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
                     item.current
                       ? "bg-blue-100 text-blue-700 border-l-4 border-blue-700"
@@ -169,20 +107,20 @@ const LearnDashboardLayout: React.FC = () => {
                 >
                   <Icon className="w-5 h-5 mr-3" />
                   {item.name}
-                </a>
+                </Link>
               );
             })}
           </nav>
 
           {/* Footer */}
           <div className="p-4 border-t border-gray-200">
-            <a
-              href="/learn"
+            <Link
+              to="/learn"
               className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200"
             >
               <Home className="w-5 h-5 mr-3" />
-              {currentContent.nav.backToHome}
-            </a>
+              Back to Home
+            </Link>
           </div>
         </div>
       </div>
@@ -196,8 +134,7 @@ const LearnDashboardLayout: React.FC = () => {
         <header className="bg-white shadow-sm border-b border-gray-200">
           <div className="px-6 py-4">
             <h2 className="text-xl font-semibold text-gray-800">
-              {navigation.find((item) => item.current)?.name ||
-                currentContent.nav.overview}
+              {navigation.find((item) => item.current)?.name || "Dashboard"}
             </h2>
           </div>
         </header>

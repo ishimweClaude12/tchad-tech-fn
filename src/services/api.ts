@@ -1,10 +1,15 @@
 import axiosInstance from "../lib/axios";
 import type { Course, Instructor } from "../types/Course.types";
 import {
+  type CourseCategory,
   type CourseCategoryApiResponse,
   type CourseSubCategoryApiResponse,
 } from "../types/CourseCategories.types";
-import { type UserListResponse, UserRole } from "../types/Users.types";
+import {
+  type User,
+  type UserListResponse,
+  UserRole,
+} from "../types/Users.types";
 import type {
   GetModulesApiResponse,
   Module,
@@ -17,23 +22,6 @@ import type { ApiResponse } from "../types/Api.types";
 // ============================================
 
 // Types
-
-export interface Enrollment {
-  id: string;
-  courseId: string;
-  progress: number;
-  startedAt: string;
-  lastAccessedAt: string;
-}
-
-// ============================================
-// Courses API
-// ============================================
-
-
-// ============================================
-// Instructors API
-// ============================================
 
 export const instructorsApi = {
   // Get all instructors
@@ -60,37 +48,6 @@ export const instructorsApi = {
 };
 
 // ============================================
-// My Learning API
-// ============================================
-
-export const myLearningApi = {
-  // Get user enrollments
-  getEnrollments: async () => {
-    const { data } = await axiosInstance.get<Enrollment[]>(
-      "/my-learning/enrollments"
-    );
-    return data;
-  },
-
-  // Update progress
-  updateProgress: async (courseId: string, progress: number) => {
-    const { data } = await axiosInstance.patch(
-      `/my-learning/${courseId}/progress`,
-      { progress }
-    );
-    return data;
-  },
-
-  // Complete lesson
-  completeLesson: async (courseId: string, lessonId: string) => {
-    const { data } = await axiosInstance.post(
-      `/my-learning/${courseId}/lessons/${lessonId}/complete`
-    );
-    return data;
-  },
-};
-
-// ============================================
 // Categories API
 // ============================================
 
@@ -102,26 +59,24 @@ export const categoriesApi = {
     return data;
   },
   createCategory: async (category: { name: string; description: string }) => {
-    const { data } = await axiosInstance.post<any>(
-      "/course-categories",
-      category
-    );
+    const { data } = await axiosInstance.post<
+      ApiResponse<{ category: CourseCategory }>
+    >("/course-categories", category);
     return data;
   },
   updateCategory: async (
     id: string,
     category: { name?: string; description?: string }
   ) => {
-    const { data } = await axiosInstance.put<any>(
-      `/course-categories/${id}`,
-      category
-    );
+    const { data } = await axiosInstance.put<
+      ApiResponse<{ category: CourseCategory }>
+    >(`/course-categories/${id}`, category);
     return data;
   },
   deleteCategory: async (id: string) => {
-    const { data } = await axiosInstance.delete<any>(
-      `/course-categories/${id}`
-    );
+    const { data } = await axiosInstance.delete<
+      ApiResponse<{ category: CourseCategory }>
+    >(`/course-categories/${id}`);
     return data;
   },
 };
@@ -137,26 +92,24 @@ export const subCategoriesApi = {
     name: string;
     description: string;
   }) => {
-    const { data } = await axiosInstance.post<any>(
-      "/course-sub-categories",
-      subCategory
-    );
+    const { data } = await axiosInstance.post<
+      ApiResponse<{ category: CourseCategory }>
+    >("/course-sub-categories", subCategory);
     return data;
   },
   updateSubCategory: async (
     id: string,
     category: { name?: string; description?: string }
   ) => {
-    const { data } = await axiosInstance.put<any>(
-      `/course-sub-categories/${id}`,
-      category
-    );
+    const { data } = await axiosInstance.put<
+      ApiResponse<{ category: CourseCategory }>
+    >(`/course-sub-categories/${id}`, category);
     return data;
   },
   deleteSubCategory: async (id: string) => {
-    const { data } = await axiosInstance.delete<any>(
-      `/course-sub-categories/${id}`
-    );
+    const { data } = await axiosInstance.delete<
+      ApiResponse<{ category: CourseCategory }>
+    >(`/course-sub-categories/${id}`);
     return data;
   },
 };
@@ -174,9 +127,17 @@ export const usersApi = {
   },
 
   updateUser: async (id: string, role: UserRole) => {
-    const { data } = await axiosInstance.patch<any>(`/users/${id}`, {
+    const { data } = await axiosInstance.patch<
+      ApiResponse<{ userId: string; role: UserRole }>
+    >(`/users/${id}`, {
       role,
     });
+    return data;
+  },
+  getUserProfile: async (id: string) => {
+    const { data } = await axiosInstance.get<ApiResponse<{ user: User }>>(
+      `/users/${id}`
+    );
     return data;
   },
 };

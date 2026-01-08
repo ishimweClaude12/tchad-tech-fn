@@ -9,6 +9,8 @@ import {
   Check,
   Loader2,
   X,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useUpdateUser, useUsers } from "../../hooks/useApi";
@@ -16,9 +18,11 @@ import { UserRole, type User } from "../../types/Users.types";
 import Modal from "@mui/material/Modal";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Pagination from "@mui/material/Pagination";
 
 const ELearningUsersAdmin: React.FC = () => {
-  const [currentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
   const [, setOpenDropdownId] = useState<string | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -26,10 +30,14 @@ const ELearningUsersAdmin: React.FC = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const {
-    data: users,
+    data: usersData,
     isLoading,
     isError,
-  } = useUsers(currentPage.toString(), "10");
+    error,
+  } = useUsers(currentPage.toString(), itemsPerPage.toString());
+
+  const users = usersData?.users || [];
+  const meta = usersData?.meta;
 
   const handleOpen = (userId: string) => {
     setSelectedUserId(userId);
@@ -96,8 +104,6 @@ const ELearningUsersAdmin: React.FC = () => {
     setUpdatingUserId(userId);
     setOpenDropdownId(null);
 
-    console.log("Updating user role...", { userId, newRole });
-
     try {
       await updateUserMutation.mutateAsync({
         id: userId,
@@ -105,29 +111,12 @@ const ELearningUsersAdmin: React.FC = () => {
       });
 
       toast.success(
-        `User role updated successfully to ${getRoleDisplayName(newRole)}`,
-        {
-          duration: 4000,
-          position: "top-right",
-          style: {
-            background: "#10B981",
-            color: "#ffffff",
-          },
-          icon: "✅",
-        }
+        `User role updated successfully to ${getRoleDisplayName(newRole)}`
       );
     } catch (error) {
       console.error("Failed to update user role:", error);
 
-      toast.error("Failed to update user role. Please try again.", {
-        duration: 5000,
-        position: "top-right",
-        style: {
-          background: "#EF4444",
-          color: "#ffffff",
-        },
-        icon: "❌",
-      });
+      toast.error("Failed to update user role. Please try again.");
     } finally {
       setUpdatingUserId(null);
     }
@@ -166,16 +155,85 @@ const ELearningUsersAdmin: React.FC = () => {
   }
 
   if (isError) {
+    // Extract error message from API response
+    let errorMessage = "Unable to load users. Please try again later.";
+    let statusCode = "";
+
+    if (error && typeof error === "object") {
+      const apiError = error as {
+        response?: {
+          data?: { message?: string; code?: number | string };
+          status?: number;
+        };
+        message?: string;
+      };
+      if (apiError?.response?.data?.message) {
+        errorMessage = apiError.response.data.message;
+      } else if (apiError?.message) {
+        errorMessage = apiError.message;
+      }
+
+      if (apiError?.response?.data?.code) {
+        statusCode = String(apiError.response.data.code);
+      } else if (apiError?.response?.status) {
+        statusCode = String(apiError.response.status);
+      }
+    }
+
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <UserX className="w-8 h-8 text-red-600" />
+      <div className="flex items-center justify-center min-h-[400px] p-6">
+        <div className="text-center max-w-lg mx-auto">
+          {/* Status Code Display */}
+          {statusCode && (
+            <div className="mb-6">
+              <div className="text-9xl font-black text-red-500 mb-2 leading-none">
+                {statusCode}
+              </div>
+              <div className="text-sm font-semibold text-red-600 uppercase tracking-wider">
+                Error Code
+              </div>
+            </div>
+          )}
+
+          {/* Error Icon */}
+          <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+            <AlertCircle className="w-10 h-10 text-red-600" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Error Loading Users
+
+          {/* Error Title */}
+          <h3 className="text-2xl font-bold text-gray-900 mb-3">
+            Failed to Load Users
           </h3>
-          <p className="text-gray-600">Please try again</p>
+
+          {/* Error Message */}
+          <div className="bg-red-50 border border-red-200 rounded-lg px-6 py-4 mb-6">
+            <p className="text-gray-800 text-base leading-relaxed">
+              {errorMessage}
+            </p>
+          </div>
+
+          {/* Retry Button */}
+          <Button
+            onClick={() => globalThis.location.reload()}
+            variant="contained"
+            color="error"
+            size="large"
+            startIcon={<RefreshCw className="w-5 h-5" />}
+            sx={{
+              paddingX: 4,
+              paddingY: 1.5,
+              fontSize: "1rem",
+              fontWeight: 600,
+              textTransform: "none",
+              borderRadius: "12px",
+              boxShadow: "0 4px 6px -1px rgba(239, 68, 68, 0.3)",
+              "&:hover": {
+                boxShadow: "0 10px 15px -3px rgba(239, 68, 68, 0.4)",
+              },
+            }}
+          >
+            Retry Loading
+          </Button>
         </div>
       </div>
     );
@@ -193,10 +251,6 @@ const ELearningUsersAdmin: React.FC = () => {
             Manage user roles and permissions
           </p>
         </div>
-        <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2 justify-center">
-          <UserCheck className="w-4 h-4" />
-          Add User
-        </button>
       </div>
 
       {/* Table */}
@@ -226,7 +280,7 @@ const ELearningUsersAdmin: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {users && users.length > 0 ? (
+              {users.length > 0 ? (
                 users.map((user: User) => (
                   <tr
                     key={user.userId}
@@ -362,6 +416,35 @@ const ELearningUsersAdmin: React.FC = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {meta && meta.totalPages > 1 && (
+          <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+            <div className="text-sm text-gray-700">
+              Showing{" "}
+              <span className="font-medium">
+                {(meta.currentPage - 1) * meta.itemsPerPage + 1}
+              </span>{" "}
+              to{" "}
+              <span className="font-medium">
+                {Math.min(
+                  meta.currentPage * meta.itemsPerPage,
+                  meta.totalItems
+                )}
+              </span>{" "}
+              of <span className="font-medium">{meta.totalItems}</span> users
+            </div>
+            <Pagination
+              count={meta.totalPages}
+              page={meta.currentPage}
+              onChange={(_, page) => setCurrentPage(page)}
+              color="primary"
+              shape="rounded"
+              showFirstButton
+              showLastButton
+            />
+          </div>
+        )}
       </div>
 
       {/* Role Change Modal */}
