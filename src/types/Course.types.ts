@@ -75,3 +75,5 @@ export interface MuxVideo {
 
 export type GetCoursesApiResponse = ApiResponse<CourseResponse>;
 export type GetCourseApiResponse = ApiResponse<{ course: Course }>;
+
+

@@ -40,20 +40,6 @@ export const queryKeys = {
   },
 };
 
-// ============================================
-// Instructors Hooks
-// ============================================
-
- 
-
- 
- 
-
- 
-
- 
-
- 
 
 // ============================================
 // Category Hooks
@@ -155,6 +141,17 @@ export const useUpdateSubCategory = () => {
   });
 };
 
+export const useSubCategoriesByCategory = (categoryId: string) => {
+  return useQuery({
+    queryKey: ["sub-categories", "by-category", categoryId],
+    queryFn: async () => {
+      const response = await subCategoriesApi.getByCategory(categoryId);
+      return response.success ? response.data.subCategories : [];
+    },
+    enabled: !!categoryId,
+  });
+};
+
 // ============================================
 // Users Hooks
 // ============================================
@@ -186,6 +183,16 @@ export const useELearningUser = (id: string) => {
     queryFn: async () => {
       const response = await usersApi.getUserProfile(id);
       return response.success ? response.data.user : null;
+    },
+  });
+};
+
+export const useInstructors = (page: string, limit: string) => {
+  return useQuery({
+    queryKey: ["instructors", page, limit],
+    queryFn: async () => {
+      const response = await usersApi.getAllInstructors(page, limit);
+      return response.success ? response.data.users : [];
     },
   });
 };

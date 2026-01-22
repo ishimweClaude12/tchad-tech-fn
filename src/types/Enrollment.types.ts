@@ -42,3 +42,15 @@ export interface CourseEnrollment {
     price: number;
   };
 }
+
+export interface PayCoursePayload {
+  enrollmentId: string;
+  amount: number;
+  phoneNumber: string;
+}
+
+export type UserEnrollment = Enrollment & {
+  user: {
+    userId: string;
+  };
+}

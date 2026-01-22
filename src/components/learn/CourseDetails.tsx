@@ -15,9 +15,9 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
+  Breadcrumbs,
 } from "@mui/material";
-import { useNavigate, useParams } from "react-router-dom";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import {
   useCourseById,
@@ -87,6 +87,10 @@ export const CourseDetails = () => {
     setAnchorEl(null);
   };
 
+  const handleEnrollments = () => {
+    navigate(`/learn/dashboard/course/${courseId}/enrollments`);
+  };
+
   if (!courseId) {
     return <div className="text-center text-gray-600">No course selected.</div>;
   }
@@ -115,13 +119,13 @@ export const CourseDetails = () => {
   return (
     <div className="space-y-10">
       <div>
-        <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={() => navigate(-1)}
-          variant="text"
-        >
-          Back
-        </Button>
+        <Breadcrumbs aria-label="breadcrumb">
+          <Link color="inherit" to="/learn/dashboard/courses">
+            Courses
+          </Link>
+
+          <Typography sx={{ color: "text.primary" }}>{course.title}</Typography>
+        </Breadcrumbs>
       </div>
       {/* Header */}
       <Card>
@@ -166,6 +170,9 @@ export const CourseDetails = () => {
               </Button>
               <Button variant="outlined" onClick={() => setOpenQuizForm(true)}>
                 Add Quiz
+              </Button>
+              <Button variant="contained" onClick={() => handleEnrollments()}>
+                Enrollments
               </Button>
             </div>
           </div>

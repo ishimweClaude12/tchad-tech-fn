@@ -87,3 +87,19 @@ export const usePublishLesson = () => {
     },
   });
 };
+
+export const useModuleLessons = (moduleId: string) => {
+  return useQuery({
+    queryKey: ["moduleLessons", moduleId],
+    queryFn: () => lessonsApi.moduleLessons(moduleId),
+    enabled: !!moduleId,
+  });
+};
+
+export const useLessonById = (lessonId: string) => {
+  return useQuery({
+    queryKey: ["lesson", lessonId],
+    queryFn: () => lessonsApi.lessonById(lessonId),
+    enabled: !!lessonId,
+  });
+};

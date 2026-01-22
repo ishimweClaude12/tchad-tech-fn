@@ -16,26 +16,24 @@ import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useCourseBySlug } from "../../hooks/learn/useCourseApi";
 import { useAuth } from "@clerk/clerk-react";
-import { useELearningUser } from "../../hooks/useApi";
 import {
   useCheckEnrollment,
   useEnrolInCourse,
 } from "src/hooks/learn/useEnrollmentApi";
-import { EnrollmentStatus } from "src/types/Enrollment.types";
+import {
+  EnrollmentStatus,
+  type CourseEnrollment,
+} from "src/types/Enrollment.types";
 
 const MoreCourseDetails = () => {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const { data, isLoading, error } = useCourseBySlug(slug || "");
 
   const { userId, isSignedIn } = useAuth();
-  const {
-    data: userData,
-    isLoading: isUserLoading,
-    error: userError,
-  } = useELearningUser(userId || "");
 
   const { data: enrollmentData, isLoading: isEnrollmentLoading } =
     useCheckEnrollment(data?.data.course.id || "", userId || "");
@@ -46,6 +44,27 @@ const MoreCourseDetails = () => {
     if (userId && data) {
       enrollmentMutation.mutate({ courseId: data.data.course.id, userId });
     }
+  };
+
+  const hanldeCompletePayment = () => {
+    if (!enrollmentData?.data.enrollment.id || !data?.data.course) return;
+
+    const courseEnrollment: CourseEnrollment = {
+      ...enrollmentData.data.enrollment,
+      id: enrollmentData.data.enrollment.id,
+      courseId: data.data.course.id,
+      userId: userId || "",
+      course: {
+        ...data.data.course,
+        price: Number.parseFloat(data.data.course.price),
+      },
+    };
+
+    navigate(
+      `/learn/${
+        enrollmentData.data.enrollment.id
+      }/checkout?data=${encodeURIComponent(JSON.stringify(courseEnrollment))}`
+    );
   };
 
   // Get enrollment status details
@@ -133,7 +152,13 @@ const MoreCourseDetails = () => {
 
     if (status === EnrollmentStatus.PENDING_PAYMENT) {
       return (
-        <Button variant="contained" size="large" fullWidth color="warning">
+        <Button
+          variant="contained"
+          size="large"
+          fullWidth
+          color="warning"
+          onClick={() => hanldeCompletePayment()}
+        >
           Complete Payment
         </Button>
       );
@@ -144,7 +169,7 @@ const MoreCourseDetails = () => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-64 mx-auto min-w-screen">
         <CircularProgress />
       </div>
     );
@@ -152,7 +177,7 @@ const MoreCourseDetails = () => {
 
   if (error || !data) {
     return (
-      <div className="text-center text-red-500">
+      <div className="text-center text-red-500 min-w-screen">
         Failed to load course details
       </div>
     );
@@ -161,24 +186,9 @@ const MoreCourseDetails = () => {
   const course = data.data.course;
 
   return (
-    <div className=" mx-auto p-8 ">
-      <div>{isSignedIn ? `Logged in user ID: ${userId}` : "Not signed in"}</div>
-      <div> course id: {course.id}</div>
-      <div>
-        {isUserLoading && <div>Loading user data...</div>}
-        {userError && (
-          <div className="text-red-500">Failed to load user data</div>
-        )}
-        {userData && (
-          <div>
-            <h2 className="text-2xl font-semibold mb-4">User Profile</h2>
-            <p>role: {userData.role}</p>
-            <p>Email: {userData.clerkProfile.primaryEmailAddressId}</p>
-          </div>
-        )}
-      </div>
+    <div className=" mx-auto p-4 sm:p-8 min-w-screen space-y-8 max-w-7xl">
       {/* Hero Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
         {/* Left */}
         <div className="lg:col-span-2 space-y-4">
           <Typography variant="h4" fontWeight={700}>
@@ -215,8 +225,8 @@ const MoreCourseDetails = () => {
         </div>
 
         {/* Right Enroll Card */}
-        <Card className="sticky top-24 h-fit">
-          <CardContent className="space-y-4">
+        <Card className="sticky top-24 h-fit w-full -mx-4 sm:mx-0 rounded-none sm:rounded-lg">
+          <CardContent className="space-y-4 w-full px-4 sm:px-4">
             <img
               src={course.thumbnailUrl || "/images/placeholder.jpg"}
               alt={course.title}

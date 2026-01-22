@@ -96,10 +96,7 @@ const TrustedByBanner = () => {
               key={index}
               className="flex-shrink-0 mx-8 md:mx-12 text-gray-400 hover:text-gray-700 transition-colors duration-300 font-bold text-lg cursor-pointer whitespace-nowrap"
             >
-              <img
-                src={`assets/icons/${logo.toLowerCase()}-logo.svg`}
-                alt={logo}
-              />
+              <img src={`/icons/${logo.toLowerCase()}-logo.svg`} alt={logo} />
             </div>
           ))}
         </div>

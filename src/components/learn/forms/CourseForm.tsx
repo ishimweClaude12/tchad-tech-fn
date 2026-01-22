@@ -1,7 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { X, Plus, Trash2, Upload, Video, AlertCircle } from "lucide-react";
+import {
+  X,
+  Plus,
+  Trash2,
+  Upload,
+  Video,
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  UserCircle,
+  Check,
+} from "lucide-react";
 import { Button } from "@mui/material";
 import { useImageUpload } from "../../../hooks/learn/useVideoApi";
+import {
+  useSubCategoriesByCategory,
+  useInstructors,
+} from "../../../hooks/useApi";
 
 // Types
 interface CourseFormData {
@@ -16,7 +31,7 @@ interface CourseFormData {
   learningObjectives: string[];
   prerequisites: string;
   targetAudience: string;
-  difficultyLevel: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+  difficultyLevel: "BIGINNER" | "INTERMEDIATE" | "ADVANCED";
   price: number;
   discountPrice: number;
   currency: string;
@@ -31,7 +46,6 @@ interface CourseFormProps {
   onCancel: () => void;
   initialData?: Partial<CourseFormData>;
   categories: Array<{ id: string; name: string }>;
-  subcategories: Array<{ id: string; name: string; categoryId: string }>;
   instructorId: string;
 }
 
@@ -52,12 +66,19 @@ const ERROR_MESSAGES = {
   invalidNumber: "Please enter a valid number",
 };
 
+// Error display component
+const ErrorMessage: React.FC<{ message: string }> = ({ message }) => (
+  <div className="flex items-center gap-1 mt-1 text-sm text-red-600">
+    <AlertCircle size={14} />
+    <span>{message}</span>
+  </div>
+);
+
 const CourseForm: React.FC<CourseFormProps> = ({
   onSubmit,
   onCancel,
   initialData,
   categories,
-  subcategories,
   instructorId,
 }) => {
   const isEditMode = !!initialData;
@@ -75,7 +96,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
     learningObjectives: [""],
     prerequisites: "",
     targetAudience: "",
-    difficultyLevel: "BEGINNER",
+    difficultyLevel: "BIGINNER",
     price: 0,
     discountPrice: 0,
     currency: "CFA",
@@ -85,6 +106,21 @@ const CourseForm: React.FC<CourseFormProps> = ({
     hasCertificate: true,
     ...initialData,
   });
+
+  // Fetch subcategories based on selected category
+  const { data: subcategoriesData } = useSubCategoriesByCategory(
+    formData.categoryId || "",
+  );
+  const subcategories = subcategoriesData || [];
+
+  // Pagination state for instructors
+  const [instructorPage, setInstructorPage] = useState(1);
+  const instructorsPerPage = 6;
+
+  // Fetch instructors with pagination
+  const { data: instructorsData, isLoading: isLoadingInstructors } =
+    useInstructors(instructorPage.toString(), instructorsPerPage.toString());
+  const instructors = instructorsData || [];
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
@@ -107,13 +143,14 @@ const CourseForm: React.FC<CourseFormProps> = ({
     if (!isEditMode && formData.title) {
       const slug = formData.title
         .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "");
+        .replaceAll(/[^a-z0-9]+/g, "-")
+        .replaceAll(/^-+|-+$/g, "");
       setFormData((prev) => ({ ...prev, slug }));
     }
   }, [formData.title, isEditMode]);
 
   // Validation function
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const validateField = (name: string, value: any): string => {
     switch (name) {
       case "title":
@@ -179,7 +216,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
 
     // Special validation for learning objectives
     const validObjectives = formData.learningObjectives.filter((obj) =>
-      obj.trim()
+      obj.trim(),
     );
     if (validObjectives.length === 0) {
       newErrors.learningObjectives =
@@ -217,7 +254,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    >,
   ) => {
     const { name, value, type } = e.target;
 
@@ -231,7 +268,11 @@ const CourseForm: React.FC<CourseFormProps> = ({
     if (touched[name]) {
       const error = validateField(
         name,
-        type === "number" ? (value === "" ? 0 : parseFloat(value)) : value
+        type === "number"
+          ? value === ""
+            ? 0
+            : Number.parseFloat(value)
+          : value,
       );
       setErrors((prev) => {
         if (error) {
@@ -275,7 +316,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
   const removeObjective = (index: number) => {
     if (formData.learningObjectives.length > 1) {
       const newObjectives = formData.learningObjectives.filter(
-        (_, i) => i !== index
+        (_, i) => i !== index,
       );
       setFormData((prev) => ({ ...prev, learningObjectives: newObjectives }));
     }
@@ -302,7 +343,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
   };
 
   const handleThumbnailUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -368,7 +409,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
       const cleanedData = {
         ...formData,
         learningObjectives: formData.learningObjectives.filter((obj) =>
-          obj.trim()
+          obj.trim(),
         ),
       };
 
@@ -380,16 +421,8 @@ const CourseForm: React.FC<CourseFormProps> = ({
     }
   };
 
-  // Error display component
-  const ErrorMessage: React.FC<{ message: string }> = ({ message }) => (
-    <div className="flex items-center gap-1 mt-1 text-sm text-red-600">
-      <AlertCircle size={14} />
-      <span>{message}</span>
-    </div>
-  );
-
   return (
-    <div className="w-full max-w-5xl mx-auto p-6 bg-white rounded-lg shadow-md">
+    <div className="w-full max-w-5xl mx-auto p-6 bg-white rounded-lg  ">
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -411,7 +444,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                   {Object.entries(errors).map(([field, message]) => (
                     <li key={field}>
                       <span className="font-medium capitalize">
-                        {field.replace(/([A-Z])/g, " $1").trim()}
+                        {field.replaceAll(/([A-Z])/g, " $1").trim()}
                       </span>
                       : {message}
                     </li>
@@ -552,6 +585,160 @@ const CourseForm: React.FC<CourseFormProps> = ({
           </div>
         </section>
 
+        {/* Instructor */}
+        <section className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Course Instructor <span className="text-red-500">*</span>
+              </h3>
+              <p className="text-sm text-gray-500 mt-1">
+                Select an instructor to teach this course
+              </p>
+            </div>
+          </div>
+
+          {errors.instructorId && touched.instructorId && (
+            <div className="mb-4">
+              <ErrorMessage message={errors.instructorId} />
+            </div>
+          )}
+
+          {/* Loading State */}
+          {isLoadingInstructors && (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className="ml-3 text-gray-600">Loading instructors...</span>
+            </div>
+          )}
+
+          {/* Instructors Grid */}
+          {!isLoadingInstructors && instructors.length > 0 && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {instructors.map((instructor) => {
+                  const isSelected =
+                    formData.instructorId === instructor.userId;
+                  return (
+                    <Button
+                      type="button"
+                      key={instructor.userId}
+                      onClick={() => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          instructorId: instructor.userId,
+                        }));
+                        setTouched((prev) => ({ ...prev, instructorId: true }));
+                        setErrors((prev) => {
+                          const newErrors = { ...prev };
+                          delete newErrors.instructorId;
+                          return newErrors;
+                        });
+                      }}
+                      className={`relative p-4 rounded-lg border-2 transition-all duration-200 text-left hover:shadow-md w-full ${
+                        isSelected
+                          ? "border-blue-500 bg-blue-50 shadow-md"
+                          : "border-gray-200 hover:border-blue-300"
+                      }`}
+                    >
+                      {/* Selected Checkmark */}
+                      {isSelected && (
+                        <div className="absolute top-2 right-2 bg-blue-600 rounded-full p-1">
+                          <Check size={16} className="text-white" />
+                        </div>
+                      )}
+
+                      {/* Instructor Avatar */}
+                      <div className="flex items-start space-x-3">
+                        {instructor.clerkProfile.imageUrl ? (
+                          <img
+                            src={instructor.clerkProfile.imageUrl}
+                            alt={`${instructor.clerkProfile.firstName} ${instructor.clerkProfile.lastName}`}
+                            className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = "none";
+                              target.nextElementSibling?.classList.remove(
+                                "hidden",
+                              );
+                            }}
+                          />
+                        ) : null}
+                        <div
+                          className={`w-16 h-16 rounded-full bg-linear-to-br from-blue-400 to-blue-600 flex items-center justify-center ${
+                            instructor.clerkProfile.imageUrl ? "hidden" : ""
+                          }`}
+                        >
+                          <UserCircle size={32} className="text-white" />
+                        </div>
+
+                        {/* Instructor Info */}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-gray-900 truncate">
+                            {instructor.clerkProfile.firstName}{" "}
+                            {instructor.clerkProfile.lastName}
+                          </h4>
+                          {instructor.clerkProfile.username && (
+                            <p className="text-sm text-gray-500 truncate">
+                              @{instructor.clerkProfile.username}
+                            </p>
+                          )}
+                          <div className="mt-1">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                              {instructor.role}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Button>
+                  );
+                })}
+              </div>
+
+              {/* Pagination Controls */}
+              <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                <Button
+                  type="button"
+                  onClick={() =>
+                    setInstructorPage((prev) => Math.max(1, prev - 1))
+                  }
+                  disabled={instructorPage === 1}
+                  className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronLeft size={16} className="mr-1" />
+                  Previous
+                </Button>
+
+                <span className="text-sm text-gray-600">
+                  Page {instructorPage}
+                </span>
+
+                <Button
+                  type="button"
+                  onClick={() => setInstructorPage((prev) => prev + 1)}
+                  disabled={instructors.length < instructorsPerPage}
+                  className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                  <ChevronRight size={16} className="ml-1" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* No Instructors Found */}
+          {!isLoadingInstructors && instructors.length === 0 && (
+            <div className="text-center py-12">
+              <UserCircle size={48} className="mx-auto text-gray-400 mb-3" />
+              <p className="text-gray-600">No instructors found</p>
+              <p className="text-sm text-gray-500 mt-1">
+                {instructorPage > 1
+                  ? "Try going to the previous page"
+                  : "No instructors available"}
+              </p>
+            </div>
+          )}
+        </section>
         {/* Media Assets */}
         <section className="bg-white rounded-lg border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -561,7 +748,10 @@ const CourseForm: React.FC<CourseFormProps> = ({
           <div className="space-y-6">
             {/* Thumbnail Image */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="courseThumbnail"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Course Thumbnail
               </label>
 
@@ -581,18 +771,19 @@ const CourseForm: React.FC<CourseFormProps> = ({
                         }}
                       />
                       <div className="absolute inset-0  bg-opacity-0 group-hover:bg-opacity-40 transition-all rounded-lg flex items-center justify-center">
-                        <button
+                        <Button
                           type="button"
                           onClick={removeThumbnail}
                           className="opacity-0 group-hover:opacity-100 transition-opacity px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center gap-2"
                         >
                           <Trash2 size={16} />
                           Remove
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   ) : (
-                    <div
+                    <Button
+                      type="button"
                       onClick={() => thumbnailFileInputRef.current?.click()}
                       className="w-full h-48 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors"
                     >
@@ -603,7 +794,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                       <p className="text-xs text-gray-500 mt-1">
                         PNG, JPG up to 5MB
                       </p>
-                    </div>
+                    </Button>
                   )}
                   <input
                     ref={thumbnailFileInputRef}
@@ -676,13 +867,13 @@ const CourseForm: React.FC<CourseFormProps> = ({
                       : "border-gray-300"
                   }`}
                 />
-                <button
+                <Button
                   type="button"
                   className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors flex items-center gap-2"
                 >
                   <Video size={16} />
                   Upload
-                </button>
+                </Button>
               </div>
               {errors.previewVideo && touched.previewVideo && (
                 <ErrorMessage message={errors.previewVideo} />
@@ -703,12 +894,15 @@ const CourseForm: React.FC<CourseFormProps> = ({
           <div className="space-y-4">
             {/* Learning Objectives */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="learningObjective-0"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Learning Objectives <span className="text-red-500">*</span>
               </label>
               <div className="space-y-2">
                 {formData.learningObjectives.map((objective, index) => (
-                  <div key={index} className="flex gap-2">
+                  <div key={objective.length + index} className="flex gap-2">
                     <input
                       type="text"
                       value={objective}
@@ -719,25 +913,25 @@ const CourseForm: React.FC<CourseFormProps> = ({
                       className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                     {formData.learningObjectives.length > 1 && (
-                      <button
+                      <Button
                         type="button"
                         onClick={() => removeObjective(index)}
                         className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                       >
                         <Trash2 size={20} />
-                      </button>
+                      </Button>
                     )}
                   </div>
                 ))}
               </div>
-              <button
+              <Button
                 type="button"
                 onClick={addObjective}
                 className="mt-2 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex items-center gap-2"
               >
                 <Plus size={16} />
                 Add Objective
-              </button>
+              </Button>
               {errors.learningObjectives && (
                 <ErrorMessage message={errors.learningObjectives} />
               )}
@@ -821,7 +1015,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 onChange={handleInputChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="BEGINNER">Beginner</option>
+                <option value="BIGINNER">Beginner</option>
                 <option value="INTERMEDIATE">Intermediate</option>
                 <option value="ADVANCED">Advanced</option>
               </select>
@@ -980,13 +1174,13 @@ const CourseForm: React.FC<CourseFormProps> = ({
                       className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm"
                     >
                       {tag}
-                      <button
+                      <Button
                         type="button"
                         onClick={() => removeTag(tag)}
                         className="hover:text-blue-900"
                       >
                         <X size={14} />
-                      </button>
+                      </Button>
                     </span>
                   ))}
                 </div>

@@ -40,12 +40,26 @@ export const ControlledEditor = forwardRef<any, ControlledEditorProps>(
           autocapitalize: "off",
           "aria-label": "Lesson content editor",
           class:
-            "tiptap focus:outline-none prose prose-sm max-w-none w-full p-4",
+            "tiptap focus:outline-none prose prose-lg max-w-none w-full p-6 " +
+            "prose-headings:font-bold prose-headings:text-gray-900 " +
+            "prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-4 " +
+            "prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline " +
+            "prose-strong:text-gray-900 prose-strong:font-semibold " +
+            "prose-ul:list-disc prose-ul:my-4 prose-ol:list-decimal prose-ol:my-4 " +
+            "prose-li:text-gray-700 prose-li:my-1 " +
+            "prose-code:text-pink-600 prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded " +
+            "prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:my-4 " +
+            "prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:my-4 " +
+            "prose-img:rounded-lg prose-img:shadow-md prose-img:my-4 " +
+            "[&_p:empty]:h-6",
         },
       },
       onUpdate: ({ editor }) => {
+        // Get HTML and preserve empty paragraphs by ensuring they have proper spacing
         const html = editor.getHTML();
-        onChange?.(html);
+        // Replace empty paragraphs with paragraphs containing line break for proper spacing
+        const preservedHtml = html.replaceAll(/<p><\/p>/g, "<p><br></p>");
+        onChange?.(preservedHtml);
       },
       extensions: [
         StarterKit.configure({

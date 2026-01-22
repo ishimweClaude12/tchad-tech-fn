@@ -261,7 +261,6 @@ const CoursesAdmin: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const { data: coursesData, isLoading, error, refetch } = useCourses();
   const { data: categoriesData } = useCategories();
-  const { data: subcategoriesData } = useSubCategories();
   const createCourseMutation = useCreateCourse();
   const updateCourseMutation = useUpdateCourse();
   const deleteCourseMutation = useDeleteCourse();
@@ -280,7 +279,6 @@ const CoursesAdmin: React.FC = () => {
   // Extract courses and categories
   const courses = coursesData?.data?.courses || [];
   const apiCategories = categoriesData || [];
-  const apiSubcategories = subcategoriesData || [];
 
   // No search/filters: use all courses as-is
   const filteredAndSortedCourses = courses;
@@ -290,7 +288,7 @@ const CoursesAdmin: React.FC = () => {
     const startIndex = (page - 1) * itemsPerPage;
     return filteredAndSortedCourses.slice(
       startIndex,
-      startIndex + itemsPerPage
+      startIndex + itemsPerPage,
     );
   }, [filteredAndSortedCourses, page]);
 
@@ -300,10 +298,10 @@ const CoursesAdmin: React.FC = () => {
   const stats = useMemo(() => {
     const totalEnrollments = courses.reduce(
       (sum, c) => sum + c.enrollmentCount,
-      0
+      0,
     );
     const activeCourses = courses.filter(
-      (c) => c.status === "published"
+      (c) => c.status === "published",
     ).length;
     const avgRating =
       courses.reduce((sum, c) => sum + (c.ratingAverage || 0), 0) /
@@ -320,7 +318,7 @@ const CoursesAdmin: React.FC = () => {
   // Handlers
   const handleMenuOpen = (
     event: React.MouseEvent<HTMLElement>,
-    course: Course
+    course: Course,
   ) => {
     setAnchorEl(event.currentTarget);
     setSelectedCourse(course);
@@ -482,11 +480,6 @@ const CoursesAdmin: React.FC = () => {
                 borderRadius: 2,
                 border: "1px solid",
                 borderColor: "divider",
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  transform: "translateY(-4px)",
-                  boxShadow: 4,
-                },
               }}
             >
               <CardMedia
@@ -982,7 +975,7 @@ const CoursesAdmin: React.FC = () => {
                       selectedCourse.totalDurationMinutes / 60,
                     price: Number.parseFloat(selectedCourse.price),
                     discountPrice: Number.parseFloat(
-                      selectedCourse.discountPrice || "0"
+                      selectedCourse.discountPrice || "0",
                     ),
                     currency: selectedCourse.currency,
                     categoryId: selectedCourse.category?.id || "",
@@ -996,13 +989,7 @@ const CoursesAdmin: React.FC = () => {
               id: cat.id,
               name: cat.name,
             }))}
-            subcategories={apiSubcategories.map((sub) => ({
-              id: sub.id,
-              name: sub.name,
-              categoryId: sub.id,
-            }))}
             instructorId={user?.id || ""}
-            language={language}
           />
         </Box>
       </Modal>

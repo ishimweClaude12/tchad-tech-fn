@@ -76,3 +76,10 @@ export const useUpdateModule = () => {
     },
   });
 };
+
+export const usePublishedModulesByCourseId = (courseId: string) => {
+  return useQuery<GetCourseModulesApiResponse>({
+    queryKey: ["publishedModules", courseId],
+    queryFn: () => modulesApi.getPublishedModulesByCourseId(courseId),
+  });
+};

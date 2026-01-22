@@ -45,4 +45,16 @@ export const lessonsApi = {
     );
     return data;
   },
+  moduleLessons: async (moduleId: string) => {
+    const { data } = await axiosInstance.get<
+      ApiResponse<{ lessons: Lesson[] }>
+    >(`/lesson/module/${moduleId}`);
+    return data;
+  },
+  lessonById: async (lessonId: string) => {
+    const { data } = await axiosInstance.get<ApiResponse<{ lesson: Lesson }>>(
+      `/lesson/${lessonId}`
+    );
+    return data;
+  },
 };

@@ -2,21 +2,26 @@ import { useAuth } from "@clerk/clerk-react";
 import { Typography } from "@mui/material";
 import { useUserEnrollments } from "src/hooks/learn/useEnrollmentApi";
 import CourseEnrollmentCard from "./CourseEnrollmentCard";
+import { useNavigate } from "react-router-dom";
+import type { CourseEnrollment } from "src/types/Enrollment.types";
 
 export const EnrolledCourseSection: React.FC = () => {
   const { userId, isSignedIn } = useAuth();
   const { data: enrollments } = useUserEnrollments(userId || "");
+  const navigate = useNavigate();
 
   // Handlers
 
   const handleContinueLearning = (courseId: string) => {
-    console.log("Continue learning course:", courseId);
-    alert(`Navigating to course: ${courseId}`);
+    navigate(`/learn/progress/${courseId}`);
   };
 
-  const handleCompletePayment = (enrollmentId: string) => {
-    console.log("Complete payment for enrollment:", enrollmentId);
-    alert(`Opening payment page for enrollment: ${enrollmentId}`);
+  const handleCompletePayment = (enrollment: CourseEnrollment) => {
+    navigate(
+      `/learn/${enrollment.id}/checkout?data=${encodeURIComponent(
+        JSON.stringify(enrollment)
+      )}`
+    );
   };
 
   const handleViewCertificate = (courseId: string) => {
@@ -47,7 +52,7 @@ export const EnrolledCourseSection: React.FC = () => {
               key={enrollment.id}
               enrollment={enrollment}
               onContinueLearning={handleContinueLearning}
-              onCompletePayment={handleCompletePayment}
+              onCompletePayment={() => handleCompletePayment(enrollment)}
               onViewCertificate={handleViewCertificate}
               onViewDetails={handleViewDetails}
             />
