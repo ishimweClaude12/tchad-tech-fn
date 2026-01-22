@@ -12,8 +12,9 @@ import {
   Menu,
   MenuItem,
   IconButton,
+  Breadcrumbs,
 } from "@mui/material";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useModuleById } from "../../hooks/learn/useModulesApi";
 import {
   useLessonsByModuleId,
@@ -23,7 +24,6 @@ import {
 import { useState } from "react";
 import LessonForm from "../../components/learn/forms/LessonForm";
 import MoreVertOutlinedIcon from "@mui/icons-material/MoreVertOutlined";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import PublishIcon from "@mui/icons-material/Publish";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
@@ -40,6 +40,14 @@ import QuizCard from "../../components/learn/QuizCard";
 import QuizFormModal from "../../components/learn/forms/QuizForm";
 import type { Quiz } from "src/types/Quiz.types";
 import { useQueryClient } from "@tanstack/react-query";
+
+// Decode HTML entities while preserving HTML structure
+const decodeHTMLEntities = (text: string): string => {
+  const textarea = document.createElement("textarea");
+  textarea.innerHTML = text;
+  return textarea.value;
+};
+
 const style = {
   position: "absolute",
   top: "50%",
@@ -235,34 +243,21 @@ export const ModuleDetails = () => {
   const module = moduleData;
   const lessons = lessonsData?.data.lessons ?? [];
 
-  // Decode escaped HTML entities if content was stored encoded
-  const getHtmlContent = (text?: string | null) => {
-    if (!text) return "";
-    // If the content includes HTML-escaped characters like &lt; or &gt;, decode them
-    if (/&lt;|&gt;|&amp;/.test(text)) {
-      try {
-        const doc = new DOMParser().parseFromString(text, "text/html");
-        const decoded = doc.documentElement.textContent || text;
-        return decoded;
-      } catch (error) {
-        console.error("Failed to decode HTML content:", error);
-        return text;
-      }
-    }
-
-    return text;
-  };
-
   return (
     <div className="space-y-8">
       <div>
-        <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={() => navigate(-1)}
-          variant="text"
-        >
-          Back
-        </Button>
+        <Breadcrumbs aria-label="breadcrumb">
+          <Link color="inherit" to="/learn/dashboard/courses">
+            Courses
+          </Link>
+          <Link
+            color="inherit"
+            to={`/learn/dashboard/courses/${module.courseId}`}
+          >
+            {module.course.title}
+          </Link>
+          <Typography sx={{ color: "text.primary" }}>{module.title}</Typography>
+        </Breadcrumbs>
       </div>
       {/* Module Header */}
       <Card>
@@ -706,8 +701,22 @@ export const ModuleDetails = () => {
                     <Card variant="outlined">
                       <CardContent className="prose max-w-none">
                         <div
+                          className="prose prose-lg max-w-none 
+                prose-headings:font-bold prose-headings:text-gray-900
+                prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-4
+                prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline
+                prose-strong:text-gray-900 prose-strong:font-semibold
+                prose-ul:list-disc prose-ul:my-4 prose-ol:list-decimal prose-ol:my-4
+                prose-li:text-gray-700 prose-li:my-1
+                prose-code:text-pink-600 prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded
+                prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:my-4
+                prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:my-4
+                prose-img:rounded-lg prose-img:shadow-md prose-img:my-4
+                [&_p:empty]:h-6"
                           dangerouslySetInnerHTML={{
-                            __html: getHtmlContent(selectedLesson.textContent),
+                            __html: decodeHTMLEntities(
+                              selectedLesson.textContent || ""
+                            ),
                           }}
                         />
                       </CardContent>

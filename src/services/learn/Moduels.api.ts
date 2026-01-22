@@ -42,4 +42,10 @@ export const modulesApi = {
     );
     return response.data;
   },
+  getPublishedModulesByCourseId: async (courseId: string) => {
+    const { data } = await axiosInstance.get<GetCourseModulesApiResponse>(
+      `/modules/course/${courseId}`
+    );
+    return data;
+  },
 };

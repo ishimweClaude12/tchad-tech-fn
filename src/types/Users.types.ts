@@ -13,12 +13,12 @@ export const UserRole = {
   STUDENT: "STUDENT",
   ADMIN: "ADMIN",
   SUPPER_ADMIN: "SUPPER_ADMIN",
+  INSTRUCTOR: "INSTRUCTOR",
 } as const;
 
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
 export interface User {
-  id: string;
   userId: string;
   role: UserRole;
   clerkProfile: ClerkProfile;

@@ -234,9 +234,9 @@ const CourseCategoriesAdmin: React.FC = () => {
             <h2 className="font-heading text-2xl font-semibold text-gray-700 mb-4">
               {text.error}
             </h2>
-            <button onClick={() => refetch()} className="btn-primary">
+            <Button onClick={() => refetch()} className="btn-primary">
               {text.retry}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -327,7 +327,7 @@ const CourseCategoriesAdmin: React.FC = () => {
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center justify-center gap-2">
-                            <button
+                            <Button
                               onClick={() => handleEdit(category)}
                               className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                               aria-label={`${text.edit} ${category.name}`}
@@ -345,8 +345,8 @@ const CourseCategoriesAdmin: React.FC = () => {
                                   d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                                 />
                               </svg>
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                               onClick={() => handleDeleteClick(category)}
                               className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                               aria-label={`${text.delete} ${category.name}`}
@@ -364,7 +364,7 @@ const CourseCategoriesAdmin: React.FC = () => {
                                   d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                                 />
                               </svg>
-                            </button>
+                            </Button>
                           </div>
                         </td>
                       </tr>
@@ -398,18 +398,18 @@ const CourseCategoriesAdmin: React.FC = () => {
                           {category.description}
                         </p>
                         <div className="flex gap-2">
-                          <button
+                          <Button
                             onClick={() => handleEdit(category)}
                             className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
                           >
                             {text.edit}
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             onClick={() => handleDeleteClick(category)}
                             className="flex-1 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
                           >
                             {text.delete}
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     </div>

@@ -3,9 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { UserRole } from "../types/Users.types";
 import {
   categoriesApi,
-  instructorsApi,
   modulesApi,
-  myLearningApi,
   subCategoriesApi,
   usersApi,
 } from "../services/api";
@@ -25,6 +23,7 @@ export const queryKeys = {
     slug: (slug: string) => [...queryKeys.courses.all, "slug", slug] as const,
     modules: (courseId: string) =>
       [...queryKeys.courses.all, "modules", courseId] as const,
+    published: () => [...queryKeys.courses.all, "published"] as const,
   },
   instructors: {
     all: ["instructors"] as const,
@@ -41,90 +40,6 @@ export const queryKeys = {
   },
 };
 
-// ============================================
-// Instructors Hooks
-// ============================================
-
-// Get all instructors
-export const useInstructors = (filters?: {
-  search?: string;
-  expertise?: string;
-}) => {
-  return useQuery({
-    queryKey: queryKeys.instructors.list(filters),
-    queryFn: () => instructorsApi.getAll(filters),
-  });
-};
-
-// Get instructor by ID
-export const useInstructor = (id: string) => {
-  return useQuery({
-    queryKey: queryKeys.instructors.detail(id),
-    queryFn: () => instructorsApi.getById(id),
-    enabled: !!id,
-  });
-};
-
-// Get instructor courses
-export const useInstructorCourses = (instructorId: string) => {
-  return useQuery({
-    queryKey: queryKeys.instructors.courses(instructorId),
-    queryFn: () => instructorsApi.getCourses(instructorId),
-    enabled: !!instructorId,
-  });
-};
-
-// ============================================
-// My Learning Hooks
-// ============================================
-
-// Get user enrollments
-export const useMyEnrollments = () => {
-  return useQuery({
-    queryKey: queryKeys.myLearning.enrollments(),
-    queryFn: myLearningApi.getEnrollments,
-  });
-};
-
-// Update course progress
-export const useUpdateProgress = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({
-      courseId,
-      progress,
-    }: {
-      courseId: string;
-      progress: number;
-    }) => myLearningApi.updateProgress(courseId, progress),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.myLearning.enrollments(),
-      });
-    },
-  });
-};
-
-// Complete lesson
-export const useCompleteLesson = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({
-      courseId,
-      lessonId,
-    }: {
-      courseId: string;
-      lessonId: string;
-    }) => myLearningApi.completeLesson(courseId, lessonId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.myLearning.enrollments(),
-      });
-    },
-  });
-};
 
 // ============================================
 // Category Hooks
@@ -226,6 +141,17 @@ export const useUpdateSubCategory = () => {
   });
 };
 
+export const useSubCategoriesByCategory = (categoryId: string) => {
+  return useQuery({
+    queryKey: ["sub-categories", "by-category", categoryId],
+    queryFn: async () => {
+      const response = await subCategoriesApi.getByCategory(categoryId);
+      return response.success ? response.data.subCategories : [];
+    },
+    enabled: !!categoryId,
+  });
+};
+
 // ============================================
 // Users Hooks
 // ============================================
@@ -234,7 +160,7 @@ export const useUsers = (page: string, limit: string) => {
     queryKey: ["users", page, limit],
     queryFn: async () => {
       const response = await usersApi.getAll(page, limit);
-      return response.success ? response.data.users : [];
+      return response.success ? response.data : { users: [], meta: null };
     },
   });
 };
@@ -247,6 +173,26 @@ export const useUpdateUser = () => {
       usersApi.updateUser(id, role),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+};
+
+export const useELearningUser = (id: string) => {
+  return useQuery({
+    queryKey: ["user", id],
+    queryFn: async () => {
+      const response = await usersApi.getUserProfile(id);
+      return response.success ? response.data.user : null;
+    },
+  });
+};
+
+export const useInstructors = (page: string, limit: string) => {
+  return useQuery({
+    queryKey: ["instructors", page, limit],
+    queryFn: async () => {
+      const response = await usersApi.getAllInstructors(page, limit);
+      return response.success ? response.data.users : [];
     },
   });
 };

@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-
 import {
   MoreVertical,
   UserCheck,
@@ -10,19 +9,20 @@ import {
   Check,
   Loader2,
   X,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { useLanguage } from "../../contexts/LanguageContext";
 import { useUpdateUser, useUsers } from "../../hooks/useApi";
 import { UserRole, type User } from "../../types/Users.types";
 import Modal from "@mui/material/Modal";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Pagination from "@mui/material/Pagination";
 
 const ELearningUsersAdmin: React.FC = () => {
-  const { language, isRTL } = useLanguage();
-  const [currentPage] = useState(1);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
   const [, setOpenDropdownId] = useState<string | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -30,10 +30,14 @@ const ELearningUsersAdmin: React.FC = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const {
-    data: users,
+    data: usersData,
     isLoading,
     isError,
-  } = useUsers(currentPage.toString(), "10");
+    error,
+  } = useUsers(currentPage.toString(), itemsPerPage.toString());
+
+  const users = usersData?.users || [];
+  const meta = usersData?.meta;
 
   const handleOpen = (userId: string) => {
     setSelectedUserId(userId);
@@ -47,10 +51,11 @@ const ELearningUsersAdmin: React.FC = () => {
 
   // Format date helper
   const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleDateString(
-      language === "ar" ? "ar-EG" : language === "fr" ? "fr-FR" : "en-US",
-      { year: "numeric", month: "short", day: "numeric" }
-    );
+    return new Date(timestamp).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
   // Format relative time
@@ -59,31 +64,12 @@ const ELearningUsersAdmin: React.FC = () => {
     const diff = now - timestamp;
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-    if (days === 0)
-      return language === "ar"
-        ? "اليوم"
-        : language === "fr"
-        ? "Aujourd'hui"
-        : "Today";
-    if (days === 1)
-      return language === "ar"
-        ? "أمس"
-        : language === "fr"
-        ? "Hier"
-        : "Yesterday";
-    if (days < 7)
-      return `${days} ${
-        language === "ar" ? "أيام" : language === "fr" ? "jours" : "days ago"
-      }`;
+    if (days === 0) return "Today";
+    if (days === 1) return "Yesterday";
+    if (days < 7) return `${days} days ago`;
     if (days < 30) {
       const weeks = Math.floor(days / 7);
-      return `${weeks} ${
-        language === "ar"
-          ? "أسابيع"
-          : language === "fr"
-          ? "semaines"
-          : "weeks ago"
-      }`;
+      return `${weeks} weeks ago`;
     }
     return formatDate(timestamp);
   };
@@ -105,31 +91,6 @@ const ELearningUsersAdmin: React.FC = () => {
 
   // Get role display name
   const getRoleDisplayName = (role: UserRole) => {
-    if (language === "ar") {
-      const arabicRoles = {
-        SUPPER_ADMIN: "مدير عام",
-        ADMIN: "مدير",
-        INSTRUCTOR: "مدرس",
-        STUDENT: "طالب",
-        INNOVATOR: "مبتكر",
-        INVESTOR: "مستثمر",
-        CLIENT: "عميل",
-        BUSINESS_AGENT: "وكيل أعمال",
-      };
-      return arabicRoles[role] || role;
-    } else if (language === "fr") {
-      const frenchRoles = {
-        SUPPER_ADMIN: "Super Admin",
-        ADMIN: "Administrateur",
-        INSTRUCTOR: "Instructeur",
-        STUDENT: "Étudiant",
-        INNOVATOR: "Innovateur",
-        INVESTOR: "Investisseur",
-        CLIENT: "Client",
-        BUSINESS_AGENT: "Agent Commercial",
-      };
-      return frenchRoles[role] || role;
-    }
     return role.replace(/_/g, " ");
   };
 
@@ -143,53 +104,19 @@ const ELearningUsersAdmin: React.FC = () => {
     setUpdatingUserId(userId);
     setOpenDropdownId(null);
 
-    console.log("Updating user role...", { userId, newRole });
-
     try {
       await updateUserMutation.mutateAsync({
         id: userId,
         role: newRole,
       });
 
-      // Show success toast message
-      const successMessage =
-        language === "ar"
-          ? `تم تحديث دور المستخدم بنجاح إلى ${getRoleDisplayName(newRole)}`
-          : language === "fr"
-          ? `Rôle utilisateur mis à jour avec succès vers ${getRoleDisplayName(
-              newRole
-            )}`
-          : `User role updated successfully to ${getRoleDisplayName(newRole)}`;
-
-      toast.success(successMessage, {
-        duration: 4000,
-        position: isRTL ? "top-left" : "top-right",
-        style: {
-          background: "#10B981",
-          color: "#ffffff",
-        },
-        icon: "✅",
-      });
+      toast.success(
+        `User role updated successfully to ${getRoleDisplayName(newRole)}`
+      );
     } catch (error) {
       console.error("Failed to update user role:", error);
 
-      // Show error toast message
-      const errorMessage =
-        language === "ar"
-          ? "فشل في تحديث دور المستخدم. يرجى المحاولة مرة أخرى."
-          : language === "fr"
-          ? "Échec de la mise à jour du rôle utilisateur. Veuillez réessayer."
-          : "Failed to update user role. Please try again.";
-
-      toast.error(errorMessage, {
-        duration: 5000,
-        position: isRTL ? "top-left" : "top-right",
-        style: {
-          background: "#EF4444",
-          color: "#ffffff",
-        },
-        icon: "❌",
-      });
+      toast.error("Failed to update user role. Please try again.");
     } finally {
       setUpdatingUserId(null);
     }
@@ -213,54 +140,6 @@ const ELearningUsersAdmin: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Get translation for action menu items
-  const getTranslation = (key: string) => {
-    const translations: Record<string, Record<string, string>> = {
-      viewDetails: {
-        en: "View Details",
-        fr: "Voir les détails",
-        ar: "عرض التفاصيل",
-      },
-      editUser: {
-        en: "Edit User",
-        fr: "Modifier l'utilisateur",
-        ar: "تعديل المستخدم",
-      },
-      deleteUser: {
-        en: "Delete User",
-        fr: "Supprimer l'utilisateur",
-        ar: "حذف المستخدم",
-      },
-      changeRole: {
-        en: "Change User Role",
-        fr: "Changer le rôle",
-        ar: "تغيير دور المستخدم",
-      },
-      lockAccount: {
-        en: "Lock Account",
-        fr: "Verrouiller le compte",
-        ar: "قفل الحساب",
-      },
-      unlockAccount: {
-        en: "Unlock Account",
-        fr: "Déverrouiller le compte",
-        ar: "فتح الحساب",
-      },
-      banUser: {
-        en: "Ban User",
-        fr: "Bannir l'utilisateur",
-        ar: "حظر المستخدم",
-      },
-      unbanUser: {
-        en: "Unban User",
-        fr: "Débannir l'utilisateur",
-        ar: "إلغاء الحظر",
-      },
-    };
-
-    return translations[key]?.[language] || translations[key]?.en || key;
-  };
-
   // Get the selected user for the modal
   const selectedUser = users?.find((u: User) => u.userId === selectedUserId);
 
@@ -269,84 +148,109 @@ const ELearningUsersAdmin: React.FC = () => {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-600">
-            {language === "ar"
-              ? "جاري التحميل..."
-              : language === "fr"
-              ? "Chargement..."
-              : "Loading..."}
-          </p>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
   }
 
   if (isError) {
+    // Extract error message from API response
+    let errorMessage = "Unable to load users. Please try again later.";
+    let statusCode = "";
+
+    if (error && typeof error === "object") {
+      const apiError = error as {
+        response?: {
+          data?: { message?: string; code?: number | string };
+          status?: number;
+        };
+        message?: string;
+      };
+      if (apiError?.response?.data?.message) {
+        errorMessage = apiError.response.data.message;
+      } else if (apiError?.message) {
+        errorMessage = apiError.message;
+      }
+
+      if (apiError?.response?.data?.code) {
+        statusCode = String(apiError.response.data.code);
+      } else if (apiError?.response?.status) {
+        statusCode = String(apiError.response.status);
+      }
+    }
+
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <UserX className="w-8 h-8 text-red-600" />
+      <div className="flex items-center justify-center min-h-[400px] p-6">
+        <div className="text-center max-w-lg mx-auto">
+          {/* Status Code Display */}
+          {statusCode && (
+            <div className="mb-6">
+              <div className="text-9xl font-black text-red-500 mb-2 leading-none">
+                {statusCode}
+              </div>
+              <div className="text-sm font-semibold text-red-600 uppercase tracking-wider">
+                Error Code
+              </div>
+            </div>
+          )}
+
+          {/* Error Icon */}
+          <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+            <AlertCircle className="w-10 h-10 text-red-600" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            {language === "ar"
-              ? "خطأ في تحميل المستخدمين"
-              : language === "fr"
-              ? "Erreur de chargement"
-              : "Error Loading Users"}
+
+          {/* Error Title */}
+          <h3 className="text-2xl font-bold text-gray-900 mb-3">
+            Failed to Load Users
           </h3>
-          <p className="text-gray-600">
-            {language === "ar"
-              ? "يرجى المحاولة مرة أخرى"
-              : language === "fr"
-              ? "Veuillez réessayer"
-              : "Please try again"}
-          </p>
+
+          {/* Error Message */}
+          <div className="bg-red-50 border border-red-200 rounded-lg px-6 py-4 mb-6">
+            <p className="text-gray-800 text-base leading-relaxed">
+              {errorMessage}
+            </p>
+          </div>
+
+          {/* Retry Button */}
+          <Button
+            onClick={() => globalThis.location.reload()}
+            variant="contained"
+            color="error"
+            size="large"
+            startIcon={<RefreshCw className="w-5 h-5" />}
+            sx={{
+              paddingX: 4,
+              paddingY: 1.5,
+              fontSize: "1rem",
+              fontWeight: 600,
+              textTransform: "none",
+              borderRadius: "12px",
+              boxShadow: "0 4px 6px -1px rgba(239, 68, 68, 0.3)",
+              "&:hover": {
+                boxShadow: "0 10px 15px -3px rgba(239, 68, 68, 0.4)",
+              },
+            }}
+          >
+            Retry Loading
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 ">
+    <div className="space-y-6">
       {/* Header */}
-      <div
-        className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${
-          isRTL ? "sm:flex-row-reverse" : ""
-        }`}
-      >
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1
-            className={`text-2xl font-bold text-gray-900 ${
-              isRTL ? "text-right" : "text-left"
-            }`}
-          >
-            {language === "ar"
-              ? "إدارة المستخدمين"
-              : language === "fr"
-              ? "Gestion des Utilisateurs"
-              : "User Management"}
+          <h1 className="text-2xl font-bold text-gray-900 text-left">
+            User Management
           </h1>
-          <p
-            className={`text-gray-600 mt-1 ${
-              isRTL ? "text-right" : "text-left"
-            }`}
-          >
-            {language === "ar"
-              ? "إدارة أدوار المستخدمين وصلاحياتهم"
-              : language === "fr"
-              ? "Gérer les rôles et permissions des utilisateurs"
-              : "Manage user roles and permissions"}
+          <p className="text-gray-600 mt-1 text-left">
+            Manage user roles and permissions
           </p>
         </div>
-        <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2 justify-center">
-          <UserCheck className="w-4 h-4" />
-          {language === "ar"
-            ? "إضافة مستخدم"
-            : language === "fr"
-            ? "Ajouter Utilisateur"
-            : "Add User"}
-        </button>
       </div>
 
       {/* Table */}
@@ -355,103 +259,44 @@ const ELearningUsersAdmin: React.FC = () => {
           <table className="min-w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th
-                  className={`px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                    isRTL ? "text-right" : "text-left"
-                  }`}
-                >
-                  {language === "ar"
-                    ? "المستخدم"
-                    : language === "fr"
-                    ? "Utilisateur"
-                    : "User"}
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-left">
+                  User
                 </th>
-                <th
-                  className={`px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                    isRTL ? "text-right" : "text-left"
-                  }`}
-                >
-                  {language === "ar"
-                    ? "الدور"
-                    : language === "fr"
-                    ? "Rôle"
-                    : "Role"}
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-left">
+                  Role
                 </th>
-                <th
-                  className={`px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                    isRTL ? "text-right" : "text-left"
-                  }`}
-                >
-                  {language === "ar"
-                    ? "الحالة"
-                    : language === "fr"
-                    ? "Statut"
-                    : "Status"}
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-left">
+                  Status
                 </th>
-                <th
-                  className={`px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                    isRTL ? "text-right" : "text-left"
-                  }`}
-                >
-                  {language === "ar"
-                    ? "آخر تسجيل دخول"
-                    : language === "fr"
-                    ? "Dernière connexion"
-                    : "Last Sign In"}
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-left">
+                  Last Sign In
                 </th>
-                <th
-                  className={`px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                    isRTL ? "text-right" : "text-left"
-                  }`}
-                >
-                  {language === "ar"
-                    ? "تاريخ الانضمام"
-                    : language === "fr"
-                    ? "Date d'inscription"
-                    : "Joined Date"}
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-left">
+                  Joined Date
                 </th>
-                <th
-                  className={`px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                    isRTL ? "text-right" : "text-left"
-                  }`}
-                >
-                  {language === "ar"
-                    ? "الإجراءات"
-                    : language === "fr"
-                    ? "Actions"
-                    : "Actions"}
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-left">
+                  Actions
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {users && users.length > 0 ? (
+              {users.length > 0 ? (
                 users.map((user: User) => (
                   <tr
-                    key={user.id}
+                    key={user.userId}
                     className="hover:bg-gray-50 transition-colors"
                   >
                     {/* User Info */}
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div
-                        className={`flex items-center gap-3 ${
-                          isRTL ? "flex-row-reverse" : ""
-                        }`}
-                      >
+                      <div className="flex items-center gap-3">
                         <div className="shrink-0">
-                          {user.clerkProfile.hasImage ? (
-                            <img
-                              src={user.clerkProfile.imageUrl}
-                              alt={`${user.clerkProfile.firstName} ${user.clerkProfile.lastName}`}
-                              className="w-10 h-10 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 rounded-full bg-linear-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-semibold">
-                              {user.clerkProfile.firstName?.[0]}
-                              {user.clerkProfile.lastName?.[0]}
-                            </div>
-                          )}
+                          <img
+                            src={user.clerkProfile.imageUrl}
+                            alt={`${user.clerkProfile.firstName} ${user.clerkProfile.lastName}`}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
                         </div>
-                        <div className={isRTL ? "text-right" : "text-left"}>
+                        <div className="text-left">
                           <div className="font-medium text-gray-900">
                             {user.clerkProfile.firstName}{" "}
                             {user.clerkProfile.lastName}
@@ -472,7 +317,7 @@ const ELearningUsersAdmin: React.FC = () => {
                     {/* Role */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
-                        {updatingUserId === user.id && (
+                        {updatingUserId === user.userId && (
                           <Loader2 className="w-4 h-4 animate-spin text-primary-600" />
                         )}
                         <span
@@ -492,40 +337,24 @@ const ELearningUsersAdmin: React.FC = () => {
                         {user.clerkProfile.banned ? (
                           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200 w-fit">
                             <UserX className="w-3 h-3" />
-                            {language === "ar"
-                              ? "محظور"
-                              : language === "fr"
-                              ? "Banni"
-                              : "Banned"}
+                            Banned
                           </span>
                         ) : user.clerkProfile.locked ? (
                           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200 w-fit">
                             <UserX className="w-3 h-3" />
-                            {language === "ar"
-                              ? "مقفل"
-                              : language === "fr"
-                              ? "Verrouillé"
-                              : "Locked"}
+                            Locked
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200 w-fit">
                             <UserCheck className="w-3 h-3" />
-                            {language === "ar"
-                              ? "نشط"
-                              : language === "fr"
-                              ? "Actif"
-                              : "Active"}
+                            Active
                           </span>
                         )}
                         {user.clerkProfile.emailAddresses[0]?.verification
                           .status === "verified" && (
                           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200 w-fit">
                             <Mail className="w-3 h-3" />
-                            {language === "ar"
-                              ? "موثق"
-                              : language === "fr"
-                              ? "Vérifié"
-                              : "Verified"}
+                            Verified
                           </span>
                         )}
                       </div>
@@ -533,29 +362,17 @@ const ELearningUsersAdmin: React.FC = () => {
 
                     {/* Last Sign In */}
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div
-                        className={`text-sm text-gray-900 ${
-                          isRTL ? "text-right" : "text-left"
-                        }`}
-                      >
+                      <div className="text-sm text-gray-900 text-left">
                         {formatRelativeTime(user.clerkProfile.lastSignInAt)}
                       </div>
-                      <div
-                        className={`text-xs text-gray-500 ${
-                          isRTL ? "text-right" : "text-left"
-                        }`}
-                      >
+                      <div className="text-xs text-gray-500 text-left">
                         {formatDate(user.clerkProfile.lastSignInAt)}
                       </div>
                     </td>
 
                     {/* Joined Date */}
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div
-                        className={`flex items-center gap-1 text-sm text-gray-900 ${
-                          isRTL ? "flex-row-reverse" : ""
-                        }`}
-                      >
+                      <div className="flex items-center gap-1 text-sm text-gray-900">
                         <Calendar className="w-4 h-4 text-gray-400" />
                         {formatDate(user.clerkProfile.createdAt)}
                       </div>
@@ -565,9 +382,9 @@ const ELearningUsersAdmin: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <Button
                         onClick={() => handleOpen(user.userId)}
-                        disabled={updatingUserId === user.id}
+                        disabled={updatingUserId === user.userId}
                         className={`p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors ${
-                          updatingUserId === user.id
+                          updatingUserId === user.userId
                             ? "opacity-50 cursor-not-allowed"
                             : ""
                         }`}
@@ -586,18 +403,10 @@ const ELearningUsersAdmin: React.FC = () => {
                       </div>
                       <div>
                         <h3 className="text-lg font-medium text-gray-900">
-                          {language === "ar"
-                            ? "لم يتم العثور على مستخدمين"
-                            : language === "fr"
-                            ? "Aucun utilisateur trouvé"
-                            : "No Users Found"}
+                          No Users Found
                         </h3>
                         <p className="text-sm text-gray-500 mt-1">
-                          {language === "ar"
-                            ? "جرب تعديل معايير البحث أو الفلترة"
-                            : language === "fr"
-                            ? "Essayez de modifier vos critères de recherche"
-                            : "Try adjusting your search or filter criteria"}
+                          Try adjusting your search or filter criteria
                         </p>
                       </div>
                     </div>
@@ -607,6 +416,35 @@ const ELearningUsersAdmin: React.FC = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {meta && meta.totalPages > 1 && (
+          <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+            <div className="text-sm text-gray-700">
+              Showing{" "}
+              <span className="font-medium">
+                {(meta.currentPage - 1) * meta.itemsPerPage + 1}
+              </span>{" "}
+              to{" "}
+              <span className="font-medium">
+                {Math.min(
+                  meta.currentPage * meta.itemsPerPage,
+                  meta.totalItems
+                )}
+              </span>{" "}
+              of <span className="font-medium">{meta.totalItems}</span> users
+            </div>
+            <Pagination
+              count={meta.totalPages}
+              page={meta.currentPage}
+              onChange={(_, page) => setCurrentPage(page)}
+              color="primary"
+              shape="rounded"
+              showFirstButton
+              showLastButton
+            />
+          </div>
+        )}
       </div>
 
       {/* Role Change Modal */}
@@ -637,27 +475,15 @@ const ELearningUsersAdmin: React.FC = () => {
           onClick={(e) => e.stopPropagation()}
         >
           {/* Modal Header */}
-          <div
-            className={`px-6 py-5 border-b border-gray-200 bg-linear-to-r from-primary-50 to-primary-100 ${
-              isRTL ? "text-right" : "text-left"
-            }`}
-          >
-            <div
-              className={`flex items-center justify-between ${
-                isRTL ? "flex-row-reverse" : ""
-              }`}
-            >
+          <div className="px-6 py-5 border-b border-gray-200 bg-linear-to-r from-primary-50 to-primary-100 text-left">
+            <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                   <Shield className="w-5 h-5 text-primary-600" />
-                  {getTranslation("changeRole")}
+                  Change User Role
                 </h3>
                 <p className="text-sm text-gray-600 mt-1">
-                  {language === "ar"
-                    ? "اختر دورًا جديدًا للمستخدم"
-                    : language === "fr"
-                    ? "Sélectionnez un nouveau rôle pour l'utilisateur"
-                    : "Select a new role for the user"}
+                  Select a new role for the user
                 </p>
               </div>
               <Button onClick={handleClose} variant="outlined" color="error">
@@ -667,11 +493,7 @@ const ELearningUsersAdmin: React.FC = () => {
 
             {/* Current User Info */}
             {selectedUser && (
-              <div
-                className={`mt-4 p-3 bg-white rounded-lg border border-gray-200 flex items-center gap-3 ${
-                  isRTL ? "flex-row-reverse" : ""
-                }`}
-              >
+              <div className="mt-4 p-3 bg-white rounded-lg border border-gray-200 flex items-center gap-3">
                 <div className="shrink-0">
                   {selectedUser.clerkProfile.hasImage ? (
                     <img
@@ -686,7 +508,7 @@ const ELearningUsersAdmin: React.FC = () => {
                     </div>
                   )}
                 </div>
-                <div className={`flex-1 ${isRTL ? "text-right" : "text-left"}`}>
+                <div className="flex-1 text-left">
                   <div className="font-semibold text-gray-900 text-sm">
                     {selectedUser.clerkProfile.firstName}{" "}
                     {selectedUser.clerkProfile.lastName}
@@ -721,11 +543,11 @@ const ELearningUsersAdmin: React.FC = () => {
                       }
                     }}
                     disabled={isCurrentRole}
-                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm transition-all ${
+                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm transition-all text-left ${
                       isCurrentRole
                         ? "bg-primary-50 ring-2 ring-primary-500 ring-inset cursor-default shadow-sm"
                         : "text-gray-700 hover:bg-gray-50 hover:shadow-md border border-gray-200"
-                    } ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
+                    }`}
                   >
                     <div
                       className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
@@ -749,11 +571,7 @@ const ELearningUsersAdmin: React.FC = () => {
                         </span>
                         {isCurrentRole && (
                           <span className="text-xs text-primary-700 font-bold bg-primary-100 px-2 py-0.5 rounded-full">
-                            {language === "ar"
-                              ? "الدور الحالي"
-                              : language === "fr"
-                              ? "Actuel"
-                              : "Current"}
+                            Current
                           </span>
                         )}
                       </div>
@@ -765,23 +583,14 @@ const ELearningUsersAdmin: React.FC = () => {
           </div>
 
           {/* Modal Footer */}
-          <div
-            className={`px-6 py-4 border-t border-gray-200 bg-gray-50 flex gap-3 ${
-              isRTL ? "flex-row-reverse" : ""
-            }`}
-          >
+          <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex gap-3">
             <Button
               variant="contained"
               onClick={handleClose}
               color="error"
               fullWidth
             >
-              {" "}
-              {language === "ar"
-                ? "إلغاء"
-                : language === "fr"
-                ? "Annuler"
-                : "Cancel"}
+              Cancel
             </Button>
           </div>
         </Box>

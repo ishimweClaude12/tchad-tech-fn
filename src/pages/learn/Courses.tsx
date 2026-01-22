@@ -15,7 +15,6 @@ import {
   ListItemIcon,
   ListItemText,
   Stack,
-  Avatar,
   Rating,
   Dialog,
   DialogTitle,
@@ -31,7 +30,7 @@ import { useUser } from "@clerk/clerk-react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import CourseForm from "../../components/learn/forms/CourseForm";
 import { EmptyState } from "../../components/shared/EmptyState";
-import { useCategories, useSubCategories } from "../../hooks/useApi";
+import { useCategories } from "../../hooks/useApi";
 import {
   CheckCircleIcon,
   StarIcon,
@@ -39,16 +38,18 @@ import {
   PlayIcon,
   ViewIcon,
   EditIcon,
-  DeleteIcon,
 } from "lucide-react";
-import type { Course } from "../../types/Course.types";
+import { CourseStatus, type Course } from "../../types/Course.types";
 import { CourseDetails } from "../../components/learn/CourseDetails";
 import {
   useCourses,
   useCreateCourse,
   useUpdateCourse,
   useDeleteCourse,
+  usePublishCourse,
 } from "../../hooks/learn/useCourseApi";
+
+import DeleteIcon from "@mui/icons-material/Delete";
 
 // Translations
 const translations = {
@@ -79,6 +80,8 @@ const translations = {
     expert: "Expert",
     edit: "Edit",
     delete: "Delete",
+    publish: "Publish",
+    unpublish: "Unpublish",
     view: "View Details",
     preview: "Preview Course",
     enrollments: "Enrollments",
@@ -96,9 +99,19 @@ const translations = {
     deleteConfirm: "Delete Course",
     deleteMessage:
       "Are you sure you want to delete this course? This action cannot be undone.",
+    publishConfirm: "Publish Course",
+    publishMessage:
+      "Are you sure you want to publish this course? It will become visible to all students.",
+    unpublishConfirm: "Unpublish Course",
+    unpublishMessage:
+      "Are you sure you want to unpublish this course? Students will no longer be able to access it.",
     cancel: "Cancel",
     confirmDelete: "Delete",
+    confirmPublish: "Publish",
+    confirmUnpublish: "Unpublish",
     submitting: "Deleting...",
+    publishing: "Publishing...",
+    unpublishing: "Unpublishing...",
     lastUpdated: "Last updated",
     createdBy: "Created by",
     totalCourses: "Total Courses",
@@ -133,6 +146,8 @@ const translations = {
     expert: "Expert",
     edit: "Modifier",
     delete: "Supprimer",
+    publish: "Publier",
+    unpublish: "Dépublier",
     view: "Voir Détails",
     preview: "Prévisualiser",
     enrollments: "Inscriptions",
@@ -150,9 +165,19 @@ const translations = {
     deleteConfirm: "Supprimer le Cours",
     deleteMessage:
       "Êtes-vous sûr de vouloir supprimer ce cours ? Cette action est irréversible.",
+    publishConfirm: "Publier le Cours",
+    publishMessage:
+      "Êtes-vous sûr de vouloir publier ce cours ? Il sera visible par tous les étudiants.",
+    unpublishConfirm: "Dépublier le Cours",
+    unpublishMessage:
+      "Êtes-vous sûr de vouloir dépublier ce cours ? Les étudiants ne pourront plus y accéder.",
     cancel: "Annuler",
     confirmDelete: "Supprimer",
+    confirmPublish: "Publier",
+    confirmUnpublish: "Dépublier",
     submitting: "Suppression...",
+    publishing: "Publication...",
+    unpublishing: "Dépublication...",
     lastUpdated: "Dernière mise à jour",
     createdBy: "Créé par",
     totalCourses: "Total des Cours",
@@ -187,6 +212,8 @@ const translations = {
     expert: "خبير",
     edit: "تعديل",
     delete: "حذف",
+    publish: "نشر",
+    unpublish: "إلغاء النشر",
     view: "عرض التفاصيل",
     preview: "معاينة الدورة",
     enrollments: "التسجيلات",
@@ -204,9 +231,18 @@ const translations = {
     deleteConfirm: "حذف الدورة",
     deleteMessage:
       "هل أنت متأكد من حذف هذه الدورة؟ لا يمكن التراجع عن هذا الإجراء.",
+    publishConfirm: "نشر الدورة",
+    publishMessage: "هل أنت متأكد من نشر هذه الدورة؟ ستصبح مرئية لجميع الطلاب.",
+    unpublishConfirm: "إلغاء نشر الدورة",
+    unpublishMessage:
+      "هل أنت متأكد من إلغاء نشر هذه الدورة؟ لن يتمكن الطلاب من الوصول إليها.",
     cancel: "إلغاء",
     confirmDelete: "حذف",
+    confirmPublish: "نشر",
+    confirmUnpublish: "إلغاء النشر",
     submitting: "جاري الحذف...",
+    publishing: "جاري النشر...",
+    unpublishing: "جاري إلغاء النشر...",
     lastUpdated: "آخر تحديث",
     createdBy: "أنشأ بواسطة",
     totalCourses: "إجمالي الدورات",
@@ -224,15 +260,16 @@ const CoursesAdmin: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const { data: coursesData, isLoading, error, refetch } = useCourses();
   const { data: categoriesData } = useCategories();
-  const { data: subcategoriesData } = useSubCategories();
   const createCourseMutation = useCreateCourse();
   const updateCourseMutation = useUpdateCourse();
   const deleteCourseMutation = useDeleteCourse();
+  const publishCourseMutation = usePublishCourse();
 
   const [page, setPage] = useState(1);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [publishDialogOpen, setPublishDialogOpen] = useState(false);
   const [courseModalOpen, setCourseModalOpen] = useState(false);
   const [courseDetailsModalOpen, setCourseDetailsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
@@ -241,7 +278,6 @@ const CoursesAdmin: React.FC = () => {
   // Extract courses and categories
   const courses = coursesData?.data?.courses || [];
   const apiCategories = categoriesData || [];
-  const apiSubcategories = subcategoriesData || [];
 
   // No search/filters: use all courses as-is
   const filteredAndSortedCourses = courses;
@@ -251,7 +287,7 @@ const CoursesAdmin: React.FC = () => {
     const startIndex = (page - 1) * itemsPerPage;
     return filteredAndSortedCourses.slice(
       startIndex,
-      startIndex + itemsPerPage
+      startIndex + itemsPerPage,
     );
   }, [filteredAndSortedCourses, page]);
 
@@ -261,10 +297,10 @@ const CoursesAdmin: React.FC = () => {
   const stats = useMemo(() => {
     const totalEnrollments = courses.reduce(
       (sum, c) => sum + c.enrollmentCount,
-      0
+      0,
     );
     const activeCourses = courses.filter(
-      (c) => c.status === "published"
+      (c) => c.status === CourseStatus.PUBLISHED,
     ).length;
     const avgRating =
       courses.reduce((sum, c) => sum + (c.ratingAverage || 0), 0) /
@@ -281,7 +317,7 @@ const CoursesAdmin: React.FC = () => {
   // Handlers
   const handleMenuOpen = (
     event: React.MouseEvent<HTMLElement>,
-    course: Course
+    course: Course,
   ) => {
     setAnchorEl(event.currentTarget);
     setSelectedCourse(course);
@@ -300,6 +336,28 @@ const CoursesAdmin: React.FC = () => {
   const handleDelete = () => {
     setDeleteDialogOpen(true);
     handleMenuClose();
+  };
+
+  const handlePublish = () => {
+    setPublishDialogOpen(true);
+    handleMenuClose();
+  };
+
+  const confirmPublish = async () => {
+    if (!selectedCourse) return;
+
+    try {
+      const shouldPublish = selectedCourse.status !== CourseStatus.PUBLISHED;
+      await publishCourseMutation.mutateAsync({
+        id: selectedCourse.id,
+        publish: shouldPublish,
+      });
+      setPublishDialogOpen(false);
+      setSelectedCourse(null);
+      refetch();
+    } catch (error) {
+      console.error("Failed to publish/unpublish course:", error);
+    }
   };
 
   const confirmDelete = async () => {
@@ -421,19 +479,12 @@ const CoursesAdmin: React.FC = () => {
                 borderRadius: 2,
                 border: "1px solid",
                 borderColor: "divider",
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  transform: "translateY(-4px)",
-                  boxShadow: 4,
-                },
               }}
             >
               <CardMedia
                 component="img"
                 height="200"
-                image={
-                  course.thumbnailUrl || "https://via.placeholder.com/400x200"
-                }
+                image={course.thumbnailUrl || "/images/placeholder.jpg"}
                 alt={course.title}
                 sx={{ objectFit: "cover" }}
               />
@@ -474,22 +525,6 @@ const CoursesAdmin: React.FC = () => {
                 >
                   {course.shortDescription}
                 </Typography>
-
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                    mb: 1,
-                  }}
-                >
-                  <Avatar sx={{ width: 24, height: 24, fontSize: 12 }}>
-                    {course.instructor?.userId[0].toUpperCase()}
-                  </Avatar>
-                  <Typography variant="caption" color="text.secondary">
-                    {course.instructor?.userId}
-                  </Typography>
-                </Box>
 
                 <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
@@ -771,14 +806,6 @@ const CoursesAdmin: React.FC = () => {
         </Paper>
       </Box>
 
-      {/* Results count */}
-      {courses.length > 0 && paginatedCourses.length > 0 && (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Showing {paginatedCourses.length} of {filteredAndSortedCourses.length}{" "}
-          courses
-        </Typography>
-      )}
-
       {/* Courses Grid */}
       {getCoursesContent()}
 
@@ -793,6 +820,14 @@ const CoursesAdmin: React.FC = () => {
             <EditIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>{t.edit}</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handlePublish}>
+          <ListItemIcon>
+            <CheckCircleIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>
+            {selectedCourse?.status === "PUBLISHED" ? t.unpublish : t.publish}
+          </ListItemText>
         </MenuItem>
         <MenuItem onClick={handleDelete} sx={{ color: "error.main" }}>
           <ListItemIcon>
@@ -831,6 +866,60 @@ const CoursesAdmin: React.FC = () => {
             disabled={deleteCourseMutation.isPending}
           >
             {deleteCourseMutation.isPending ? t.submitting : t.confirmDelete}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Publish/Unpublish Confirmation Dialog */}
+      <Dialog
+        open={publishDialogOpen}
+        onClose={() => setPublishDialogOpen(false)}
+        dir={isRTL ? "rtl" : "ltr"}
+      >
+        <DialogTitle>
+          {selectedCourse?.status === CourseStatus.PUBLISHED
+            ? t.unpublishConfirm
+            : t.publishConfirm}
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            {selectedCourse?.status === CourseStatus.PUBLISHED
+              ? t.unpublishMessage
+              : t.publishMessage}
+          </Typography>
+          {selectedCourse && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+              <strong>{selectedCourse.title}</strong>
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setPublishDialogOpen(false)}
+            disabled={publishCourseMutation.isPending}
+          >
+            {t.cancel}
+          </Button>
+          <Button
+            onClick={confirmPublish}
+            color={
+              selectedCourse?.status === CourseStatus.PUBLISHED
+                ? "warning"
+                : "success"
+            }
+            variant="contained"
+            disabled={publishCourseMutation.isPending}
+          >
+            {(() => {
+              if (publishCourseMutation.isPending) {
+                return selectedCourse?.status === CourseStatus.PUBLISHED
+                  ? t.unpublishing
+                  : t.publishing;
+              }
+              return selectedCourse?.status === CourseStatus.PUBLISHED
+                ? t.confirmUnpublish
+                : t.confirmPublish;
+            })()}
           </Button>
         </DialogActions>
       </Dialog>
@@ -876,16 +965,18 @@ const CoursesAdmin: React.FC = () => {
                     learningObjectives: selectedCourse.learningObjectives || [],
                     prerequisites: selectedCourse.prerequisites || "",
                     targetAudience: selectedCourse.targetAudience || "",
-                    difficultyLevel: selectedCourse.difficultyLevel as
-                      | "BEGINNER"
+                    difficultyLevel: (selectedCourse.difficultyLevel ===
+                    "BEGINNER"
+                      ? "BIGINNER"
+                      : selectedCourse.difficultyLevel) as
+                      | "BIGINNER"
                       | "INTERMEDIATE"
-                      | "ADVANCED"
-                      | "EXPERT",
+                      | "ADVANCED",
                     estimatedDurationHours:
-                      selectedCourse.totalDurationMinutes / 60,
+                      selectedCourse.estimatedDurationHours,
                     price: Number.parseFloat(selectedCourse.price),
                     discountPrice: Number.parseFloat(
-                      selectedCourse.discountPrice || "0"
+                      selectedCourse.discountPrice || "0",
                     ),
                     currency: selectedCourse.currency,
                     categoryId: selectedCourse.category?.id || "",
@@ -899,13 +990,7 @@ const CoursesAdmin: React.FC = () => {
               id: cat.id,
               name: cat.name,
             }))}
-            subcategories={apiSubcategories.map((sub) => ({
-              id: sub.id,
-              name: sub.name,
-              categoryId: sub.id,
-            }))}
             instructorId={user?.id || ""}
-            language={language}
           />
         </Box>
       </Modal>

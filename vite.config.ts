@@ -10,6 +10,8 @@ export default defineConfig({
     alias: [
       // Make the tiptap CLI generated `@` folder available via `@/...` imports
       { find: "@", replacement: resolve(__dirname, "@") },
+      // Enable absolute imports from src folder
+      { find: "src", replacement: resolve(__dirname, "src") },
     ],
   },
 });

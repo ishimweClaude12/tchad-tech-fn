@@ -1,3 +1,4 @@
+import type { ApiResponse } from "src/types/Api.types";
 import axiosInstance from "../../lib/axios";
 
 export const videoApi = {
@@ -22,7 +23,20 @@ export const videoApi = {
     if (!data.assetId) {
       throw new Error("Invalid response: missing assetId");
     }
-    
+
+    return data;
+  },
+};
+
+export const imageApi = {
+  upload: async (image: File) => {
+    const formData = new FormData();
+    formData.append("image", image);
+    const { data } = await axiosInstance.post<
+      ApiResponse<{
+        url: string;
+      }>
+    >("/single-image", formData);
     return data;
   },
 };

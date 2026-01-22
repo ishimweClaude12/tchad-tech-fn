@@ -48,16 +48,6 @@ interface LessonFormProps {
 }
 
 const LessonForm: React.FC<LessonFormProps> = ({ initialLesson, onClose }) => {
-  const decodeHtml = (html?: string | null) => {
-    if (!html) return "";
-    try {
-      const doc = new DOMParser().parseFromString(html, "text/html");
-      return doc.documentElement.textContent || html;
-    } catch (e) {
-      console.error("Error decoding HTML content:", e);
-      return html;
-    }
-  };
   const { courseId, moduleId } = useParams<{
     courseId: string;
     moduleId: string;
@@ -78,7 +68,7 @@ const LessonForm: React.FC<LessonFormProps> = ({ initialLesson, onClose }) => {
         isPublished: initialLesson?.isPublished ?? false,
         durationMinutes: initialLesson?.durationMinutes ?? 0,
         sortOrder: initialLesson?.sortOrder ?? 1,
-        textContent: initialLesson ? decodeHtml(initialLesson.textContent) : "",
+        textContent: initialLesson?.textContent ?? "",
         contentUrl: initialLesson?.contentUrl ?? null,
         muxId: initialLesson?.muxVideoId ?? null,
       },
@@ -101,7 +91,7 @@ const LessonForm: React.FC<LessonFormProps> = ({ initialLesson, onClose }) => {
       setValue("durationMinutes", initialLesson.durationMinutes);
       setValue("sortOrder", initialLesson.sortOrder);
       setValue("isPublished", initialLesson.isPublished);
-      setValue("textContent", decodeHtml(initialLesson.textContent));
+      setValue("textContent", initialLesson.textContent ?? "");
       setValue("contentUrl", initialLesson.contentUrl ?? null);
       setValue("muxId", initialLesson.muxVideoId ?? null);
     }

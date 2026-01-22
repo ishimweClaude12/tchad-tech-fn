@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-
+import { useELearningUser } from "src/hooks/useApi";
+import { useUser } from "@clerk/clerk-react";
+import { UserRole } from "src/types/Users.types";
 
 interface NavigationItem {
   name: string;
@@ -71,6 +73,12 @@ const Navigation: React.FC<NavigationProps> = ({
   const location = useLocation();
   const languageDropdownRef = useRef<HTMLDivElement>(null);
 
+  // Get current logged in user from Clerk
+  const { user } = useUser();
+
+  // Fetch user data from backend using Clerk user ID
+  const { data: ELearningUser } = useELearningUser(user?.id || "");
+
   const languages: Language[] = [
     { code: "en", name: "English", nativeName: "English", flag: "🇺🇸" },
     { code: "fr", name: "French", nativeName: "Français", flag: "🇫🇷" },
@@ -87,7 +95,6 @@ const Navigation: React.FC<NavigationProps> = ({
     const path = location.pathname;
     console.log("Current path:", path);
     if (path.includes("/learn")) {
-      console.log("Navigating to Learn Dashboard");
       return "/learn/dashboard";
     } else if (path.includes("/shop")) {
       return "/shop/dashboard";
@@ -99,6 +106,11 @@ const Navigation: React.FC<NavigationProps> = ({
     return "/dashboard";
   };
 
+  // Check if user is admin or super admin
+  const isAdminUser =
+    ELearningUser?.role === UserRole.ADMIN ||
+    ELearningUser?.role === UserRole.SUPPER_ADMIN;
+
   // Default navigation with translations - recalculate on location change
   const defaultNavigation: NavigationItem[] = [
     { name: t.home, href: "/" },
@@ -108,13 +120,12 @@ const Navigation: React.FC<NavigationProps> = ({
     { name: t.community, href: "/community" },
     { name: t.aboutUs, href: "/about-us" },
     { name: t.contactUs, href: "/contact-us" },
-    {
-      name: t.dashboard,
-      href: getDashboardRoute(),
-    },
   ];
 
-  const navigation = defaultNavigation;
+  // Conditionally add dashboard link for admin users only
+  const navigation = isAdminUser
+    ? [...defaultNavigation, { name: t.dashboard, href: getDashboardRoute() }]
+    : defaultNavigation;
   const selectedLanguage =
     languages.find((lang) => lang.code === currentLanguage) || languages[0];
 

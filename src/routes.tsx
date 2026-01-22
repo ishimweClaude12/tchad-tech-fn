@@ -27,6 +27,12 @@ import CourseLessons from "./pages/learn/CourseLessons";
 import { CourseDetails } from "./components/learn/CourseDetails";
 import { ModuleDetails } from "./pages/learn/ModuleDetails";
 import QuizDetails from "./pages/learn/QuizDetails";
+import MoreCourseDetails from "./components/learn/MoreCourseDetails";
+import Enrollments from "./pages/learn/Enrollments";
+import CheckoutPage from "./pages/learn/Checkout";
+import CourseLayout from "./layouts/CourseLayout";
+import Lesson from "./pages/learn/Lesson";
+import Module from "./pages/learn/Module";
 
 export default function AppRouter() {
   return (
@@ -35,6 +41,9 @@ export default function AppRouter() {
       <Route element={<MainLayout />}>
         <Route index element={<Home />} />
         <Route path="/learn" element={<LearnHome />} />
+        <Route path="/learn/:id/checkout" element={<CheckoutPage />} />
+
+        <Route path="/learn/course/:slug" element={<MoreCourseDetails />} />
         <Route path="/shop" element={<ShopHome />} />
         <Route path="/about-us" element={<AboutUsPage />} />
         <Route path="/contact-us" element={<ContactUsPage />} />
@@ -63,6 +72,7 @@ export default function AppRouter() {
           path="courses/:courseId/module/:moduleId/quiz/:quizId"
           element={<QuizDetails />}
         />
+        <Route path="course/:courseId/enrollments" element={<Enrollments />} />
         <Route path="users" element={<ELearningUsersAdmin />} />
         <Route path="my-learning" element={<div>My Learning Page</div>} />
         <Route path="categories" element={<CourseCategoriesAdmin />} />
@@ -73,6 +83,12 @@ export default function AppRouter() {
         <Route path="quizes" element={<div>Quizes Page</div>} />
         <Route path="analytics" element={<div>Analytics Page</div>} />
         <Route path="settings" element={<div>Settings Page</div>} />
+      </Route>
+
+      {/* E-Learning Course Learning  - /learn/progress */}
+      <Route path="/learn/progress/:courseId" element={<CourseLayout />}>
+        <Route path="module/:moduleId" element={<Module />} />
+        <Route path="module/:moduleId/lesson/:lessonId" element={<Lesson />} />
       </Route>
 
       {/* E-Commerce Dashboard - /shop/dashboard */}

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 
 import { useLanguage } from "../../contexts/LanguageContext";
+import { Button } from "@mui/material";
 
 // Types
 interface HeroTranslations {
@@ -165,13 +166,14 @@ export const Hero: React.FC<HeroProps> = ({
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <button
+              <Button
                 onClick={handleExploreCourses}
-                className="px-8 py-4 bg-white text-blue-700 font-semibold rounded-lg shadow-lg hover:shadow-xl hover:bg-blue-50 transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-white/50"
+                color="inherit"
+                variant="outlined"
                 aria-label={content.ctaPrimary}
               >
                 {content.ctaPrimary}
-              </button>
+              </Button>
               <button
                 onClick={handleViewPaths}
                 className="px-8 py-4 bg-transparent border-2 border-white text-white font-semibold rounded-lg hover:bg-white/10 backdrop-blur-sm transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-white/50"
