@@ -15,7 +15,6 @@ import {
   ListItemIcon,
   ListItemText,
   Stack,
-  Avatar,
   Rating,
   Dialog,
   DialogTitle,
@@ -31,7 +30,7 @@ import { useUser } from "@clerk/clerk-react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import CourseForm from "../../components/learn/forms/CourseForm";
 import { EmptyState } from "../../components/shared/EmptyState";
-import { useCategories, useSubCategories } from "../../hooks/useApi";
+import { useCategories } from "../../hooks/useApi";
 import {
   CheckCircleIcon,
   StarIcon,
@@ -301,7 +300,7 @@ const CoursesAdmin: React.FC = () => {
       0,
     );
     const activeCourses = courses.filter(
-      (c) => c.status === "published",
+      (c) => c.status === CourseStatus.PUBLISHED,
     ).length;
     const avgRating =
       courses.reduce((sum, c) => sum + (c.ratingAverage || 0), 0) /
@@ -966,13 +965,15 @@ const CoursesAdmin: React.FC = () => {
                     learningObjectives: selectedCourse.learningObjectives || [],
                     prerequisites: selectedCourse.prerequisites || "",
                     targetAudience: selectedCourse.targetAudience || "",
-                    difficultyLevel: selectedCourse.difficultyLevel as
-                      | "BEGINNER"
+                    difficultyLevel: (selectedCourse.difficultyLevel ===
+                    "BEGINNER"
+                      ? "BIGINNER"
+                      : selectedCourse.difficultyLevel) as
+                      | "BIGINNER"
                       | "INTERMEDIATE"
-                      | "ADVANCED"
-                      | "EXPERT",
+                      | "ADVANCED",
                     estimatedDurationHours:
-                      selectedCourse.totalDurationMinutes / 60,
+                      selectedCourse.estimatedDurationHours,
                     price: Number.parseFloat(selectedCourse.price),
                     discountPrice: Number.parseFloat(
                       selectedCourse.discountPrice || "0",

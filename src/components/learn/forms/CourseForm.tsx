@@ -39,6 +39,7 @@ interface CourseFormData {
   subcategoryId: string;
   tags: string[];
   hasCertificate: boolean;
+  estimatedDurationHours?: string;
 }
 
 interface CourseFormProps {

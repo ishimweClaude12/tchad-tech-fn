@@ -137,7 +137,7 @@ export default function Modules() {
                           onError: () => {
                             setToggleModuleId(null);
                           },
-                        }
+                        },
                       );
                     }}
                   >
@@ -171,7 +171,6 @@ export default function Modules() {
                           "aria-labelledby": "basic-button",
                         },
                       }}
-                      PaperProps={{ sx: { zIndex: 2100 } }}
                     >
                       <MenuItem
                         onClick={(e: React.MouseEvent) => {

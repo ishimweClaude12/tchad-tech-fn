@@ -1,9 +1,6 @@
+import type { ApiResponse, PaginationMeta } from "src/types/Api.types";
 import axiosInstance from "../../lib/axios";
-import type {
-  GetCoursesApiResponse,
-  Course,
-  GetCourseApiResponse,
-} from "../../types/Course.types";
+import type { Course, GetCourseApiResponse } from "../../types/Course.types";
 import type { GetCourseModulesApiResponse } from "./Moduels.api";
 
 export const coursesApi = {
@@ -13,17 +10,19 @@ export const coursesApi = {
     level?: string;
     search?: string;
   }) => {
-    const { data } = await axiosInstance.get<GetCoursesApiResponse>(
-      "/courses",
-      { params }
-    );
+    const { data } = await axiosInstance.get<
+      ApiResponse<{
+        courses: Course[];
+        meta: PaginationMeta;
+      }>
+    >("/courses", { params });
     return data;
   },
 
   // Get course by ID
   getById: async (id: string) => {
     const { data } = await axiosInstance.get<GetCourseApiResponse>(
-      `/courses/${id}`
+      `/courses/${id}`,
     );
     return data;
   },
@@ -64,20 +63,30 @@ export const coursesApi = {
   },
   getBySlug: async (slug: string) => {
     const { data } = await axiosInstance.get<GetCourseApiResponse>(
-      `/courses/slug/${slug}`
+      `/courses/slug/${slug}`,
     );
     return data;
   },
   getAllCourseModules: async (courseId: string) => {
     const { data } = await axiosInstance.get<GetCourseModulesApiResponse>(
-      `/modules/course/${courseId}/all`
+      `/modules/course/${courseId}/all`,
     );
     return data;
   },
   getPublishedCourses: async () => {
-    const { data } = await axiosInstance.get<GetCoursesApiResponse>(
-      "/courses/published"
-    );
+    const { data } = await axiosInstance.get<
+      ApiResponse<{
+        courses: {
+          data: Course[];
+          meta: {
+            currentPage: number;
+            totalPages: number;
+            pageSize: number;
+            totalItems: number;
+          };
+        };
+      }>
+    >("/courses/published");
     return data;
   },
 };
