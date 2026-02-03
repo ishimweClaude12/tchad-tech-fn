@@ -117,137 +117,164 @@ export const CourseDetails = () => {
   if (!course) return null;
 
   return (
-    <div className="space-y-10">
-      <div>
+    <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+      {/* Breadcrumbs - Fixed height container */}
+      <div className="h-8 flex items-center">
         <Breadcrumbs aria-label="breadcrumb">
           <Link color="inherit" to="/learn/dashboard/courses">
             Courses
           </Link>
-
           <Typography sx={{ color: "text.primary" }}>{course.title}</Typography>
         </Breadcrumbs>
       </div>
-      {/* Header */}
-      <Card>
-        <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="h-56 rounded bg-gray-100 overflow-hidden">
-            <img
-              src={course.thumbnailUrl}
-              alt={course.title}
-              className="h-full w-full object-cover"
-            />
-          </div>
 
-          <div className="md:col-span-3 space-y-4">
-            <Typography variant="h4" fontWeight={600}>
-              {course.title}
+      {/* Course Header Card - Fixed layout */}
+      <Card>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {/* Thumbnail - Fixed aspect ratio */}
+            <div className="aspect-video md:aspect-3/4 rounded-lg bg-gray-100 overflow-hidden">
+              <img
+                src={course.thumbnailUrl}
+                alt={course.title}
+                className="h-full w-full object-cover"
+              />
+            </div>
+
+            {/* Course Info - Consistent vertical spacing */}
+            <div className="md:col-span-3 flex flex-col gap-4">
+              <div>
+                <Typography variant="h4" fontWeight={600} className="mb-2">
+                  {course.title}
+                </Typography>
+                <Typography className="text-gray-600">
+                  {course.subtitle}
+                </Typography>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <Chip label={course.difficultyLevel} />
+                <Chip label={course.category?.name} />
+                {course.hasCertificate && (
+                  <Chip label="Certificate" color="success" />
+                )}
+              </div>
+
+              <div className="flex items-center gap-4">
+                <Rating
+                  value={course.ratingAverage ?? 0}
+                  precision={0.5}
+                  readOnly
+                />
+                <Typography className="text-sm text-gray-600">
+                  ({course.ratingCount} ratings)
+                </Typography>
+              </div>
+
+              <div className="flex flex-wrap gap-3 mt-auto">
+                <Button variant="outlined" onClick={() => setOpenCreate(true)}>
+                  Add Module
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => setOpenQuizForm(true)}
+                >
+                  Add Quiz
+                </Button>
+                <Button variant="contained" onClick={handleEnrollments}>
+                  Enrollments
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Course Overview Card - Consistent spacing */}
+      <Card>
+        <CardContent>
+          <div className="space-y-6">
+            <Typography variant="h6" fontWeight={600}>
+              Course Overview
             </Typography>
 
-            <Typography className="text-gray-600">{course.subtitle}</Typography>
+            <Typography className="text-gray-700 leading-relaxed">
+              {course.description}
+            </Typography>
 
-            <div className="flex flex-wrap gap-2">
-              <Chip label={course.difficultyLevel} />
-              <Chip label={course.category?.name} />
-              {course.hasCertificate && (
-                <Chip label="Certificate" color="success" />
-              )}
+            <Divider />
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-1">
+                <Typography fontWeight={500} className="text-gray-900">
+                  Target Audience
+                </Typography>
+                <Typography className="text-gray-600">
+                  {course.targetAudience}
+                </Typography>
+              </div>
+
+              <div className="space-y-1">
+                <Typography fontWeight={500} className="text-gray-900">
+                  Prerequisites
+                </Typography>
+                <Typography className="text-gray-600">
+                  {course.prerequisites}
+                </Typography>
+              </div>
+
+              <div className="space-y-1">
+                <Typography fontWeight={500} className="text-gray-900">
+                  Language
+                </Typography>
+                <Typography className="text-gray-600">English</Typography>
+              </div>
             </div>
 
-            <div className="flex items-center gap-4">
-              <Rating
-                value={course.ratingAverage ?? 0}
-                precision={0.5}
-                readOnly
-              />
-              <Typography className="text-sm text-gray-600">
-                ({course.ratingCount} ratings)
-              </Typography>
-            </div>
+            <Divider />
 
-            <div className="flex gap-3 pt-2">
-              <Button variant="outlined" onClick={() => setOpenCreate(true)}>
-                Add Module
-              </Button>
-              <Button variant="outlined" onClick={() => setOpenQuizForm(true)}>
-                Add Quiz
-              </Button>
-              <Button variant="contained" onClick={() => handleEnrollments()}>
-                Enrollments
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div className="text-center space-y-1">
+                <Typography variant="h5" fontWeight={600}>
+                  {course.totalLessons}
+                </Typography>
+                <Typography className="text-sm text-gray-600">
+                  Lessons
+                </Typography>
+              </div>
 
-      {/* Course Details */}
-      <Card>
-        <CardContent className="space-y-6">
-          <Typography variant="h6" fontWeight={600}>
-            Course Overview
-          </Typography>
+              <div className="text-center space-y-1">
+                <Typography variant="h5" fontWeight={600}>
+                  {course.estimatedDurationHours} hrs
+                </Typography>
+                <Typography className="text-sm text-gray-600">
+                  Duration
+                </Typography>
+              </div>
 
-          <Typography className="text-gray-700">
-            {course.description}
-          </Typography>
+              <div className="text-center space-y-1">
+                <Typography variant="h5" fontWeight={600}>
+                  {course.enrollmentCount}
+                </Typography>
+                <Typography className="text-sm text-gray-600">
+                  Enrolled
+                </Typography>
+              </div>
 
-          <Divider />
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <Typography fontWeight={500}>Target Audience</Typography>
-              <Typography className="text-gray-600">
-                {course.targetAudience}
-              </Typography>
-            </div>
-
-            <div>
-              <Typography fontWeight={500}>Prerequisites</Typography>
-              <Typography className="text-gray-600">
-                {course.prerequisites}
-              </Typography>
-            </div>
-
-            <div>
-              <Typography fontWeight={500}>Language</Typography>
-              <Typography className="text-gray-600">English</Typography>
-            </div>
-          </div>
-
-          <Divider />
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div>
-              <Typography fontWeight={600}>{course.totalLessons}</Typography>
-              <Typography className="text-sm text-gray-600">Lessons</Typography>
-            </div>
-
-            <div>
-              <Typography fontWeight={600}>
-                {course.estimatedDurationHours} hrs
-              </Typography>
-              <Typography className="text-sm text-gray-600">
-                Duration
-              </Typography>
-            </div>
-
-            <div>
-              <Typography fontWeight={600}>{course.enrollmentCount}</Typography>
-              <Typography className="text-sm text-gray-600">
-                Enrolled
-              </Typography>
-            </div>
-
-            <div>
-              <Typography fontWeight={600}>{course.completionCount}</Typography>
-              <Typography className="text-sm text-gray-600">
-                Completed
-              </Typography>
+              <div className="text-center space-y-1">
+                <Typography variant="h5" fontWeight={600}>
+                  {course.completionCount}
+                </Typography>
+                <Typography className="text-sm text-gray-600">
+                  Completed
+                </Typography>
+              </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Modules */}
+      {/* Course Modules Section - Consistent spacing */}
       <div className="space-y-4">
         <Typography variant="h5" fontWeight={600}>
           Course Modules
@@ -255,96 +282,113 @@ export const CourseDetails = () => {
 
         {modules.length === 0 ? (
           <Card>
-            <CardContent className="text-center text-gray-500 mt-2">
+            <CardContent className="py-8 text-center text-gray-500">
               No modules added yet.
             </CardContent>
           </Card>
         ) : (
-          modules.map((module) => (
-            <Card
-              key={module.id}
-              onClick={() => navigate(`module/${module.id}`)}
-              className="cursor-pointer transition hover:shadow-lg mt-2"
-            >
-              <CardContent className="flex justify-between items-start gap-4">
-                <div className="space-y-1">
-                  <Typography fontWeight={600}>{module.title}</Typography>
+          <div className="space-y-3">
+            {modules.map((module) => (
+              <Card
+                key={module.id}
+                onClick={() => navigate(`module/${module.id}`)}
+                className="cursor-pointer transition-shadow hover:shadow-lg"
+              >
+                <CardContent>
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="flex-1 space-y-2">
+                      <Typography variant="h6" fontWeight={600}>
+                        {module.sortOrder}. {module.title}
+                      </Typography>
 
-                  <Typography variant="body2" className="text-gray-600">
-                    {module.description}
-                  </Typography>
+                      <Typography variant="body2" className="text-gray-600">
+                        {module.description}
+                      </Typography>
 
-                  <Typography variant="body2" className="text-gray-500">
-                    Duration: {module.estimatedDurationMinutes} minutes
-                  </Typography>
-                </div>
+                      <Typography variant="body2" className="text-gray-500">
+                        Duration: {module.estimatedDurationMinutes} minutes
+                      </Typography>
+                    </div>
 
-                <div className="flex flex-col items-end gap-2">
-                  <Chip
-                    label={module.isPublished ? "Published" : "Draft"}
-                    color={module.isPublished ? "success" : "default"}
-                  />
-                  <IconButton
-                    size="small"
-                    sx={{ position: "relative", zIndex: 2000 }}
-                    aria-label="lesson actions"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedModule(module);
-                      setAnchorEl(e.currentTarget);
-                    }}
-                  >
-                    <MoreVertOutlinedIcon />
-                  </IconButton>
-                </div>
-              </CardContent>
-            </Card>
-          ))
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      <Chip
+                        label={module.isPublished ? "Published" : "Draft"}
+                        color={module.isPublished ? "success" : "default"}
+                        size="small"
+                      />
+                      <IconButton
+                        size="small"
+                        aria-label="module actions"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedModule(module);
+                          setAnchorEl(e.currentTarget);
+                        }}
+                      >
+                        <MoreVertOutlinedIcon />
+                      </IconButton>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         )}
       </div>
 
-      {/* Quizes */}
+      {/* Course Quizzes Section - Consistent spacing */}
+      <div className="space-y-4">
+        <Typography variant="h5" fontWeight={600} className="mb-2">
+          Course Assessments
+        </Typography>
 
-      {quizzesError && (
-        <div className="text-center text-red-500">
-          Failed to load course quizzes.
-        </div>
-      )}
-
-      {isQuizzesLoading && (
-        <div className="flex justify-center items-center h-64">
-          <CircularProgress />
-        </div>
-      )}
-
-      <Typography variant="h5" fontWeight={600}>
-        Course Quizzes
-      </Typography>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-        {quizzesData?.data.quizzes.length === 0 && (
-          <div className="text-gray-600">
-            No quizzes available for this course.
+        {isQuizzesLoading && (
+          <div className="flex justify-center items-center h-32">
+            <CircularProgress />
           </div>
         )}
 
-        {quizzesData?.data.quizzes.map((quiz) => (
-          <QuizCard
-            key={quiz.id}
-            quiz={quiz}
-            onClick={() => {
-              navigate(`quiz/${quiz.id}`);
-            }}
-            onEdit={(quiz) => {
-              setSelectedQuiz(quiz);
-              setOpenQuizForm(true);
-            }}
-            onDelete={(quiz) => {
-              setSelectedQuiz(quiz);
-              setOpenQuizDelete(true);
-            }}
-          />
-        ))}
+        {quizzesError && (
+          <Card>
+            <CardContent className="py-8 text-center text-red-500">
+              Failed to load course quizzes.
+            </CardContent>
+          </Card>
+        )}
+
+        {!isQuizzesLoading && !quizzesError && (
+          <>
+            {quizzesData?.data.quizzes.length === 0 ? (
+              <Card>
+                <CardContent className="py-8 text-center text-gray-600 mt-2">
+                  No quizzes available for this course.
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {quizzesData?.data.quizzes.map((quiz) => (
+                  <QuizCard
+                    key={quiz.id}
+                    quiz={quiz}
+                    onClick={() => {
+                      navigate(`quiz/${quiz.id}`);
+                    }}
+                    onEdit={(quiz) => {
+                      setSelectedQuiz(quiz);
+                      setOpenQuizForm(true);
+                    }}
+                    onDelete={(quiz) => {
+                      setSelectedQuiz(quiz);
+                      setOpenQuizDelete(true);
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        )}
       </div>
+
       {/* Context Menu */}
       <Menu
         anchorEl={anchorEl}
@@ -365,7 +409,7 @@ export const CourseDetails = () => {
           <ListItemIcon>
             <EditIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText> Edit</ListItemText>
+          <ListItemText>Edit</ListItemText>
         </MenuItem>
 
         <MenuItem
@@ -407,7 +451,10 @@ export const CourseDetails = () => {
       {selectedModule && (
         <ModuleFormModal
           open={openEdit}
-          onClose={() => setOpenEdit(false)}
+          onClose={() => {
+            setOpenEdit(false);
+            setSelectedModule(null);
+          }}
           onSubmit={(data: ModuleFormData) => {
             if (!selectedModule) return;
             updateModuleMutation.mutate(
@@ -420,7 +467,7 @@ export const CourseDetails = () => {
                     queryKey: [queryKeys.courses.modules(courseId)],
                   });
                 },
-              }
+              },
             );
           }}
           initialData={selectedModule}
@@ -459,38 +506,45 @@ export const CourseDetails = () => {
         maxWidth="xs"
       >
         <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent className="py-4">
-          <Typography>
-            Are you sure you want to delete the module "{selectedModule?.title}"
-            ?
-          </Typography>
-          <div className="mt-4 flex justify-end space-x-2 gap-2">
-            <Button onClick={() => setOpenDelete(false)} variant="outlined">
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                if (selectedModule) {
-                  deleteModuleMutation.mutate(selectedModule.id, {
-                    onSuccess: () => {
-                      setOpenDelete(false);
-                      setSelectedModule(null);
-                      queryClient.invalidateQueries({
-                        queryKey: [queryKeys.courses.modules(courseId)],
-                      });
-                    },
-                  });
-                }
-              }}
-              variant="contained"
-              color="error"
-            >
-              {deleteModuleMutation.isPending ? (
-                <CircularProgress size={24} color="inherit" />
-              ) : (
-                "Delete"
-              )}
-            </Button>
+        <DialogContent>
+          <div className="space-y-4 py-2">
+            <Typography>
+              Are you sure you want to delete the module "
+              {selectedModule?.title}"?
+            </Typography>
+            <div className="flex justify-end gap-2">
+              <Button
+                onClick={() => setOpenDelete(false)}
+                variant="outlined"
+                disabled={deleteModuleMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  if (selectedModule) {
+                    deleteModuleMutation.mutate(selectedModule.id, {
+                      onSuccess: () => {
+                        setOpenDelete(false);
+                        setSelectedModule(null);
+                        queryClient.invalidateQueries({
+                          queryKey: [queryKeys.courses.modules(courseId)],
+                        });
+                      },
+                    });
+                  }
+                }}
+                variant="contained"
+                color="error"
+                disabled={deleteModuleMutation.isPending}
+              >
+                {deleteModuleMutation.isPending ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  "Delete"
+                )}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -518,70 +572,74 @@ export const CourseDetails = () => {
                 ? "Unpublish Module"
                 : "Publish Module"}
             </DialogTitle>
-            <DialogContent className="py-4">
-              <Typography>
-                Are you sure you want to{" "}
-                <strong>
-                  {selectedModule?.isPublished ? "unpublish" : "publish"}
-                </strong>{" "}
-                the module "{selectedModule?.title}"?
-              </Typography>
-              {selectedModule?.isPublished && (
-                <Typography variant="body2" className="text-orange-600 mt-2">
-                  Unpublishing this module will make it unavailable to enrolled
-                  students.
+            <DialogContent>
+              <div className="space-y-4 py-2">
+                <Typography>
+                  Are you sure you want to{" "}
+                  <strong>
+                    {selectedModule?.isPublished ? "unpublish" : "publish"}
+                  </strong>{" "}
+                  the module "{selectedModule?.title}"?
                 </Typography>
-              )}
-              <div className="mt-4 flex justify-end space-x-2 gap-2">
-                <Button
-                  onClick={() => setOpenPublishConfirm(false)}
-                  variant="outlined"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() => {
-                    if (selectedModule) {
-                      toggleModulePublishMutation.mutate(
-                        {
-                          id: selectedModule.id,
-                          isPublished: !selectedModule.isPublished,
-                        },
-                        {
-                          onSuccess: () => {
-                            setOpenPublishConfirm(false);
-                            queryClient.invalidateQueries({
-                              queryKey: [queryKeys.courses.modules(courseId)],
-                            });
-                            toast.success(
-                              `Module ${
-                                selectedModule.isPublished
-                                  ? "unpublished"
-                                  : "published"
-                              } successfully`
-                            );
+                {selectedModule?.isPublished && (
+                  <Typography variant="body2" className="text-orange-600">
+                    Unpublishing this module will make it unavailable to
+                    enrolled students.
+                  </Typography>
+                )}
+                <div className="flex justify-end gap-2">
+                  <Button
+                    onClick={() => setOpenPublishConfirm(false)}
+                    variant="outlined"
+                    disabled={toggleModulePublishMutation.isPending}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      if (selectedModule) {
+                        toggleModulePublishMutation.mutate(
+                          {
+                            id: selectedModule.id,
+                            isPublished: !selectedModule.isPublished,
                           },
-                          onError: (error) => {
-                            toast.error("Failed to update module status");
-                            console.error(
-                              "Error toggling module publish:",
-                              error
-                            );
-                            setOpenPublishConfirm(false);
+                          {
+                            onSuccess: () => {
+                              setOpenPublishConfirm(false);
+                              queryClient.invalidateQueries({
+                                queryKey: [queryKeys.courses.modules(courseId)],
+                              });
+                              toast.success(
+                                `Module ${
+                                  selectedModule.isPublished
+                                    ? "unpublished"
+                                    : "published"
+                                } successfully`,
+                              );
+                            },
+                            onError: (error) => {
+                              toast.error("Failed to update module status");
+                              console.error(
+                                "Error toggling module publish:",
+                                error,
+                              );
+                              setOpenPublishConfirm(false);
+                            },
                           },
-                        }
-                      );
-                    }
-                  }}
-                  variant="contained"
-                  color={selectedModule?.isPublished ? "warning" : "success"}
-                >
-                  {toggleModulePublishMutation.isPending ? (
-                    <CircularProgress size={24} color="inherit" />
-                  ) : (
-                    buttonLabel
-                  )}
-                </Button>
+                        );
+                      }
+                    }}
+                    variant="contained"
+                    color={selectedModule?.isPublished ? "warning" : "success"}
+                    disabled={toggleModulePublishMutation.isPending}
+                  >
+                    {toggleModulePublishMutation.isPending ? (
+                      <CircularProgress size={24} color="inherit" />
+                    ) : (
+                      buttonLabel
+                    )}
+                  </Button>
+                </div>
               </div>
             </DialogContent>
           </Dialog>
@@ -596,47 +654,49 @@ export const CourseDetails = () => {
         maxWidth="xs"
       >
         <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent className="py-4">
-          <Typography>
-            Are you sure you want to delete the quiz "{selectedQuiz?.title}"?
-          </Typography>
-          <div className="mt-4 flex justify-end space-x-2 gap-2">
-            <Button
-              onClick={() => setOpenQuizDelete(false)}
-              variant="outlined"
-              disabled={deleteQuizMutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                if (selectedQuiz) {
-                  deleteQuizMutation.mutate(selectedQuiz.id, {
-                    onSuccess: () => {
-                      setOpenQuizDelete(false);
-                      setSelectedQuiz(null);
-                      queryClient.invalidateQueries({
-                        queryKey: ["courseQuizzes", courseId],
-                      });
-                      toast.success("Quiz deleted successfully");
-                    },
-                    onError: (error) => {
-                      toast.error("Failed to delete quiz");
-                      console.error("Error deleting quiz:", error);
-                    },
-                  });
-                }
-              }}
-              variant="contained"
-              color="error"
-              disabled={deleteQuizMutation.isPending}
-            >
-              {deleteQuizMutation.isPending ? (
-                <CircularProgress size={24} color="inherit" />
-              ) : (
-                "Delete"
-              )}
-            </Button>
+        <DialogContent>
+          <div className="space-y-4 py-2">
+            <Typography>
+              Are you sure you want to delete the quiz "{selectedQuiz?.title}"?
+            </Typography>
+            <div className="flex justify-end gap-2">
+              <Button
+                onClick={() => setOpenQuizDelete(false)}
+                variant="outlined"
+                disabled={deleteQuizMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  if (selectedQuiz) {
+                    deleteQuizMutation.mutate(selectedQuiz.id, {
+                      onSuccess: () => {
+                        setOpenQuizDelete(false);
+                        setSelectedQuiz(null);
+                        queryClient.invalidateQueries({
+                          queryKey: ["courseQuizzes", courseId],
+                        });
+                        toast.success("Quiz deleted successfully");
+                      },
+                      onError: (error) => {
+                        toast.error("Failed to delete quiz");
+                        console.error("Error deleting quiz:", error);
+                      },
+                    });
+                  }
+                }}
+                variant="contained"
+                color="error"
+                disabled={deleteQuizMutation.isPending}
+              >
+                {deleteQuizMutation.isPending ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  "Delete"
+                )}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

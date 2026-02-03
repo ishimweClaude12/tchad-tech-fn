@@ -1,4 +1,3 @@
-// components/modules/ModuleFormModal.tsx
 import React, { useState } from "react";
 import {
   Dialog,
@@ -57,7 +56,7 @@ const ModuleFormModal: React.FC<ModuleFormModalProps> = ({
   mode = "create",
 }) => {
   const getInitialFormData = (
-    initial?: Partial<ModuleFormData>
+    initial?: Partial<ModuleFormData>,
   ): ModuleFormData => {
     if (initial) {
       return {
@@ -83,13 +82,19 @@ const ModuleFormModal: React.FC<ModuleFormModalProps> = ({
 
   // Form state
   const [formData, setFormData] = useState<ModuleFormData>(() =>
-    getInitialFormData(initialData)
+    getInitialFormData(initialData),
   );
 
   // Validation state
   const [errors, setErrors] = useState<
     Partial<Record<keyof ModuleFormData, string>>
   >({});
+
+  // Create a key to force remount when dialog opens with new data
+  const dialogKey = React.useMemo(() => {
+    if (!open) return "closed";
+    return `${open}-${initialData?.courseId || "new"}-${initialData?.title || ""}`;
+  }, [open, initialData]);
 
   // Validation function
   const validateForm = (): boolean => {
@@ -189,6 +194,7 @@ const ModuleFormModal: React.FC<ModuleFormModalProps> = ({
 
   return (
     <Dialog
+      key={dialogKey}
       open={open}
       onClose={onClose}
       maxWidth="md"
@@ -509,8 +515,8 @@ const ModuleFormModal: React.FC<ModuleFormModalProps> = ({
             {loading
               ? "Saving..."
               : mode === "create"
-              ? "Create Module"
-              : "Update Module"}
+                ? "Create Module"
+                : "Update Module"}
           </Button>
         </DialogActions>
       </form>

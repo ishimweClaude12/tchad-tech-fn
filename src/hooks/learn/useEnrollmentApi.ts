@@ -91,3 +91,110 @@ export const useDeleteEnrollment = () => {
     },
   });
 };
+
+export const useModuleProgress = (enrollmentId: string, moduleId: string) => {
+  return useQuery({
+    queryKey: ["module-progress", enrollmentId, moduleId],
+    queryFn: () => enrollmentApi.getModuleProgress(enrollmentId, moduleId),
+    enabled: !!enrollmentId && !!moduleId,
+  });
+};
+
+export const useStartModuleProgress = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: { enrollmentId: string; moduleId: string }) =>
+      enrollmentApi.startModuleProgress(payload.enrollmentId, payload.moduleId),
+    onSuccess: (_, variables) => {
+      toast.success("Module progress started successfully.");
+      // Invalidate module progress query to refetch updated status
+      queryClient.invalidateQueries({
+        queryKey: [
+          "module-progress",
+          variables.enrollmentId,
+          variables.moduleId,
+        ],
+      });
+      // Invalidate user enrollments to update overall progress
+      queryClient.invalidateQueries({
+        queryKey: ["user-enrollments"],
+      });
+    },
+    onError: (error) => {
+      toast.error("Failed to start module progress.");
+      console.error("Start Module Progress Error:", error);
+    },
+  });
+};
+
+export const useCompleteLesson = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      enrollmentId,
+      lessonId,
+    }: {
+      enrollmentId: string;
+      lessonId: string;
+    }) => enrollmentApi.completeLesson(enrollmentId, lessonId),
+    onSuccess: (_, variables) => {
+      toast.success("Lesson marked as complete.");
+      // Invalidate lesson progress query
+      queryClient.invalidateQueries({
+        queryKey: ["lesson-progress", variables.enrollmentId],
+      });
+      // Invalidate module progress query
+      queryClient.invalidateQueries({
+        queryKey: ["module-progress"],
+      });
+      // Invalidate user enrollments to update overall progress
+      queryClient.invalidateQueries({
+        queryKey: ["user-enrollments"],
+      });
+    },
+    onError: (error) => {
+      toast.error("Failed to complete lesson.");
+      console.error("Complete Lesson Error:", error);
+    },
+  });
+};
+
+export const useStartLessonProgress = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      enrollmentId,
+      lessonId,
+    }: {
+      enrollmentId: string;
+      lessonId: string;
+    }) => enrollmentApi.startLessonProgress(enrollmentId, lessonId),
+    onSuccess: (_, variables) => {
+      toast.success("Lesson progress started.");
+      // Invalidate lesson progress query
+      queryClient.invalidateQueries({
+        queryKey: ["lesson-progress", variables.enrollmentId],
+      });
+      // Invalidate module progress query
+      queryClient.invalidateQueries({
+        queryKey: ["module-progress"],
+      });
+      // Invalidate user enrollments to update overall progress
+      queryClient.invalidateQueries({
+        queryKey: ["user-enrollments"],
+      });
+    },
+    onError: (error) => {
+      toast.error("Failed to start lesson progress.");
+      console.error("Start Lesson Progress Error:", error);
+    },
+  });
+};
+
+export const useLessonProgress = (enrollmentId: string) => {
+  return useQuery({
+    queryKey: ["lesson-progress", enrollmentId],
+    queryFn: () => enrollmentApi.getLessonProgress(enrollmentId),
+    enabled: !!enrollmentId,
+  });
+};

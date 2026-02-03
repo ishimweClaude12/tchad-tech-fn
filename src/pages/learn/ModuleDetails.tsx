@@ -59,8 +59,7 @@ const style = {
   p: 4,
 };
 
-const videoUrl =
-  "https://stream.mux.com/aTuXVCeIRFsp028hxTqp3YC1ATGKrhUinhQ2bHN002wzs.m3u8?token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhVHVYVkNlSVJGc3AwMjhoeFRxcDNZQzFBVEdLcmhVaW5oUTJiSE4wMDJ3enMiLCJhdWQiOiJ2IiwiZXhwIjoxNzY2NzY0Nzc1LCJraWQiOiJhQ2lJVWV5aHcwMlRWY0pFYkMyRmVYbDU5TlNBYWtDSHZZVXZicHRESFFFZyIsImlhdCI6MTc2Njc1NzU3NX0.eDZoBfXc3AIdROinNqgvgRuxKl_D8YspwYpLXm_ikRRtXXQPs_3zGufTYF5AEAID87QbP9cxwAmKcaXDSaO0fBEuxAr6F1kMBoSoSfwsbroN-I7RO2grCR0PyefG3oUxYvTB92Uiv9Kxsg5hCEv_2fyynZI02-256KU2mijRGo0aUeQkj9Bup11ltsaFkV1x_qsrFCT0so4dpzqE9yoIiiG2jZ5oCL5uGynQ6Bl6jli_m5w2aRsEKx_yQ6DSuzCPrg2MyrMf0UjSII58h5Z4hjkXRvz7GzUqEul38iqV7wM40RJHC5GkuYmBsOTQ_bomAhPN9yQf5ijzP57NYo3wlQ";
+ 
 
 export const ModuleDetails = () => {
   const { moduleId } = useParams<{ moduleId: string }>();
@@ -82,7 +81,7 @@ export const ModuleDetails = () => {
   const [openLessonQuizForm, setOpenLessonQuizForm] = useState<boolean>(false);
   const [editingLessonQuiz, setEditingLessonQuiz] = useState<Quiz | null>(null);
   const [lessonQuizToDelete, setLessonQuizToDelete] = useState<Quiz | null>(
-    null
+    null,
   );
   const [openLessonQuizDelete, setOpenLessonQuizDelete] =
     useState<boolean>(false);
@@ -94,7 +93,7 @@ export const ModuleDetails = () => {
   const handleClose = () => setOpen(false);
   const handleMenuOpen = (
     event: React.MouseEvent<HTMLElement>,
-    lesson?: Lesson | null
+    lesson?: Lesson | null,
   ) => {
     setAnchorEl(event.currentTarget);
     setMenuTargetLesson(lesson ?? null);
@@ -399,7 +398,7 @@ export const ModuleDetails = () => {
               quiz={quiz}
               onClick={() => {
                 navigate(
-                  `/learn/dashboard/courses/${module.courseId}/module/${moduleId}/quiz/${quiz.id}`
+                  `/learn/dashboard/courses/${module.courseId}/module/${moduleId}/quiz/${quiz.id}`,
                 );
               }}
               onEdit={(quiz) => {
@@ -490,7 +489,7 @@ export const ModuleDetails = () => {
                       setPublishConfirmOpen(false);
                       setLessonToPublish(null);
                     },
-                  }
+                  },
                 );
               }}
               disabled={publishLessonMutation.isPending}
@@ -547,7 +546,7 @@ export const ModuleDetails = () => {
                     setLessonToDelete(null);
                     // if currently viewing the deleted lesson, close viewer
                     setSelectedLesson((prev) =>
-                      prev?.id === lessonToDelete.id ? null : prev
+                      prev?.id === lessonToDelete.id ? null : prev,
                     );
                   },
                 });
@@ -715,7 +714,7 @@ export const ModuleDetails = () => {
                 [&_p:empty]:h-6"
                           dangerouslySetInnerHTML={{
                             __html: decodeHTMLEntities(
-                              selectedLesson.textContent || ""
+                              selectedLesson.textContent || "",
                             ),
                           }}
                         />
@@ -733,9 +732,13 @@ export const ModuleDetails = () => {
                     <video
                       controls
                       className="w-full rounded-lg border"
-                      src={videoUrl}
+                      src={selectedLesson.contentUrl}
                     >
-                      <track kind="captions" src="" label="English" />
+                      <track
+                        kind="captions"
+                        src={selectedLesson.contentUrl}
+                        label="English"
+                      />
                     </video>
                   </div>
                 )}
@@ -772,7 +775,7 @@ export const ModuleDetails = () => {
                         quiz={quiz}
                         onClick={() => {
                           navigate(
-                            `/learn/dashboard/courses/${module.courseId}/module/${moduleId}/quiz/${quiz.id}`
+                            `/learn/dashboard/courses/${module.courseId}/module/${moduleId}/quiz/${quiz.id}`,
                           );
                         }}
                         onEdit={(quiz) => {

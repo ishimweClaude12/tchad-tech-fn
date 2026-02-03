@@ -33,6 +33,9 @@ import CheckoutPage from "./pages/learn/Checkout";
 import CourseLayout from "./layouts/CourseLayout";
 import Lesson from "./pages/learn/Lesson";
 import Module from "./pages/learn/Module";
+import WishList from "./pages/learn/WishList";
+import CourseLandingPage from "./pages/learn/CourseLandingPage";
+import QuizAttempt from "./pages/learn/QuizAttempt";
 
 export default function AppRouter() {
   return (
@@ -42,7 +45,7 @@ export default function AppRouter() {
         <Route index element={<Home />} />
         <Route path="/learn" element={<LearnHome />} />
         <Route path="/learn/:id/checkout" element={<CheckoutPage />} />
-
+        <Route path="/learn/wishlist" element={<WishList />} />
         <Route path="/learn/course/:slug" element={<MoreCourseDetails />} />
         <Route path="/shop" element={<ShopHome />} />
         <Route path="/about-us" element={<AboutUsPage />} />
@@ -86,9 +89,19 @@ export default function AppRouter() {
       </Route>
 
       {/* E-Learning Course Learning  - /learn/progress */}
-      <Route path="/learn/progress/:courseId" element={<CourseLayout />}>
+      <Route
+        path="/learn/enrollment/:enrollmentId/course/:courseId"
+        element={<CourseLayout />}
+      >
+        <Route index element={<CourseLandingPage />} />
+        <Route path="quiz/:quizId" element={<QuizAttempt />} />
         <Route path="module/:moduleId" element={<Module />} />
+        <Route path="module/:moduleId/quiz/:quizId" element={<QuizAttempt />} />
         <Route path="module/:moduleId/lesson/:lessonId" element={<Lesson />} />
+        <Route
+          path="module/:moduleId/lesson/:lessonId/quiz/:quizId"
+          element={<QuizAttempt />}
+        />
       </Route>
 
       {/* E-Commerce Dashboard - /shop/dashboard */}

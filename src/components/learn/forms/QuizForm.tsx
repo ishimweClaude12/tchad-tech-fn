@@ -201,14 +201,13 @@ const QuizFormModal: React.FC<QuizFormModalProps> = ({
 
       createQuizMutation.mutate(payload, {
         onSuccess: () => {
-          toast.success("Quiz created successfully");
           resetForm();
           invalidateQuizCache();
           onClose();
         },
         onError: (error) => {
           toast.error(
-            error instanceof Error ? error.message : "Failed to create quiz"
+            error instanceof Error ? error.message : "Failed to create quiz",
           );
         },
       });

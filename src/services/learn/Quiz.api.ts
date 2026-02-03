@@ -5,7 +5,9 @@ import type {
   QuestionOption,
   QuestionOptionPayload,
   QuestionPayload,
+  QuiAttempt,
   Quiz,
+  QuizAttemptPayload,
   QuizPayload,
 } from "../../types/Quiz.types";
 
@@ -84,7 +86,7 @@ export const quizApi = {
   },
   updateQuestion: async (
     questionId: string,
-    payload: Partial<QuestionPayload>
+    payload: Partial<QuestionPayload>,
   ) => {
     const { data } = await axiosInstance.put<
       ApiResponse<{
@@ -111,7 +113,7 @@ export const quizApi = {
   },
   updateQuestionOption: async (
     optionId: string,
-    payload: Partial<QuestionOptionPayload>
+    payload: Partial<QuestionOptionPayload>,
   ) => {
     const { data } = await axiosInstance.put<
       ApiResponse<{
@@ -126,6 +128,30 @@ export const quizApi = {
         success: boolean;
       }>
     >(`/question-options/${optionId}/`);
+    return data;
+  },
+  startQuizAttempt: async (quizId: string, userId: string) => {
+    const { data } = await axiosInstance.post<
+      ApiResponse<{
+        attemptId: string;
+      }>
+    >(`/quiz-attempts/start`, { quizId, userId });
+    return data;
+  },
+  answerQuizQuestion: async (payload: QuizAttemptPayload) => {
+    const { data } = await axiosInstance.post<
+      ApiResponse<{
+        success: boolean;
+      }>
+    >(`/quiz-attempts/submit`, payload);
+    return data;
+  },
+  getQuizAttempts: async (quizId: string, userId: string) => {
+    const { data } = await axiosInstance.get<
+      ApiResponse<{
+        attempts: QuiAttempt[];
+      }>
+    >(`/quiz-attempts/user/${userId}/quiz/${quizId}`);
     return data;
   },
 };

@@ -229,3 +229,52 @@ export const useDeleteQuestionOption = () => {
     },
   });
 };
+
+export const useQuizAttempts = (quizId: string, userId: string) => {
+  return useQuery({
+    queryKey: ["quizAttempts", quizId, userId],
+    queryFn: () => quizApi.getQuizAttempts(quizId, userId),
+    enabled: !!quizId && !!userId,
+  });
+};
+
+export const useStartQuizAttempt = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ quizId, userId }: { quizId: string; userId: string }) =>
+      quizApi.startQuizAttempt(quizId, userId),
+    onError: (error) => {
+      toast.error("Failed to start quiz attempt.");
+      console.error("Start Quiz Attempt Error:", error);
+    },
+    onSuccess: (_, { quizId, userId }) => {
+      toast.success("Quiz attempt started successfully.");
+      queryClient.invalidateQueries({
+        queryKey: ["quizAttempts", quizId, userId],
+      });
+    },
+  });
+};
+
+export const useSubmitQuizAttempt = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      attemptId,
+      answers,
+    }: {
+      attemptId: string;
+      answers: { questionId: string; selectedOptionId: string }[];
+    }) => quizApi.answerQuizQuestion({ attemptId, answers }),
+    onError: (error) => {
+      toast.error("Failed to submit quiz attempt.");
+      console.error("Submit Quiz Attempt Error:", error);
+    },
+    onSuccess: (_, vars) => {
+      toast.success("Quiz attempt submitted successfully.");
+      queryClient.invalidateQueries({
+        queryKey: ["quizAttempts", vars.attemptId],
+      });
+    },
+  });
+};

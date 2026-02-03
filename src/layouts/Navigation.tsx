@@ -35,6 +35,7 @@ const translations = {
     openMenu: "Open main menu",
     adminUser: "Admin User",
     dashboard: "Dashboard",
+    wishlist: "Wishlist",
   },
   fr: {
     home: "Accueil",
@@ -48,6 +49,7 @@ const translations = {
     openMenu: "Ouvrir le menu principal",
     adminUser: "Utilisateur Admin",
     dashboard: "Tableau de Bord",
+    wishlist: "Liste de Souhaits",
   },
   ar: {
     home: "الرئيسية",
@@ -61,6 +63,7 @@ const translations = {
     openMenu: "افتح القائمة الرئيسية",
     adminUser: "مستخدم مشرف",
     dashboard: "لوحة القيادة",
+    wishlist: "قائمة الرغبات",
   },
 };
 
@@ -203,6 +206,34 @@ const Navigation: React.FC<NavigationProps> = ({
             </Link>
           ))}
         </nav>
+
+        {/* Wishlist Button - Only show on /learn when user is logged in */}
+        {user && location.pathname.startsWith("/learn") && (
+          <Link
+            to="/learn/wishlist"
+            className={`flex items-center space-x-2 px-3 py-2 md:px-4 lg:px-4 text-xs md:text-sm lg:text-base font-medium rounded-lg transition-all duration-200 whitespace-nowrap hover:scale-105 shadow-sm border ${
+              isActivePath("/learn/wishlist")
+                ? "bg-pink-50 text-pink-700 border-pink-200"
+                : "bg-white text-gray-700 border-gray-200 hover:bg-pink-50 hover:text-pink-700 hover:border-pink-200"
+            } ${isRTL ? "flex-row-reverse space-x-reverse" : ""}`}
+            aria-label={t.wishlist}
+          >
+            <svg
+              className="w-4 h-4 md:w-5 md:h-5"
+              fill={isActivePath("/learn/wishlist") ? "currentColor" : "none"}
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+              />
+            </svg>
+            <span className="hidden lg:inline">{t.wishlist}</span>
+          </Link>
+        )}
 
         {/* Desktop Language Dropdown */}
         <div className="relative shrink-0" ref={languageDropdownRef}>
@@ -373,6 +404,38 @@ const Navigation: React.FC<NavigationProps> = ({
                     {item.name}
                   </Link>
                 ))}
+
+                {/* Wishlist Link - Only show on /learn when user is logged in */}
+                {user && location.pathname.startsWith("/learn") && (
+                  <Link
+                    to="/learn/wishlist"
+                    className={`flex items-center space-x-3 px-4 py-3.5 text-base font-medium rounded-lg transition-all duration-200 active:scale-98 ${
+                      isActivePath("/learn/wishlist")
+                        ? "bg-pink-50 text-pink-700 shadow-sm"
+                        : "text-gray-700 hover:bg-pink-50 hover:text-pink-700 active:bg-pink-100"
+                    } ${isRTL ? "flex-row-reverse space-x-reverse" : ""}`}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill={
+                        isActivePath("/learn/wishlist")
+                          ? "currentColor"
+                          : "none"
+                      }
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                      />
+                    </svg>
+                    <span>{t.wishlist}</span>
+                  </Link>
+                )}
               </div>
 
               {/* Mobile Language Selector */}

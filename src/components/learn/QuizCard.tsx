@@ -22,6 +22,7 @@ interface QuizCardProps {
   onClick?: () => void;
   onEdit?: (quiz: Quiz) => void;
   onDelete?: (quiz: Quiz) => void;
+  showMenu?: boolean;
 }
 
 const QuizCard: React.FC<QuizCardProps> = ({
@@ -29,6 +30,7 @@ const QuizCard: React.FC<QuizCardProps> = ({
   onClick,
   onEdit,
   onDelete,
+  showMenu = true,
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -71,13 +73,15 @@ const QuizCard: React.FC<QuizCardProps> = ({
               </Typography>
             </div>
 
-            <IconButton
-              size="small"
-              onClick={handleMenuOpen}
-              sx={{ position: "relative", zIndex: 2000 }}
-            >
-              <MoreVertOutlinedIcon />
-            </IconButton>
+            {showMenu && (
+              <IconButton
+                size="small"
+                onClick={handleMenuOpen}
+                sx={{ position: "relative", zIndex: 2000 }}
+              >
+                <MoreVertOutlinedIcon />
+              </IconButton>
+            )}
           </div>
 
           {/* Tags */}

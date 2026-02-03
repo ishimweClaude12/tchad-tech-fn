@@ -2,6 +2,7 @@ import type { ApiResponse, PaginationMeta } from "src/types/Api.types";
 import axiosInstance from "../../lib/axios";
 import type { Course, GetCourseApiResponse } from "../../types/Course.types";
 import type { GetCourseModulesApiResponse } from "./Moduels.api";
+import type { UserRole } from "src/types/Users.types";
 
 export const coursesApi = {
   // Get all courses
@@ -87,6 +88,67 @@ export const coursesApi = {
         };
       }>
     >("/courses/published");
+    return data;
+  },
+  CheckCourseWishListed: async (userId: string, courseId: string) => {
+    const { data } = await axiosInstance.get<
+      ApiResponse<{
+        isInWishlist: boolean;
+        wishlistItem: {
+          id: string;
+          userId: string;
+          courseId: string;
+          createdAt: string;
+        };
+      }>
+    >(`/wishlist/check/${userId}/${courseId}`);
+
+    console.log("WishList Check Data:", data);
+    return data;
+  },
+  getUserWishListedCourses: async (userId: string) => {
+    const { data } = await axiosInstance.get<
+      ApiResponse<{
+        wishlist: {
+          id: string;
+          userId: string;
+          courseId: string;
+          createdAt: string;
+          course: {
+            id: string;
+            title: string;
+            slug: string;
+            description: string;
+            price: string;
+            thumbnailUrl: string;
+            instructorId: string;
+            instructor: {
+              userId: string;
+              role: UserRole;
+            };
+          };
+        }[];
+        count: number;
+      }>
+    >(`/wishlist/user/${userId}`);
+    return data;
+  },
+  addCourseToWishList: async (userId: string, courseId: string) => {
+    const { data } = await axiosInstance.post<
+      ApiResponse<{ wishlistItem: Course }>
+    >(`/wishlist/add`, { userId, courseId });
+    return data;
+  },
+  removeCourseFromWishList: async (userId: string, courseId: string) => {
+    const { data } = await axiosInstance.delete<
+      ApiResponse<{ success: boolean }>
+    >(`/wishlist/remove/${userId}/${courseId}`);
+    return data;
+  },
+  clearUserWishList: async (userId: string) => {
+    const { data } = await axiosInstance.delete<
+      ApiResponse<{ success: boolean }>
+    >(`/wishlist/user/${userId}/clear`);
     return data;
   },
 };

@@ -4,6 +4,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import axios from "axios";
 import { coursesApi } from "../../services/learn/Course.api";
 import type { Course } from "../../types/Course.types";
 import { queryKeys } from "../useApi";
@@ -114,12 +115,95 @@ export const usePublishCourse = () => {
       coursesApi.publish(id, publish),
     onSuccess: (_, variables) => {
       toast.success(
-        `Course ${variables.publish ? "published" : "unpublished"} successfully`
+        `Course ${variables.publish ? "published" : "unpublished"} successfully`,
       );
       queryClient.invalidateQueries({ queryKey: queryKeys.courses.all });
       queryClient.invalidateQueries({
         queryKey: queryKeys.courses.detail(variables.id),
       });
+    },
+  });
+};
+
+// Check if course is wishlisted by user
+export const useCheckCourseWishListed = (userId: string, courseId: string) => {
+  return useQuery({
+    queryKey: queryKeys.courses.wishListCheck(userId, courseId),
+    queryFn: () => coursesApi.CheckCourseWishListed(userId, courseId),
+    enabled: !!userId && !!courseId,
+  });
+};
+
+// Get user's wishlisted courses
+export const useUserWishListedCourses = (userId: string) => {
+  return useQuery({
+    queryKey: ["wishlists", "user", userId],
+    queryFn: () => coursesApi.getUserWishListedCourses(userId),
+    enabled: !!userId,
+  });
+};
+
+// Add course to wishlist
+export const useAddCourseToWishList = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, courseId }: { userId: string; courseId: string }) =>
+      coursesApi.addCourseToWishList(userId, courseId),
+    onSuccess: (_, variables) => {
+      toast.success("Course added to wishlist");
+      queryClient.invalidateQueries({
+        queryKey: ["wishlists", "user", variables.userId],
+      });
+    },
+    onError: (error) => {
+      let errorMessage = "Failed to add course to wishlist";
+
+      if (axios.isAxiosError(error) && error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+
+      toast.error(errorMessage);
+    },
+  });
+};
+
+// Remove course from wishlist
+export const useRemoveCourseFromWishList = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, courseId }: { userId: string; courseId: string }) =>
+      coursesApi.removeCourseFromWishList(userId, courseId),
+    onSuccess: (_, variables) => {
+      toast.success("Course removed from wishlist");
+      queryClient.invalidateQueries({
+        queryKey: ["wishlists", "user", variables.userId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.courses.wishListCheck(
+          variables.userId,
+          variables.courseId,
+        ),
+      });
+    },
+    onError: () => {
+      toast.error("Failed to remove course from wishlist");
+    },
+  });
+};
+
+// Clear user's wishlist
+export const useClearUserWishList = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => coursesApi.clearUserWishList(userId),
+    onSuccess: (_, userId) => {
+      toast.success("Wishlist cleared successfully");
+      queryClient.invalidateQueries({
+        queryKey: ["wishlists", "user", userId],
+      });
+    },
+    onError: () => {
+      toast.error("Failed to clear wishlist");
     },
   });
 };
