@@ -48,6 +48,11 @@ export const queryKeys = {
       [...queryKeys.announcements.all, "detail", id] as const,
     global: () => [...queryKeys.announcements.all, "global"] as const,
   },
+  notifications: {
+    all: ["notifications"] as const,
+    user: (userId: string) =>
+      [...queryKeys.notifications.all, "user", userId] as const,
+  },
 };
 
 // ============================================
