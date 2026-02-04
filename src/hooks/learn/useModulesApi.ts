@@ -69,6 +69,9 @@ export const useUpdateModule = () => {
       queryClient.invalidateQueries({
         queryKey: ["module", variables.id],
       });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.courses.all,
+      });
     },
     onError: (error) => {
       toast.error("Failed to update module");

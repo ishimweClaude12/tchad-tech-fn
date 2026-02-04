@@ -12,8 +12,9 @@ export const EnrolledCourseSection: React.FC = () => {
 
   // Handlers
 
-  const handleContinueLearning = (courseId: string) => {
-    navigate(`/learn/progress/${courseId}`);
+  const handleContinueLearning = (enrollmentId: string, courseId: string) => {
+    ///learn/enrollment/:enrollmentId/course/:courseId
+    navigate(`/learn/enrollment/${enrollmentId}/course/${courseId}`);
   };
 
   const handleCompletePayment = (enrollment: CourseEnrollment) => {

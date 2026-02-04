@@ -109,3 +109,45 @@ export interface QuestionOptionPayload {
   isCorrect: boolean;
   sortOrder: number;
 }
+
+export interface QuizAttemptPayload {
+  attemptId: string;
+  answers: {
+    questionId: string;
+    selectedOptionId: string;
+  }[];
+}
+
+export interface QuiAttempt {
+  id: string;
+  quizId: string;
+  userId: string;
+  attemptNumber: number;
+  startedAt: string;
+  completedAt: string;
+  totalScore: string;
+  maxPossibleScore: string;
+  gradingStatus: "finalized";
+  isPassed: boolean;
+  createdAt: string;
+  updatedAt: string;
+  answers: {
+    id: string;
+    attemptId: string;
+    questionId: string;
+    selectedOptionId: string;
+    textAnswer: null;
+    matchingAnswer: null;
+    isCorrect: true;
+    earnedPoints: number;
+    requiresManualGrading: boolean;
+    gradedAt: string;
+    answeredAt: string;
+    question: {
+      id: string;
+      questionText: string;
+      questionType: string;
+      points: number;
+    };
+  }[];
+}

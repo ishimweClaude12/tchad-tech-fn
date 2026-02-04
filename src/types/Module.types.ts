@@ -21,6 +21,15 @@ export interface Module {
   lessons: BaseLesson[];
 }
 
+export interface UpdateModulePayload {
+  title: string;
+  description: string;
+  sortOrder: number;
+  isPreview: boolean;
+  estimatedDurationMinutes: number;
+  isPublished: boolean;
+}
+
 export interface BaseCourse {
   id: string;
   title: string;

@@ -28,7 +28,7 @@ import {
 
 interface CourseEnrollmentCardProps {
   enrollment: CourseEnrollment;
-  onContinueLearning?: (courseId: string) => void;
+  onContinueLearning?: (enrollmentId: string, courseId: string) => void;
   onCompletePayment?: (enrollmentId: string) => void;
   onViewCertificate?: (courseId: string) => void;
   onViewDetails?: (courseId: string) => void;
@@ -105,7 +105,7 @@ const CourseEnrollmentCard: React.FC<CourseEnrollmentCardProps> = ({
   const handlePrimaryAction = () => {
     switch (status) {
       case EnrollmentStatus.ACTIVE:
-        onContinueLearning?.(course.id);
+        onContinueLearning?.(enrollment.id, course.id);
         break;
       case EnrollmentStatus.PENDING_PAYMENT:
         onCompletePayment?.(enrollment.id);

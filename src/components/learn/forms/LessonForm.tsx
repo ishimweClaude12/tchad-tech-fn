@@ -158,8 +158,12 @@ const LessonForm: React.FC<LessonFormProps> = ({ initialLesson, onClose }) => {
     setSelectedFile(file);
 
     uploadVideoMutation.mutate(file, {
-      onSuccess: (response: { assetId: string }) => {
-        setValue("muxId", response.assetId, { shouldDirty: true });
+      onSuccess: (response: {
+        maxId: string;
+        assetId: string;
+        playbackId: string;
+      }) => {
+        setValue("muxId", response.maxId, { shouldDirty: true });
         setVideoError(null);
         toast.success("Video uploaded successfully");
       },

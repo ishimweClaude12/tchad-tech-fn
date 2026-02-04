@@ -24,6 +24,8 @@ export const queryKeys = {
     modules: (courseId: string) =>
       [...queryKeys.courses.all, "modules", courseId] as const,
     published: () => [...queryKeys.courses.all, "published"] as const,
+    wishListCheck: (userId: string, courseId: string) =>
+      [...queryKeys.courses.all, "wishListCheck", userId, courseId] as const,
   },
   instructors: {
     all: ["instructors"] as const,
@@ -39,7 +41,6 @@ export const queryKeys = {
     enrollments: () => [...queryKeys.myLearning.all, "enrollments"] as const,
   },
 };
-
 
 // ============================================
 // Category Hooks
@@ -244,7 +245,6 @@ export const useToggleModulePublished = () => {
     mutationFn: ({ id, isPublished }: { id: string; isPublished: boolean }) =>
       modulesApi.toggleIsPublished(id, isPublished),
     onSuccess: () => {
-      toast.success("Module publication status updated");
       queryClient.invalidateQueries({ queryKey: ["modules"] });
       queryClient.invalidateQueries({
         queryKey: queryKeys.courses.all,

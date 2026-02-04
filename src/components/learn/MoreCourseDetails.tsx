@@ -8,6 +8,8 @@ import {
   CircularProgress,
   Alert,
   Box,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import SchoolIcon from "@mui/icons-material/School";
@@ -16,8 +18,15 @@ import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import { useNavigate, useParams } from "react-router-dom";
-import { useCourseBySlug } from "../../hooks/learn/useCourseApi";
+import {
+  useCourseBySlug,
+  useCheckCourseWishListed,
+  useAddCourseToWishList,
+  useRemoveCourseFromWishList,
+} from "../../hooks/learn/useCourseApi";
 import { useAuth } from "@clerk/clerk-react";
 import {
   useCheckEnrollment,
@@ -27,10 +36,12 @@ import {
   EnrollmentStatus,
   type CourseEnrollment,
 } from "src/types/Enrollment.types";
+import { useScrollToTop } from "src/utils/hooks/ScrollTop";
 
 const MoreCourseDetails = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  useScrollToTop({ smooth: true });
   const { data, isLoading, error } = useCourseBySlug(slug || "");
 
   const { userId, isSignedIn } = useAuth();
@@ -39,6 +50,30 @@ const MoreCourseDetails = () => {
     useCheckEnrollment(data?.data.course.id || "", userId || "");
 
   const enrollmentMutation = useEnrolInCourse();
+
+  // Wishlist hooks
+  const { data: wishlistData, isLoading: isWishlistLoading } =
+    useCheckCourseWishListed(userId || "", data?.data.course.id || "");
+  const addToWishlistMutation = useAddCourseToWishList();
+  const removeFromWishlistMutation = useRemoveCourseFromWishList();
+
+  const isWishlisted = wishlistData?.data?.isInWishlist;
+
+  const handleToggleWishlist = () => {
+    if (!userId || !data?.data.course.id) return;
+
+    if (isWishlisted) {
+      removeFromWishlistMutation.mutate({
+        userId,
+        courseId: data.data.course.id,
+      });
+    } else {
+      addToWishlistMutation.mutate({
+        userId,
+        courseId: data.data.course.id,
+      });
+    }
+  };
 
   const handleEnroll = () => {
     if (userId && data) {
@@ -63,7 +98,7 @@ const MoreCourseDetails = () => {
     navigate(
       `/learn/${
         enrollmentData.data.enrollment.id
-      }/checkout?data=${encodeURIComponent(JSON.stringify(courseEnrollment))}`
+      }/checkout?data=${encodeURIComponent(JSON.stringify(courseEnrollment))}`,
     );
   };
 
@@ -143,7 +178,7 @@ const MoreCourseDetails = () => {
           fullWidth
           color="success"
           startIcon={<PlayCircleIcon />}
-          href={`/learn/course/${course.slug}/learn`}
+          href={`/learn/enrollment/${enrollmentData.data.enrollment.id}/course/${data?.data.course.id}`}
         >
           Continue Learning
         </Button>
@@ -188,6 +223,14 @@ const MoreCourseDetails = () => {
   return (
     <div className=" mx-auto p-4 sm:p-8 min-w-screen space-y-8 max-w-7xl">
       {/* Hero Section */}
+      {/* Go Back Button */}
+      <Button
+        variant="text"
+        onClick={() => navigate(-1)}
+        className="mb-4 text-gray-600"
+      >
+        &larr; Back to Courses
+      </Button>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
         {/* Left */}
         <div className="lg:col-span-2 space-y-4">
@@ -227,11 +270,54 @@ const MoreCourseDetails = () => {
         {/* Right Enroll Card */}
         <Card className="sticky top-24 h-fit w-full -mx-4 sm:mx-0 rounded-none sm:rounded-lg">
           <CardContent className="space-y-4 w-full px-4 sm:px-4">
-            <img
-              src={course.thumbnailUrl || "/images/placeholder.jpg"}
-              alt={course.title}
-              className="rounded-md w-full h-44 object-cover"
-            />
+            <div className="relative">
+              <img
+                src={course.thumbnailUrl || "/images/placeholder.jpg"}
+                alt={course.title}
+                className="rounded-md w-full h-44 object-cover"
+              />
+              {/* Wishlist Button/Icon */}
+              {isSignedIn && !enrollmentData?.data.isEnrolled && (
+                <>
+                  {wishlistData?.data.isInWishlist ? (
+                    <Tooltip title="Remove from wishlist">
+                      <IconButton
+                        onClick={handleToggleWishlist}
+                        disabled={
+                          isWishlistLoading ||
+                          removeFromWishlistMutation.isPending
+                        }
+                        className="absolute top-2 right-2 bg-red-50 hover:bg-red-100 border-2 border-red-300 shadow-lg transition-all duration-200"
+                        size="small"
+                        sx={{
+                          "&:hover": {
+                            transform: "scale(1.1)",
+                          },
+                        }}
+                      >
+                        <FavoriteIcon
+                          className="text-red-600"
+                          fontSize="medium"
+                        />
+                      </IconButton>
+                    </Tooltip>
+                  ) : (
+                    <Button
+                      onClick={handleToggleWishlist}
+                      disabled={
+                        isWishlistLoading || addToWishlistMutation.isPending
+                      }
+                      variant="outlined"
+                      size="small"
+                      startIcon={<FavoriteBorderIcon />}
+                      className="absolute top-2 right-2 bg-white hover:bg-gray-50 shadow-lg"
+                    >
+                      Add to Wishlist
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
 
             <div className="flex items-center gap-2">
               {course.discountPrice ? (

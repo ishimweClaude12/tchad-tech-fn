@@ -1,8 +1,10 @@
 import type {
   CourseEnrollment,
   Enrollment,
+  EnrollmentProgress,
   EnrollmentStatus,
   EnrollmentType,
+  ModuleProgress,
   PayCoursePayload,
   UserEnrollment,
 } from "src/types/Enrollment.types";
@@ -47,7 +49,7 @@ export const enrollmentApi = {
   updateEnrollment: async (
     enrollmentType: EnrollmentType,
     status: EnrollmentStatus,
-    enrollmentId: string
+    enrollmentId: string,
   ) => {
     const { data } = await axiosInstance.put<
       ApiResponse<{ enrollment: Enrollment }>
@@ -58,6 +60,39 @@ export const enrollmentApi = {
     const { data } = await axiosInstance.delete<
       ApiResponse<{ success: boolean }>
     >(`/enrollments/${enrollmentId}`);
+    return data;
+  },
+  getModuleProgress: async (enrollmentId: string, moduleId: string) => {
+    const { data } = await axiosInstance.get<
+      ApiResponse<{ moduleProgress: ModuleProgress | null }>
+    >(`/progress/module/${enrollmentId}/${moduleId}`);
+    return data;
+  },
+  startModuleProgress: async (enrollmentId: string, moduleId: string) => {
+    const { data } = await axiosInstance.post<
+      ApiResponse<{ progress: ModuleProgress }>
+    >(`/progress/module/start`, { enrollmentId, moduleId });
+    return data;
+  },
+  completeLesson: async (enrollmentId: string, lessonId: string) => {
+    const { data } = await axiosInstance.post<
+      ApiResponse<{ progress: ModuleProgress }>
+    >(`/progress/lesson/complete`, {
+      enrollmentId,
+      lessonId,
+    });
+    return data;
+  },
+  startLessonProgress: async (enrollmentId: string, lessonId: string) => {
+    const { data } = await axiosInstance.post<
+      ApiResponse<{ progress: ModuleProgress }>
+    >(`/progress/lesson/start`, { enrollmentId, lessonId });
+    return data;
+  },
+  getLessonProgress: async (enrollmentId: string) => {
+    const { data } = await axiosInstance.get<
+      ApiResponse<{ progress: EnrollmentProgress[] }>
+    >(`/progress/enrollment/${enrollmentId}`);
     return data;
   },
 };
