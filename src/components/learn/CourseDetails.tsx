@@ -90,6 +90,10 @@ export const CourseDetails = () => {
   const handleEnrollments = () => {
     navigate(`/learn/dashboard/course/${courseId}/enrollments`);
   };
+  
+  const handleAnnouncements = () => {
+    navigate(`/learn/dashboard/course/${courseId}/announcements`);
+  };
 
   if (!courseId) {
     return <div className="text-center text-gray-600">No course selected.</div>;
@@ -177,12 +181,20 @@ export const CourseDetails = () => {
                 </Button>
                 <Button
                   variant="outlined"
+                  color="secondary"
                   onClick={() => setOpenQuizForm(true)}
                 >
                   Add Quiz
                 </Button>
                 <Button variant="contained" onClick={handleEnrollments}>
                   Enrollments
+                </Button>
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  onClick={handleAnnouncements}
+                >
+                  Announcements
                 </Button>
               </div>
             </div>

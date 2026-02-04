@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useCourseById } from "src/hooks/learn/useCourseApi";
 import {
@@ -20,6 +20,7 @@ import {
   Alert,
   LinearProgress,
   Paper,
+  IconButton,
 } from "@mui/material";
 import {
   PlayCircleOutline,
@@ -35,11 +36,17 @@ import {
   Group,
   Verified,
   ArrowBack,
+  Close,
+  Campaign,
+  CalendarToday,
+  NavigateNext,
+  NavigateBefore,
 } from "@mui/icons-material";
 import { useCourseQuizzes, useQuizAttempts } from "src/hooks/learn/useQuizApi";
 import { useAuth } from "@clerk/clerk-react";
 import type { Quiz } from "src/types/Quiz.types";
 import QuizAttemptCard from "src/components/learn/QuizAttemptCard";
+import { useCourseAnnouncements } from "src/hooks/learn/useAnnouncementsApi";
 
 // Component to handle individual quiz card with attempts check
 const QuizCardWithAttempts: React.FC<{
@@ -76,11 +83,14 @@ const CourseLandingPage = () => {
     enrollmentId: string;
   }>();
   const navigate = useNavigate();
+  const [currentAnnouncementIndex, setCurrentAnnouncementIndex] = useState(0);
+  const [showAnnouncement, setShowAnnouncement] = useState(true);
 
   const { data: courseData, isLoading, error } = useCourseById(courseId);
   const { data: courseQuizzes, isLoading: isQuizLoading } =
     useCourseQuizzes(courseId);
   const { userId } = useAuth();
+  const { data: announcementsData } = useCourseAnnouncements(courseId);
   // Loading state with skeletons
   if (isLoading) {
     return (
@@ -162,6 +172,36 @@ const CourseLandingPage = () => {
     return `${hours}h ${mins}m`;
   };
 
+  // Announcement handlers
+  const publishedAnnouncements =
+    announcementsData?.data?.announcements?.filter((a) => a.isPublished) || [];
+  const currentAnnouncement = publishedAnnouncements[currentAnnouncementIndex];
+
+  const handleAnnouncementClose = () => {
+    setShowAnnouncement(false);
+  };
+
+  const handleNextAnnouncement = () => {
+    if (currentAnnouncementIndex < publishedAnnouncements.length - 1) {
+      setCurrentAnnouncementIndex(currentAnnouncementIndex + 1);
+    }
+  };
+
+  const handlePreviousAnnouncement = () => {
+    if (currentAnnouncementIndex > 0) {
+      setCurrentAnnouncementIndex(currentAnnouncementIndex - 1);
+    }
+  };
+
+  const formatAnnouncementDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }).format(date);
+  };
+
   return (
     <Box className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Back Navigation */}
@@ -176,6 +216,183 @@ const CourseLandingPage = () => {
           </Button>
         </Container>
       </Box>
+
+      {/* Announcement Banner */}
+      {publishedAnnouncements.length > 0 &&
+        showAnnouncement &&
+        currentAnnouncement && (
+          <Container maxWidth="xl" className="pt-4">
+            <Box
+              sx={{
+                background: "#ffffff",
+                borderRadius: 2,
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
+                overflow: "hidden",
+                position: "relative",
+                animation: "slideDown 0.4s ease-out",
+                border: "1px solid #e5e7eb",
+                "@keyframes slideDown": {
+                  from: { opacity: 0, transform: "translateY(-10px)" },
+                  to: { opacity: 1, transform: "translateY(0)" },
+                },
+              }}
+            >
+              {/* Blue accent border */}
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: "3px",
+                  background:
+                    "linear-gradient(90deg, #3b82f6 0%, #2563eb 100%)",
+                }}
+              />
+
+              <div className="px-4 py-3">
+                <div className="flex items-start gap-3">
+                  {/* Icon */}
+                  <div className="shrink-0 mt-0.5">
+                    <Campaign
+                      sx={{
+                        color: "#3b82f6",
+                        fontSize: 20,
+                      }}
+                    />
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-3 mb-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
+                          Announcement
+                        </span>
+                        {currentAnnouncement.isGlobal && (
+                          <Chip
+                            label="Global"
+                            size="small"
+                            sx={{
+                              height: "18px",
+                              fontSize: "0.7rem",
+                              background: "#eff6ff",
+                              color: "#3b82f6",
+                              fontWeight: 600,
+                              border: "1px solid #dbeafe",
+                            }}
+                          />
+                        )}
+                        {publishedAnnouncements.length > 1 && (
+                          <span className="text-xs text-gray-500">
+                            {currentAnnouncementIndex + 1} of{" "}
+                            {publishedAnnouncements.length}
+                          </span>
+                        )}
+                      </div>
+                      <IconButton
+                        onClick={handleAnnouncementClose}
+                        size="small"
+                        sx={{
+                          color: "#6b7280",
+                          padding: "4px",
+                          "&:hover": {
+                            background: "#f3f4f6",
+                            color: "#374151",
+                          },
+                          transition: "all 0.2s ease",
+                        }}
+                      >
+                        <Close sx={{ fontSize: 16 }} />
+                      </IconButton>
+                    </div>
+
+                    <h4
+                      style={{
+                        fontSize: "0.95rem",
+                        fontWeight: 600,
+                        color: "#111827",
+                        marginBottom: "0.375rem",
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      {currentAnnouncement.title}
+                    </h4>
+
+                    <p
+                      style={{
+                        color: "#4b5563",
+                        lineHeight: 1.5,
+                        fontSize: "0.875rem",
+                        margin: 0,
+                        marginBottom: "0.5rem",
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {currentAnnouncement.content}
+                    </p>
+
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                      {currentAnnouncement.publishedAt && (
+                        <div className="flex items-center gap-1 text-gray-500 text-xs">
+                          <CalendarToday sx={{ fontSize: 13 }} />
+                          <span>
+                            {formatAnnouncementDate(
+                              currentAnnouncement.publishedAt,
+                            )}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Navigation for multiple announcements */}
+                      {publishedAnnouncements.length > 1 && (
+                        <div className="flex gap-1">
+                          <IconButton
+                            onClick={handlePreviousAnnouncement}
+                            disabled={currentAnnouncementIndex === 0}
+                            size="small"
+                            sx={{
+                              padding: "4px",
+                              color: "#3b82f6",
+                              "&:hover": {
+                                background: "#eff6ff",
+                              },
+                              "&:disabled": {
+                                color: "#d1d5db",
+                              },
+                            }}
+                          >
+                            <NavigateBefore sx={{ fontSize: 18 }} />
+                          </IconButton>
+                          <IconButton
+                            onClick={handleNextAnnouncement}
+                            disabled={
+                              currentAnnouncementIndex ===
+                              publishedAnnouncements.length - 1
+                            }
+                            size="small"
+                            sx={{
+                              padding: "4px",
+                              color: "#3b82f6",
+                              "&:hover": {
+                                background: "#eff6ff",
+                              },
+                              "&:disabled": {
+                                color: "#d1d5db",
+                              },
+                            }}
+                          >
+                            <NavigateNext sx={{ fontSize: 18 }} />
+                          </IconButton>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Box>
+          </Container>
+        )}
 
       <Container maxWidth="xl" className="py-8">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4">

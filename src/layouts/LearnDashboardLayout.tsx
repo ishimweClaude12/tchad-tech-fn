@@ -3,10 +3,15 @@ import {
   BookOpen,
   Users,
   GraduationCap,
-  FolderOpen,
   BarChart3,
   Settings,
   Home,
+  Megaphone,
+  Folder,
+  Layers,
+  Box,
+  FileText,
+  LayoutDashboard,
 } from "lucide-react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 
@@ -18,7 +23,7 @@ const LearnDashboardLayout: React.FC = () => {
     {
       name: "Dashboard",
       href: "/learn/dashboard",
-      icon: BarChart3,
+      icon: LayoutDashboard,
       current: currentPath === "/learn/dashboard",
     },
     {
@@ -42,25 +47,25 @@ const LearnDashboardLayout: React.FC = () => {
     {
       name: "Categories",
       href: "/learn/dashboard/categories",
-      icon: FolderOpen,
+      icon: Folder,
       current: currentPath === "/learn/dashboard/categories",
     },
     {
       name: "Sub-Categories",
       href: "/learn/dashboard/sub-categories",
-      icon: FolderOpen,
+      icon: Layers,
       current: currentPath === "/learn/dashboard/sub-categories",
     },
     {
       name: "Modules",
       href: "/learn/dashboard/modules",
-      icon: FolderOpen,
+      icon: Box,
       current: currentPath === "/learn/dashboard/modules",
     },
     {
       name: "Lessons",
       href: "/learn/dashboard/lessons",
-      icon: FolderOpen,
+      icon: FileText,
       current: currentPath === "/learn/dashboard/lessons",
     },
     {
@@ -68,6 +73,12 @@ const LearnDashboardLayout: React.FC = () => {
       href: "/learn/dashboard/analytics",
       icon: BarChart3,
       current: currentPath === "/learn/dashboard/analytics",
+    },
+    {
+      name: "Announcements",
+      href: "/learn/dashboard/announcements",
+      icon: Megaphone,
+      current: currentPath === "/learn/dashboard/announcements",
     },
     {
       name: "Settings",

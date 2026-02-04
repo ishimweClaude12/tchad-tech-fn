@@ -40,6 +40,14 @@ export const queryKeys = {
     all: ["my-learning"] as const,
     enrollments: () => [...queryKeys.myLearning.all, "enrollments"] as const,
   },
+  announcements: {
+    all: ["announcements"] as const,
+    list: (page?: number, limit?: number) =>
+      [...queryKeys.announcements.all, "list", page, limit] as const,
+    detail: (id: string) =>
+      [...queryKeys.announcements.all, "detail", id] as const,
+    global: () => [...queryKeys.announcements.all, "global"] as const,
+  },
 };
 
 // ============================================

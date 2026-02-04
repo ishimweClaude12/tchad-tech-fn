@@ -1,7 +1,15 @@
 import React, { useState } from "react";
 
 import { useLanguage } from "../../contexts/LanguageContext";
-import { Button } from "@mui/material";
+import { Button, IconButton, Chip, Box } from "@mui/material";
+import {
+  Close,
+  Campaign,
+  CalendarToday,
+  NavigateNext,
+  NavigateBefore,
+} from "@mui/icons-material";
+import { useGlobalAnnouncements } from "src/hooks/learn/useAnnouncementsApi";
 
 // Types
 interface HeroTranslations {
@@ -112,8 +120,14 @@ export const Hero: React.FC<HeroProps> = ({
   const { language } = useLanguage();
 
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [showAnnouncement, setShowAnnouncement] = useState(true);
   const content = translations[language];
   const isRTL = language === "ar";
+  const { data: announcements } = useGlobalAnnouncements();
+
+  const publishedAnnouncements =
+    announcements?.data?.announcements?.filter((a) => a.isPublished) || [];
 
   // Use asset utility for the image path
   const imageSrc = heroImageSrc ?? "assets/images/hero-image.jpg";
@@ -130,6 +144,33 @@ export const Hero: React.FC<HeroProps> = ({
     setImageLoaded(true);
   };
 
+  const handleAnnouncementClose = () => {
+    setShowAnnouncement(false);
+  };
+
+  const handleNext = () => {
+    if (currentIndex < publishedAnnouncements.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+    }
+  };
+
+  const currentAnnouncement = publishedAnnouncements[currentIndex];
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }).format(date);
+  };
+
   return (
     <section
       className="relative bg-linear-to-br from-blue-600 via-blue-700 to-indigo-800 text-white overflow-hidden"
@@ -142,6 +183,218 @@ export const Hero: React.FC<HeroProps> = ({
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-300 rounded-full blur-3xl animate-pulse delay-1000"></div>
         <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-cyan-300 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
+
+      {/* Inline Announcement Banner */}
+      {publishedAnnouncements.length > 0 &&
+        showAnnouncement &&
+        currentAnnouncement && (
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+            <Box
+              sx={{
+                background: "linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)",
+                borderRadius: 4,
+                boxShadow: "0 20px 50px rgba(30, 64, 175, 0.4)",
+                overflow: "hidden",
+                position: "relative",
+                animation: "slideDown 0.5s ease-out",
+                border: "2px solid rgba(59, 130, 246, 0.3)",
+                backdropFilter: "blur(10px)",
+                "@keyframes slideDown": {
+                  from: { opacity: 0, transform: "translateY(-20px)" },
+                  to: { opacity: 1, transform: "translateY(0)" },
+                },
+              }}
+            >
+              {/* Animated top border */}
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: "3px",
+                  background:
+                    "linear-gradient(90deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%)",
+                  animation: "shimmer 3s infinite",
+                  backgroundSize: "200% 100%",
+                  "@keyframes shimmer": {
+                    "0%": { backgroundPosition: "-200% 0" },
+                    "100%": { backgroundPosition: "200% 0" },
+                  },
+                }}
+              />
+
+              <div className="p-6">
+                {/* Announcement Header Badge */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 bg-blue-500/20 px-4 py-2 rounded-full border border-blue-300/30">
+                      <Campaign
+                        sx={{
+                          color: "#60a5fa",
+                          fontSize: 22,
+                          animation: "pulse 2s infinite",
+                          "@keyframes pulse": {
+                            "0%, 100%": { transform: "scale(1)" },
+                            "50%": { transform: "scale(1.1)" },
+                          },
+                        }}
+                      />
+                      <span className="text-blue-100 font-semibold text-sm tracking-wide uppercase">
+                        📢 Announcement
+                      </span>
+                    </div>
+                    {currentAnnouncement.isGlobal && (
+                      <Chip
+                        label="Global"
+                        size="small"
+                        sx={{
+                          background: "rgba(96, 165, 250, 0.2)",
+                          color: "#93c5fd",
+                          fontWeight: 600,
+                          border: "1px solid rgba(147, 197, 253, 0.3)",
+                        }}
+                      />
+                    )}
+                  </div>
+                  <IconButton
+                    onClick={handleAnnouncementClose}
+                    size="small"
+                    sx={{
+                      color: "#93c5fd",
+                      background: "rgba(96, 165, 250, 0.1)",
+                      "&:hover": {
+                        background: "rgba(96, 165, 250, 0.2)",
+                        transform: "rotate(90deg)",
+                      },
+                      transition: "all 0.3s ease",
+                    }}
+                  >
+                    <Close />
+                  </IconButton>
+                </div>
+
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    {/* Title */}
+                    <h3
+                      style={{
+                        fontSize: "1.75rem",
+                        fontWeight: 800,
+                        color: "#ffffff",
+                        marginBottom: "1rem",
+                        textShadow: "0 2px 10px rgba(0,0,0,0.2)",
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      {currentAnnouncement.title}
+                    </h3>
+
+                    {/* Meta Information */}
+                    <div className="flex items-center gap-3 flex-wrap mb-4">
+                      {currentAnnouncement.publishedAt && (
+                        <div className="flex items-center gap-1 text-blue-200 text-sm bg-blue-500/10 px-3 py-1 rounded-full">
+                          <CalendarToday sx={{ fontSize: 16 }} />
+                          <span className="font-medium">
+                            {formatDate(currentAnnouncement.publishedAt)}
+                          </span>
+                        </div>
+                      )}
+                      {publishedAnnouncements.length > 1 && (
+                        <Chip
+                          label={`${currentIndex + 1} of ${publishedAnnouncements.length}`}
+                          size="small"
+                          sx={{
+                            background: "rgba(96, 165, 250, 0.15)",
+                            color: "#dbeafe",
+                            fontWeight: 600,
+                            border: "1px solid rgba(147, 197, 253, 0.3)",
+                          }}
+                        />
+                      )}
+                    </div>
+
+                    {/* Content */}
+                    <div
+                      style={{
+                        background: "rgba(255, 255, 255, 0.95)",
+                        borderRadius: "12px",
+                        padding: "1.25rem",
+                        marginBottom: "1rem",
+                        border: "1px solid rgba(59, 130, 246, 0.2)",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                    >
+                      <p
+                        style={{
+                          color: "#1f2937",
+                          lineHeight: 1.7,
+                          fontSize: "1rem",
+                          margin: 0,
+                          whiteSpace: "pre-wrap",
+                        }}
+                      >
+                        {currentAnnouncement.content}
+                      </p>
+                    </div>
+
+                    {/* Navigation buttons for multiple announcements */}
+                    {publishedAnnouncements.length > 1 && (
+                      <div className="flex gap-2 mt-4">
+                        <IconButton
+                          onClick={handlePrevious}
+                          disabled={currentIndex === 0}
+                          size="small"
+                          sx={{
+                            background: "rgba(255, 255, 255, 0.9)",
+                            color: "#1e40af",
+                            padding: "8px",
+                            "&:hover": {
+                              background: "#ffffff",
+                              transform: "translateX(-2px)",
+                            },
+                            "&:disabled": {
+                              background: "rgba(255, 255, 255, 0.3)",
+                              color: "rgba(30, 64, 175, 0.3)",
+                            },
+                            transition: "all 0.3s ease",
+                            border: "1px solid rgba(59, 130, 246, 0.3)",
+                          }}
+                        >
+                          <NavigateBefore />
+                        </IconButton>
+                        <IconButton
+                          onClick={handleNext}
+                          disabled={
+                            currentIndex === publishedAnnouncements.length - 1
+                          }
+                          size="small"
+                          sx={{
+                            background: "rgba(255, 255, 255, 0.9)",
+                            color: "#1e40af",
+                            padding: "8px",
+                            "&:hover": {
+                              background: "#ffffff",
+                              transform: "translateX(2px)",
+                            },
+                            "&:disabled": {
+                              background: "rgba(255, 255, 255, 0.3)",
+                              color: "rgba(30, 64, 175, 0.3)",
+                            },
+                            transition: "all 0.3s ease",
+                            border: "1px solid rgba(59, 130, 246, 0.3)",
+                          }}
+                        >
+                          <NavigateNext />
+                        </IconButton>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </Box>
+          </div>
+        )}
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-28">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
