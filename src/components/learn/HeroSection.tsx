@@ -1,15 +1,26 @@
 import React, { useState } from "react";
 
 import { useLanguage } from "../../contexts/LanguageContext";
-import { Button, IconButton, Chip, Box } from "@mui/material";
+import { Button, IconButton, Chip, Box, Tooltip } from "@mui/material";
 import {
   Close,
   Campaign,
   CalendarToday,
   NavigateNext,
   NavigateBefore,
+  Notifications,
+  Circle,
+  CheckCircle,
+  Delete,
 } from "@mui/icons-material";
 import { useGlobalAnnouncements } from "src/hooks/learn/useAnnouncementsApi";
+import {
+  useUserNotifications,
+  useMarkNotificationAsRead,
+  useMarkAllNotificationsAsRead,
+  useDeleteNotification,
+} from "src/hooks/learn/useNotificationsApi";
+import { useAuth } from "@clerk/clerk-react";
 
 // Types
 interface HeroTranslations {
@@ -118,13 +129,19 @@ export const Hero: React.FC<HeroProps> = ({
   heroImageSrc,
 }) => {
   const { language } = useLanguage();
+  const { userId } = useAuth();
 
   const [imageLoaded, setImageLoaded] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showAnnouncement, setShowAnnouncement] = useState(true);
+  const [showNotifications, setShowNotifications] = useState(true);
   const content = translations[language];
   const isRTL = language === "ar";
   const { data: announcements } = useGlobalAnnouncements();
+  const { data: notifications = [] } = useUserNotifications(userId || "");
+  const { mutate: markAsRead } = useMarkNotificationAsRead();
+  const { mutate: markAllAsRead } = useMarkAllNotificationsAsRead(userId || "");
+  const { mutate: deleteNotification } = useDeleteNotification();
 
   const publishedAnnouncements =
     announcements?.data?.announcements?.filter((a) => a.isPublished) || [];
@@ -146,6 +163,10 @@ export const Hero: React.FC<HeroProps> = ({
 
   const handleAnnouncementClose = () => {
     setShowAnnouncement(false);
+  };
+
+  const handleNotificationsClose = () => {
+    setShowNotifications(false);
   };
 
   const handleNext = () => {
@@ -184,21 +205,235 @@ export const Hero: React.FC<HeroProps> = ({
         <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-cyan-300 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
-      {/* Inline Announcement Banner */}
-      {publishedAnnouncements.length > 0 &&
-        showAnnouncement &&
-        currentAnnouncement && (
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+      {/* Inline Announcement and Notifications Banners */}
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 flex gap-4">
+        {/* Announcement Banner */}
+        {publishedAnnouncements.length > 0 &&
+          showAnnouncement &&
+          currentAnnouncement && (
+            <div className="flex-1">
+              <Box
+                sx={{
+                  background:
+                    "linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)",
+                  borderRadius: 4,
+                  boxShadow: "0 20px 50px rgba(30, 64, 175, 0.4)",
+                  overflow: "hidden",
+                  position: "relative",
+                  animation: "slideDown 0.5s ease-out",
+                  border: "2px solid rgba(59, 130, 246, 0.3)",
+                  backdropFilter: "blur(10px)",
+                  "@keyframes slideDown": {
+                    from: { opacity: 0, transform: "translateY(-20px)" },
+                    to: { opacity: 1, transform: "translateY(0)" },
+                  },
+                }}
+              >
+                {/* Animated top border */}
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: "3px",
+                    background:
+                      "linear-gradient(90deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%)",
+                    animation: "shimmer 3s infinite",
+                    backgroundSize: "200% 100%",
+                    "@keyframes shimmer": {
+                      "0%": { backgroundPosition: "-200% 0" },
+                      "100%": { backgroundPosition: "200% 0" },
+                    },
+                  }}
+                />
+
+                <div className="p-6">
+                  {/* Announcement Header Badge */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 bg-blue-500/20 px-4 py-2 rounded-full border border-blue-300/30">
+                        <Campaign
+                          sx={{
+                            color: "#60a5fa",
+                            fontSize: 22,
+                            animation: "pulse 2s infinite",
+                            "@keyframes pulse": {
+                              "0%, 100%": { transform: "scale(1)" },
+                              "50%": { transform: "scale(1.1)" },
+                            },
+                          }}
+                        />
+                        <span className="text-blue-100 font-semibold text-sm tracking-wide uppercase">
+                          📢 Announcement
+                        </span>
+                      </div>
+                      {currentAnnouncement.isGlobal && (
+                        <Chip
+                          label="Global"
+                          size="small"
+                          sx={{
+                            background: "rgba(96, 165, 250, 0.2)",
+                            color: "#93c5fd",
+                            fontWeight: 600,
+                            border: "1px solid rgba(147, 197, 253, 0.3)",
+                          }}
+                        />
+                      )}
+                    </div>
+                    <IconButton
+                      onClick={handleAnnouncementClose}
+                      size="small"
+                      sx={{
+                        color: "#93c5fd",
+                        background: "rgba(96, 165, 250, 0.1)",
+                        "&:hover": {
+                          background: "rgba(96, 165, 250, 0.2)",
+                          transform: "rotate(90deg)",
+                        },
+                        transition: "all 0.3s ease",
+                      }}
+                    >
+                      <Close />
+                    </IconButton>
+                  </div>
+
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      {/* Title */}
+                      <h3
+                        style={{
+                          fontSize: "1.75rem",
+                          fontWeight: 800,
+                          color: "#ffffff",
+                          marginBottom: "1rem",
+                          textShadow: "0 2px 10px rgba(0,0,0,0.2)",
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        {currentAnnouncement.title}
+                      </h3>
+
+                      {/* Meta Information */}
+                      <div className="flex items-center gap-3 flex-wrap mb-4">
+                        {currentAnnouncement.publishedAt && (
+                          <div className="flex items-center gap-1 text-blue-200 text-sm bg-blue-500/10 px-3 py-1 rounded-full">
+                            <CalendarToday sx={{ fontSize: 16 }} />
+                            <span className="font-medium">
+                              {formatDate(currentAnnouncement.publishedAt)}
+                            </span>
+                          </div>
+                        )}
+                        {publishedAnnouncements.length > 1 && (
+                          <Chip
+                            label={`${currentIndex + 1} of ${publishedAnnouncements.length}`}
+                            size="small"
+                            sx={{
+                              background: "rgba(96, 165, 250, 0.15)",
+                              color: "#dbeafe",
+                              fontWeight: 600,
+                              border: "1px solid rgba(147, 197, 253, 0.3)",
+                            }}
+                          />
+                        )}
+                      </div>
+
+                      {/* Content */}
+                      <div
+                        style={{
+                          background: "rgba(255, 255, 255, 0.95)",
+                          borderRadius: "12px",
+                          padding: "1.25rem",
+                          marginBottom: "1rem",
+                          border: "1px solid rgba(59, 130, 246, 0.2)",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                        }}
+                      >
+                        <p
+                          style={{
+                            color: "#1f2937",
+                            lineHeight: 1.7,
+                            fontSize: "1rem",
+                            margin: 0,
+                            whiteSpace: "pre-wrap",
+                          }}
+                        >
+                          {currentAnnouncement.content}
+                        </p>
+                      </div>
+
+                      {/* Navigation buttons for multiple announcements */}
+                      {publishedAnnouncements.length > 1 && (
+                        <div className="flex gap-2 mt-4">
+                          <IconButton
+                            onClick={handlePrevious}
+                            disabled={currentIndex === 0}
+                            size="small"
+                            sx={{
+                              background: "rgba(255, 255, 255, 0.9)",
+                              color: "#1e40af",
+                              padding: "8px",
+                              "&:hover": {
+                                background: "#ffffff",
+                                transform: "translateX(-2px)",
+                              },
+                              "&:disabled": {
+                                background: "rgba(255, 255, 255, 0.3)",
+                                color: "rgba(30, 64, 175, 0.3)",
+                              },
+                              transition: "all 0.3s ease",
+                              border: "1px solid rgba(59, 130, 246, 0.3)",
+                            }}
+                          >
+                            <NavigateBefore />
+                          </IconButton>
+                          <IconButton
+                            onClick={handleNext}
+                            disabled={
+                              currentIndex === publishedAnnouncements.length - 1
+                            }
+                            size="small"
+                            sx={{
+                              background: "rgba(255, 255, 255, 0.9)",
+                              color: "#1e40af",
+                              padding: "8px",
+                              "&:hover": {
+                                background: "#ffffff",
+                                transform: "translateX(2px)",
+                              },
+                              "&:disabled": {
+                                background: "rgba(255, 255, 255, 0.3)",
+                                color: "rgba(30, 64, 175, 0.3)",
+                              },
+                              transition: "all 0.3s ease",
+                              border: "1px solid rgba(59, 130, 246, 0.3)",
+                            }}
+                          >
+                            <NavigateNext />
+                          </IconButton>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </Box>
+            </div>
+          )}
+
+        {/* Notifications Banner */}
+        {notifications.length > 0 && showNotifications && userId && (
+          <div className="flex-1">
             <Box
               sx={{
-                background: "linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)",
+                background: "linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)",
                 borderRadius: 4,
-                boxShadow: "0 20px 50px rgba(30, 64, 175, 0.4)",
+                boxShadow: "0 20px 50px rgba(124, 58, 237, 0.4)",
                 overflow: "hidden",
                 position: "relative",
                 animation: "slideDown 0.5s ease-out",
-                border: "2px solid rgba(59, 130, 246, 0.3)",
+                border: "2px solid rgba(168, 85, 247, 0.3)",
                 backdropFilter: "blur(10px)",
+                maxHeight: "400px",
                 "@keyframes slideDown": {
                   from: { opacity: 0, transform: "translateY(-20px)" },
                   to: { opacity: 1, transform: "translateY(0)" },
@@ -214,7 +449,7 @@ export const Hero: React.FC<HeroProps> = ({
                   right: 0,
                   height: "3px",
                   background:
-                    "linear-gradient(90deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%)",
+                    "linear-gradient(90deg, #c084fc 0%, #a855f7 50%, #7c3aed 100%)",
                   animation: "shimmer 3s infinite",
                   backgroundSize: "200% 100%",
                   "@keyframes shimmer": {
@@ -225,13 +460,13 @@ export const Hero: React.FC<HeroProps> = ({
               />
 
               <div className="p-6">
-                {/* Announcement Header Badge */}
+                {/* Notifications Header */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 bg-blue-500/20 px-4 py-2 rounded-full border border-blue-300/30">
-                      <Campaign
+                    <div className="flex items-center gap-2 bg-purple-500/20 px-4 py-2 rounded-full border border-purple-300/30">
+                      <Notifications
                         sx={{
-                          color: "#60a5fa",
+                          color: "#c084fc",
                           fontSize: 22,
                           animation: "pulse 2s infinite",
                           "@keyframes pulse": {
@@ -240,31 +475,54 @@ export const Hero: React.FC<HeroProps> = ({
                           },
                         }}
                       />
-                      <span className="text-blue-100 font-semibold text-sm tracking-wide uppercase">
-                        📢 Announcement
+                      <span className="text-purple-100 font-semibold text-sm tracking-wide uppercase">
+                        🔔 Notifications
                       </span>
                     </div>
-                    {currentAnnouncement.isGlobal && (
-                      <Chip
-                        label="Global"
+                    <Chip
+                      label={`${notifications.filter((n) => !n.isRead).length} unread`}
+                      size="small"
+                      sx={{
+                        background: "rgba(192, 132, 252, 0.2)",
+                        color: "#e9d5ff",
+                        fontWeight: 600,
+                        border: "1px solid rgba(233, 213, 255, 0.3)",
+                      }}
+                    />
+                    {notifications.filter((n) => !n.isRead).length > 0 && (
+                      <Button
+                        onClick={() => markAllAsRead()}
                         size="small"
+                        startIcon={<CheckCircle />}
                         sx={{
-                          background: "rgba(96, 165, 250, 0.2)",
-                          color: "#93c5fd",
+                          background: "rgba(255, 255, 255, 0.9)",
+                          color: "#7c3aed",
+                          textTransform: "none",
                           fontWeight: 600,
-                          border: "1px solid rgba(147, 197, 253, 0.3)",
+                          fontSize: "0.75rem",
+                          padding: "4px 12px",
+                          borderRadius: "20px",
+                          "&:hover": {
+                            background: "#ffffff",
+                            transform: "translateY(-1px)",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                          },
+                          transition: "all 0.2s ease",
+                          border: "1px solid rgba(124, 58, 237, 0.2)",
                         }}
-                      />
+                      >
+                        Mark All Read
+                      </Button>
                     )}
                   </div>
                   <IconButton
-                    onClick={handleAnnouncementClose}
+                    onClick={handleNotificationsClose}
                     size="small"
                     sx={{
-                      color: "#93c5fd",
-                      background: "rgba(96, 165, 250, 0.1)",
+                      color: "#e9d5ff",
+                      background: "rgba(192, 132, 252, 0.1)",
                       "&:hover": {
-                        background: "rgba(96, 165, 250, 0.2)",
+                        background: "rgba(192, 132, 252, 0.2)",
                         transform: "rotate(90deg)",
                       },
                       transition: "all 0.3s ease",
@@ -274,127 +532,140 @@ export const Hero: React.FC<HeroProps> = ({
                   </IconButton>
                 </div>
 
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    {/* Title */}
-                    <h3
-                      style={{
-                        fontSize: "1.75rem",
-                        fontWeight: 800,
-                        color: "#ffffff",
-                        marginBottom: "1rem",
-                        textShadow: "0 2px 10px rgba(0,0,0,0.2)",
-                        lineHeight: 1.3,
-                      }}
+                {/* Notifications List */}
+                <div
+                  style={{
+                    background: "rgba(255, 255, 255, 0.95)",
+                    borderRadius: "12px",
+                    padding: "0.75rem",
+                    border: "1px solid rgba(168, 85, 247, 0.2)",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                    maxHeight: "250px",
+                    overflowY: "auto",
+                  }}
+                >
+                  {notifications.slice(0, 5).map((notification) => (
+                    <Tooltip
+                      key={notification.id}
+                      title={
+                        notification.isRead
+                          ? "Already read"
+                          : "Click to mark as read"
+                      }
+                      arrow
+                      placement="left"
                     >
-                      {currentAnnouncement.title}
-                    </h3>
-
-                    {/* Meta Information */}
-                    <div className="flex items-center gap-3 flex-wrap mb-4">
-                      {currentAnnouncement.publishedAt && (
-                        <div className="flex items-center gap-1 text-blue-200 text-sm bg-blue-500/10 px-3 py-1 rounded-full">
-                          <CalendarToday sx={{ fontSize: 16 }} />
-                          <span className="font-medium">
-                            {formatDate(currentAnnouncement.publishedAt)}
-                          </span>
-                        </div>
-                      )}
-                      {publishedAnnouncements.length > 1 && (
-                        <Chip
-                          label={`${currentIndex + 1} of ${publishedAnnouncements.length}`}
-                          size="small"
-                          sx={{
-                            background: "rgba(96, 165, 250, 0.15)",
-                            color: "#dbeafe",
-                            fontWeight: 600,
-                            border: "1px solid rgba(147, 197, 253, 0.3)",
-                          }}
-                        />
-                      )}
-                    </div>
-
-                    {/* Content */}
-                    <div
-                      style={{
-                        background: "rgba(255, 255, 255, 0.95)",
-                        borderRadius: "12px",
-                        padding: "1.25rem",
-                        marginBottom: "1rem",
-                        border: "1px solid rgba(59, 130, 246, 0.2)",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                      }}
-                    >
-                      <p
-                        style={{
-                          color: "#1f2937",
-                          lineHeight: 1.7,
-                          fontSize: "1rem",
-                          margin: 0,
-                          whiteSpace: "pre-wrap",
-                        }}
-                      >
-                        {currentAnnouncement.content}
-                      </p>
-                    </div>
-
-                    {/* Navigation buttons for multiple announcements */}
-                    {publishedAnnouncements.length > 1 && (
-                      <div className="flex gap-2 mt-4">
-                        <IconButton
-                          onClick={handlePrevious}
-                          disabled={currentIndex === 0}
-                          size="small"
-                          sx={{
-                            background: "rgba(255, 255, 255, 0.9)",
-                            color: "#1e40af",
-                            padding: "8px",
-                            "&:hover": {
-                              background: "#ffffff",
-                              transform: "translateX(-2px)",
-                            },
-                            "&:disabled": {
-                              background: "rgba(255, 255, 255, 0.3)",
-                              color: "rgba(30, 64, 175, 0.3)",
-                            },
-                            transition: "all 0.3s ease",
-                            border: "1px solid rgba(59, 130, 246, 0.3)",
-                          }}
-                        >
-                          <NavigateBefore />
-                        </IconButton>
-                        <IconButton
-                          onClick={handleNext}
-                          disabled={
-                            currentIndex === publishedAnnouncements.length - 1
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!notification.isRead) {
+                            markAsRead(notification.id);
                           }
-                          size="small"
-                          sx={{
-                            background: "rgba(255, 255, 255, 0.9)",
-                            color: "#1e40af",
-                            padding: "8px",
-                            "&:hover": {
-                              background: "#ffffff",
-                              transform: "translateX(2px)",
-                            },
-                            "&:disabled": {
-                              background: "rgba(255, 255, 255, 0.3)",
-                              color: "rgba(30, 64, 175, 0.3)",
-                            },
-                            transition: "all 0.3s ease",
-                            border: "1px solid rgba(59, 130, 246, 0.3)",
-                          }}
-                        >
-                          <NavigateNext />
-                        </IconButton>
-                      </div>
-                    )}
-                  </div>
+                        }}
+                        style={{
+                          padding: "0.75rem",
+                          marginBottom: "0.5rem",
+                          background: notification.isRead
+                            ? "rgba(243, 244, 246, 0.5)"
+                            : "rgba(243, 232, 255, 0.8)",
+                          borderRadius: "8px",
+                          borderLeft: notification.isRead
+                            ? "3px solid #d1d5db"
+                            : "3px solid #a855f7",
+                          transition: "all 0.2s ease",
+                          cursor: "pointer",
+                          width: "100%",
+                          textAlign: "left",
+                          border: "none",
+                        }}
+                        className="hover:shadow-md"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              {!notification.isRead && (
+                                <Circle
+                                  sx={{
+                                    fontSize: 8,
+                                    color: "#a855f7",
+                                  }}
+                                />
+                              )}
+                              <h4
+                                style={{
+                                  fontSize: "0.875rem",
+                                  fontWeight: 600,
+                                  color: "#1f2937",
+                                  margin: 0,
+                                }}
+                              >
+                                {notification.title}
+                              </h4>
+                            </div>
+                            <p
+                              style={{
+                                fontSize: "0.8125rem",
+                                color: "#4b5563",
+                                margin: 0,
+                                lineHeight: 1.5,
+                              }}
+                            >
+                              {notification.message}
+                            </p>
+                            <span
+                              style={{
+                                fontSize: "0.75rem",
+                                color: "#9ca3af",
+                                marginTop: "0.25rem",
+                                display: "block",
+                              }}
+                            >
+                              {formatDate(notification.createdAt)}
+                            </span>
+                          </div>
+                          <Tooltip title="Delete notification" arrow>
+                            <IconButton
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteNotification(notification.id);
+                              }}
+                              size="small"
+                              sx={{
+                                color: "#ef4444",
+                                background: "rgba(239, 68, 68, 0.1)",
+                                padding: "6px",
+                                "&:hover": {
+                                  background: "rgba(239, 68, 68, 0.2)",
+                                  transform: "scale(1.1)",
+                                },
+                                transition: "all 0.2s ease",
+                              }}
+                            >
+                              <Delete sx={{ fontSize: 16 }} />
+                            </IconButton>
+                          </Tooltip>
+                        </div>
+                      </button>
+                    </Tooltip>
+                  ))}
+                  {notifications.length > 5 && (
+                    <div
+                      className="text-center pt-2"
+                      style={{
+                        color: "#7c3aed",
+                        fontSize: "0.875rem",
+                        fontWeight: 600,
+                      }}
+                    >
+                      + {notifications.length - 5} more notifications
+                    </div>
+                  )}
                 </div>
               </div>
             </Box>
           </div>
         )}
+      </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-28">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
