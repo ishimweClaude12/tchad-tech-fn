@@ -36,6 +36,8 @@ import Module from "./pages/learn/Module";
 import WishList from "./pages/learn/WishList";
 import CourseLandingPage from "./pages/learn/CourseLandingPage";
 import QuizAttempt from "./pages/learn/QuizAttempt";
+import Announcements from "./pages/learn/Announcements";
+import CourseAnnouncements from "./pages/learn/CourseAnnouncements";
 
 export default function AppRouter() {
   return (
@@ -76,6 +78,10 @@ export default function AppRouter() {
           element={<QuizDetails />}
         />
         <Route path="course/:courseId/enrollments" element={<Enrollments />} />
+        <Route
+          path="course/:courseId/announcements"
+          element={<CourseAnnouncements />}
+        />
         <Route path="users" element={<ELearningUsersAdmin />} />
         <Route path="my-learning" element={<div>My Learning Page</div>} />
         <Route path="categories" element={<CourseCategoriesAdmin />} />
@@ -85,6 +91,7 @@ export default function AppRouter() {
         <Route path="assignments" element={<div>Assignments Page</div>} />
         <Route path="quizes" element={<div>Quizes Page</div>} />
         <Route path="analytics" element={<div>Analytics Page</div>} />
+        <Route path="announcements" element={<Announcements />} />
         <Route path="settings" element={<div>Settings Page</div>} />
       </Route>
 
