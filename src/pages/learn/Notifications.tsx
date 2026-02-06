@@ -1,10 +1,35 @@
-import { Bell, Plus, Clock, CheckCircle2, Circle } from "lucide-react";
-import { useAllNotifications } from "src/hooks/learn/useNotificationsApi";
+import { useState } from "react";
+import { Bell, Plus, Clock, CheckCircle2, Circle, Trash2 } from "lucide-react";
+import { Button, Pagination } from "@mui/material";
+import {
+  useAllNotifications,
+  useDeleteNotification,
+} from "src/hooks/learn/useNotificationsApi";
 import { NotificationType } from "src/types/Notifications.types";
 import UserCard from "src/components/learn/UserCard";
+import NotificationForm from "src/components/learn/forms/NotificationForm";
 
 const Notifications = () => {
-  const { data: notifications, isLoading, error } = useAllNotifications();
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const {
+    data: notifications,
+    isLoading,
+    error,
+  } = useAllNotifications(page, limit);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const deleteNotificationMutation = useDeleteNotification();
+
+  const handlePageChange = (
+    _event: React.ChangeEvent<unknown>,
+    value: number,
+  ) => {
+    setPage(value);
+  };
+
+  const handleDeleteNotification = (notificationId: string) => {
+    deleteNotificationMutation.mutate(notificationId);
+  };
 
   const getNotificationIcon = (type: NotificationType) => {
     const iconClass = "w-5 h-5";
@@ -52,7 +77,7 @@ const Notifications = () => {
     return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
-      year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
+      year: date.getFullYear() === now.getFullYear() ? undefined : "numeric",
     });
   };
 
@@ -107,19 +132,16 @@ const Notifications = () => {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
             <p className="text-gray-600 mt-1">
-              Manage all learner notifications
+              Manage all learner(s) notifications
             </p>
           </div>
-          <button
+          <Button
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-            onClick={() => {
-              // TODO: Open create notification modal/form
-              console.log("Create new notification");
-            }}
+            onClick={() => setIsFormOpen(true)}
           >
             <Plus className="w-5 h-5" />
             Create Notification
-          </button>
+          </Button>
         </div>
 
         {/* Stats Bar */}
@@ -153,9 +175,9 @@ const Notifications = () => {
               <div
                 key={notification.id}
                 className={`bg-white rounded-lg p-5 shadow-sm transition-all hover:shadow-md ${
-                  !notification.isRead
-                    ? "border-l-4 border-blue-500"
-                    : "border-l-4 border-transparent"
+                  notification.isRead
+                    ? "border-l-4 border-transparent"
+                    : "border-l-4 border-blue-500"
                 }`}
               >
                 <div className="flex items-start gap-4">
@@ -173,14 +195,26 @@ const Notifications = () => {
                     <div className="flex items-start justify-between gap-4 mb-1">
                       <h3
                         className={`font-semibold text-gray-900 ${
-                          !notification.isRead ? "font-bold" : ""
+                          notification.isRead ? "" : "font-bold"
                         }`}
                       >
                         {notification.title}
                       </h3>
-                      <span className="text-sm text-gray-500 whitespace-nowrap">
-                        {formatDate(notification.createdAt)}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-500 whitespace-nowrap">
+                          {formatDate(notification.createdAt)}
+                        </span>
+                        <Button
+                          onClick={() =>
+                            handleDeleteNotification(notification.id)
+                          }
+                          disabled={deleteNotificationMutation.isPending}
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
+                          title="Delete notification"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
 
                     <p className="text-gray-700 mb-2">{notification.message}</p>
@@ -193,12 +227,15 @@ const Notifications = () => {
                     {/* Metadata */}
                     <div className="flex items-center gap-4 text-sm">
                       <span className="px-2.5 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
-                        {notification.type.replace(/_/g, " ")}
+                        {notification.type.toString().replaceAll("_", " ")}
                       </span>
 
                       {notification.relatedType && (
                         <span className="text-gray-500">
-                          Related: {notification.relatedType}
+                          Related:{" "}
+                          {notification.relatedType
+                            .toString()
+                            .replaceAll("_", " ")}
                         </span>
                       )}
 
@@ -220,6 +257,19 @@ const Notifications = () => {
                 </div>
               </div>
             ))}
+            {/* Pagination Controls */}
+            <div className="flex justify-center mt-6 bg-white rounded-lg p-4 shadow-sm">
+              <Pagination
+                count={notifications.length < limit ? page : page + 1}
+                page={page}
+                onChange={handlePageChange}
+                color="primary"
+                showFirstButton
+                showLastButton
+                siblingCount={1}
+                boundaryCount={1}
+              />
+            </div>
           </div>
         ) : (
           <div className="bg-white rounded-lg p-12 text-center shadow-sm">
@@ -232,19 +282,22 @@ const Notifications = () => {
             <p className="text-gray-600 mb-6">
               Create your first notification to get started
             </p>
-            <button
+            <Button
               className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-              onClick={() => {
-                // TODO: Open create notification modal/form
-                console.log("Create new notification");
-              }}
+              onClick={() => setIsFormOpen(true)}
             >
               <Plus className="w-5 h-5" />
               Create Notification
-            </button>
+            </Button>
           </div>
         )}
       </div>
+
+      {/* Notification Form Modal */}
+      <NotificationForm
+        open={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+      />
     </div>
   );
 };

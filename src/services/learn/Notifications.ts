@@ -1,6 +1,9 @@
 import axiosInstance from "src/lib/axios";
 import type { ApiResponse } from "src/types/Api.types";
-import type { UserNotification } from "src/types/Notifications.types";
+import type {
+  NotificationPayload,
+  UserNotification,
+} from "src/types/Notifications.types";
 
 export const NotificationsApi = {
   getUserNotifications: async (userId: string) => {
@@ -35,12 +38,20 @@ export const NotificationsApi = {
     >(`/notifications/${notificationId}`);
     return data;
   },
-  getAllNotifications: async () => {
+  getAllNotifications: async (page: number = 1, limit: number = 20) => {
     const { data } = await axiosInstance.get<
       ApiResponse<{
         notifications: UserNotification[];
       }>
-    >(`/notifications`);
+    >(`/notifications?page=${page}&limit=${limit}`);
+    return data;
+  },
+  sendNotification: async (payload: NotificationPayload) => {
+    const { data } = await axiosInstance.post<
+      ApiResponse<{
+        count: number;
+      }>
+    >(`/notifications/bulk`, payload);
     return data;
   },
 };

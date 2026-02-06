@@ -278,3 +278,10 @@ export const useSubmitQuizAttempt = () => {
     },
   });
 };
+
+export const useAllQuizzes = () => {
+  return useQuery({
+    queryKey: ["allQuizzes"],
+    queryFn: () => quizApi.getAllQuizzes(),
+  });
+};

@@ -154,4 +154,12 @@ export const quizApi = {
     >(`/quiz-attempts/user/${userId}/quiz/${quizId}`);
     return data;
   },
+  getAllQuizzes: async () => {
+    const { data } = await axiosInstance.get<
+      ApiResponse<{
+        quizzes: Quiz[];
+      }>
+    >(`/quizzes/`);
+    return data;
+  },
 };

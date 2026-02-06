@@ -27,3 +27,12 @@ export enum RelatedEntityType {
   SYSTEM = "SYSTEM",
   ANNOUNCEMENT = "announcement",
 }
+
+export interface NotificationPayload {
+  userIds: string[];
+  type: NotificationType;
+  title: string;
+  message: string;
+  relatedId: string;
+  relatedType: RelatedEntityType;
+}
