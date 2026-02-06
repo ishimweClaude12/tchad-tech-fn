@@ -8,10 +8,19 @@ import type {
 } from "src/types/Enrollment.types";
 
 export const useEnrolInCourse = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ courseId, userId }: { courseId: string; userId: string }) =>
       enrollmentApi.enrollInCourse(courseId, userId),
-    onSuccess: () => toast.success("Enrolled in course successfully."),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["check-enrollment"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["user-enrollments"],
+      });
+      toast.success("Enrolled in course successfully.");
+    },
     onError: (error) => {
       toast.error("Failed to enroll in course.");
       console.error("Enroll In Course Error:", error);

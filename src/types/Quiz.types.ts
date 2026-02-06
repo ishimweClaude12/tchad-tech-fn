@@ -4,6 +4,8 @@ import type {
   QuizDeliveryMode,
   QuestionType,
 } from "src/utils/enums/Quiz.enums";
+import type { LessonModule } from "./CourseLessons.types";
+import type { BaseCourse } from "./Module.types";
 
 export interface Quiz {
   id: string;
@@ -39,9 +41,9 @@ export interface Quiz {
 
   createdAt: string;
   updatedAt: string;
-
-  module: string | null;
-  lesson: string | null;
+  course: BaseCourse | null;
+  module: LessonModule | null;
+  lesson: LessonModule | null;
 }
 
 export interface QuizPayload {
