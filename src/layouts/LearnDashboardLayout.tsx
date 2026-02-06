@@ -13,6 +13,7 @@ import {
   FileText,
   LayoutDashboard,
   Bell,
+  Star,
 } from "lucide-react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 
@@ -86,6 +87,12 @@ const LearnDashboardLayout: React.FC = () => {
       href: "/learn/dashboard/notifications",
       icon: Bell,
       current: currentPath === "/learn/dashboard/notifications",
+    },
+    {
+      name: "Reviews",
+      href: "/learn/dashboard/reviews",
+      icon: Star,
+      current: currentPath === "/learn/dashboard/reviews",
     },
     {
       name: "Settings",

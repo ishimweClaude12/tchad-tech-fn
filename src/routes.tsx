@@ -39,6 +39,7 @@ import QuizAttempt from "./pages/learn/QuizAttempt";
 import Announcements from "./pages/learn/Announcements";
 import CourseAnnouncements from "./pages/learn/CourseAnnouncements";
 import Notifications from "./pages/learn/Notifications";
+import Reviews from "./pages/learn/Reviews";
 
 export default function AppRouter() {
   return (
@@ -94,6 +95,7 @@ export default function AppRouter() {
         <Route path="analytics" element={<div>Analytics Page</div>} />
         <Route path="announcements" element={<Announcements />} />
         <Route path="notifications" element={<Notifications />} />
+        <Route path="reviews" element={<Reviews />} />
         <Route path="settings" element={<div>Settings Page</div>} />
       </Route>
 

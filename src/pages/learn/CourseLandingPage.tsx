@@ -21,6 +21,7 @@ import {
   LinearProgress,
   Paper,
   IconButton,
+  TextField,
 } from "@mui/material";
 import {
   PlayCircleOutline,
@@ -47,6 +48,13 @@ import { useAuth } from "@clerk/clerk-react";
 import type { Quiz } from "src/types/Quiz.types";
 import QuizAttemptCard from "src/components/learn/QuizAttemptCard";
 import { useCourseAnnouncements } from "src/hooks/learn/useAnnouncementsApi";
+import {
+  useCheckUserReview,
+  useAddReview,
+  useGetCourseReviews,
+  useUpdateReview,
+} from "src/hooks/learn/useReviewsApi";
+import { Edit, Send } from "@mui/icons-material";
 
 // Component to handle individual quiz card with attempts check
 const QuizCardWithAttempts: React.FC<{
@@ -85,12 +93,20 @@ const CourseLandingPage = () => {
   const navigate = useNavigate();
   const [currentAnnouncementIndex, setCurrentAnnouncementIndex] = useState(0);
   const [showAnnouncement, setShowAnnouncement] = useState(true);
+  const [reviewFormOpen, setReviewFormOpen] = useState(false);
+  const [reviewTitle, setReviewTitle] = useState("");
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewRating, setReviewRating] = useState<number | null>(0);
 
   const { data: courseData, isLoading, error } = useCourseById(courseId);
   const { data: courseQuizzes, isLoading: isQuizLoading } =
     useCourseQuizzes(courseId);
   const { userId } = useAuth();
   const { data: announcementsData } = useCourseAnnouncements(courseId);
+  const { data: userReviewData } = useCheckUserReview(courseId, userId || "");
+  const { data: courseReviewsData } = useGetCourseReviews(courseId);
+  const addReviewMutation = useAddReview();
+  const updateReviewMutation = useUpdateReview();
   // Loading state with skeletons
   if (isLoading) {
     return (
@@ -201,6 +217,79 @@ const CourseLandingPage = () => {
       day: "numeric",
     }).format(date);
   };
+
+  const handleSubmitReview = () => {
+    if (
+      !userId ||
+      !reviewTitle.trim() ||
+      !reviewComment.trim() ||
+      !reviewRating
+    ) {
+      return;
+    }
+
+    const existingReview = userReviewData?.data?.review;
+
+    if (existingReview) {
+      // Update existing review
+      updateReviewMutation.mutate(
+        {
+          reviewId: existingReview.id,
+          payload: {
+            userId,
+            title: reviewTitle.trim(),
+            comment: reviewComment.trim(),
+            rating: reviewRating,
+          },
+          courseId, // For query invalidation only
+        },
+        {
+          onSuccess: () => {
+            setReviewFormOpen(false);
+            setReviewTitle("");
+            setReviewComment("");
+            setReviewRating(0);
+          },
+        },
+      );
+    } else {
+      // Add new review
+      addReviewMutation.mutate(
+        {
+          courseId,
+          userId,
+          title: reviewTitle.trim(),
+          comment: reviewComment.trim(),
+          rating: reviewRating,
+        },
+        {
+          onSuccess: () => {
+            setReviewFormOpen(false);
+            setReviewTitle("");
+            setReviewComment("");
+            setReviewRating(0);
+          },
+        },
+      );
+    }
+  };
+
+  const handleEditReview = () => {
+    const existingReview = userReviewData?.data?.review;
+    if (existingReview) {
+      setReviewTitle(existingReview.title);
+      setReviewComment(existingReview.comment);
+      setReviewRating(existingReview.rating);
+      setReviewFormOpen(true);
+    }
+  };
+
+  const userHasReviewed = userReviewData?.data?.hasReviewed;
+  const userReview = userReviewData?.data?.review;
+  const courseReviews = courseReviewsData?.data?.reviews || [];
+  const approvedReviews = courseReviews.filter(
+    (r) => r.moderationStatus === "approved",
+  );
 
   return (
     <Box className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -699,6 +788,245 @@ const CourseLandingPage = () => {
                 </CardContent>
               </Card>
             )}
+
+            {/* Reviews Section */}
+            <Card className="rounded-xl shadow-md mb-6">
+              <CardContent className="p-6">
+                <Typography
+                  variant="h5"
+                  className="font-bold mb-4 text-gray-900 flex items-center gap-2"
+                >
+                  <Star className="text-yellow-500" />
+                  Course Reviews
+                  {approvedReviews.length > 0 && (
+                    <Chip
+                      label={`${approvedReviews.length} reviews`}
+                      size="small"
+                      color="primary"
+                      sx={{ ml: 1 }}
+                    />
+                  )}
+                </Typography>
+
+                {/* User's Review or Add Review Form */}
+                {userId && (
+                  <Box className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    {userHasReviewed && userReview && !reviewFormOpen ? (
+                      <>
+                        <Box className="flex items-start justify-between mb-3">
+                          <Typography
+                            variant="subtitle1"
+                            className="font-semibold text-gray-900"
+                          >
+                            Your Review
+                          </Typography>
+                          <Button
+                            size="small"
+                            startIcon={<Edit />}
+                            onClick={handleEditReview}
+                            sx={{ textTransform: "none" }}
+                          >
+                            Edit
+                          </Button>
+                        </Box>
+                        <Box className="mb-2">
+                          <Rating
+                            value={userReview.rating}
+                            readOnly
+                            size="small"
+                          />
+                        </Box>
+                        <Typography
+                          variant="subtitle2"
+                          className="font-semibold mb-1"
+                        >
+                          {userReview.title}
+                        </Typography>
+                        <Typography variant="body2" className="text-gray-700">
+                          {userReview.comment}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          className="text-gray-500 mt-2 block"
+                        >
+                          {userReview.moderationStatus === "pending" && (
+                            <Chip
+                              label="Pending Review"
+                              size="small"
+                              color="warning"
+                              sx={{ mt: 1 }}
+                            />
+                          )}
+                          {userReview.moderationStatus === "approved" && (
+                            <Chip
+                              label="Published"
+                              size="small"
+                              color="success"
+                              sx={{ mt: 1 }}
+                            />
+                          )}
+                        </Typography>
+                      </>
+                    ) : (
+                      <>
+                        <Typography
+                          variant="subtitle1"
+                          className="font-semibold mb-3 text-gray-900"
+                        >
+                          {userHasReviewed
+                            ? "Edit Your Review"
+                            : "Write a Review"}
+                        </Typography>
+                        <Box className="space-y-3">
+                          <Box>
+                            <Typography
+                              variant="body2"
+                              className="mb-1 text-gray-700"
+                            >
+                              Rating
+                            </Typography>
+                            <Rating
+                              value={reviewRating}
+                              onChange={(_, newValue) =>
+                                setReviewRating(newValue)
+                              }
+                              size="large"
+                            />
+                          </Box>
+                          <TextField
+                            fullWidth
+                            label="Review Title"
+                            value={reviewTitle}
+                            onChange={(e) => setReviewTitle(e.target.value)}
+                            placeholder="Summarize your experience"
+                            variant="outlined"
+                            size="small"
+                          />
+                          <TextField
+                            fullWidth
+                            label="Your Review"
+                            value={reviewComment}
+                            onChange={(e) => setReviewComment(e.target.value)}
+                            placeholder="Share your thoughts about this course"
+                            variant="outlined"
+                            multiline
+                            rows={4}
+                          />
+                          <Box className="flex gap-2">
+                            <Button
+                              variant="contained"
+                              startIcon={<Send />}
+                              onClick={handleSubmitReview}
+                              disabled={
+                                !reviewTitle.trim() ||
+                                !reviewComment.trim() ||
+                                !reviewRating ||
+                                addReviewMutation.isPending ||
+                                updateReviewMutation.isPending
+                              }
+                            >
+                              {addReviewMutation.isPending ||
+                              updateReviewMutation.isPending
+                                ? "Submitting..."
+                                : userHasReviewed
+                                  ? "Update Review"
+                                  : "Submit Review"}
+                            </Button>
+                            {userHasReviewed && (
+                              <Button
+                                variant="outlined"
+                                onClick={() => {
+                                  setReviewFormOpen(false);
+                                  setReviewTitle("");
+                                  setReviewComment("");
+                                  setReviewRating(0);
+                                }}
+                              >
+                                Cancel
+                              </Button>
+                            )}
+                          </Box>
+                        </Box>
+                      </>
+                    )}
+                  </Box>
+                )}
+
+                {/* All Approved Reviews */}
+                {approvedReviews.length > 0 ? (
+                  <Box className="space-y-4">
+                    {approvedReviews.map((review) => (
+                      <Paper
+                        key={review.id}
+                        elevation={0}
+                        className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
+                      >
+                        <Box className="flex items-start justify-between mb-2">
+                          <Box>
+                            <Rating
+                              value={review.rating}
+                              readOnly
+                              size="small"
+                            />
+                            <Typography
+                              variant="subtitle2"
+                              className="font-semibold mt-1"
+                            >
+                              {review.title}
+                            </Typography>
+                          </Box>
+                          {review.isVerifiedPurchase && (
+                            <Chip
+                              label="Verified"
+                              size="small"
+                              icon={<Verified />}
+                              color="success"
+                              variant="outlined"
+                            />
+                          )}
+                        </Box>
+                        <Typography
+                          variant="body2"
+                          className="text-gray-700 mb-2"
+                        >
+                          {review.comment}
+                        </Typography>
+                        <Box className="flex items-center gap-2 text-sm text-gray-500">
+                          <Typography variant="caption">
+                            {new Date(review.createdAt).toLocaleDateString(
+                              "en-US",
+                              {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              },
+                            )}
+                          </Typography>
+                          {review.helpfulCount > 0 && (
+                            <>
+                              <span>•</span>
+                              <Typography variant="caption">
+                                {review.helpfulCount} found helpful
+                              </Typography>
+                            </>
+                          )}
+                        </Box>
+                      </Paper>
+                    ))}
+                  </Box>
+                ) : (
+                  <Box className="text-center py-8">
+                    <Star
+                      className="text-gray-300 mb-2"
+                      style={{ fontSize: 48 }}
+                    />
+                    <Typography variant="body2" className="text-gray-500">
+                      No reviews yet. Be the first to review this course!
+                    </Typography>
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Course Quizzes Section */}
             {!isQuizLoading &&
