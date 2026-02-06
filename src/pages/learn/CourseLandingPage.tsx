@@ -42,6 +42,8 @@ import {
   CalendarToday,
   NavigateNext,
   NavigateBefore,
+  Edit,
+  Send,
 } from "@mui/icons-material";
 import { useCourseQuizzes, useQuizAttempts } from "src/hooks/learn/useQuizApi";
 import { useAuth } from "@clerk/clerk-react";
@@ -54,7 +56,7 @@ import {
   useGetCourseReviews,
   useUpdateReview,
 } from "src/hooks/learn/useReviewsApi";
-import { Edit, Send } from "@mui/icons-material";
+ 
 
 // Component to handle individual quiz card with attempts check
 const QuizCardWithAttempts: React.FC<{
@@ -925,12 +927,12 @@ const CourseLandingPage = () => {
                                 updateReviewMutation.isPending
                               }
                             >
-                              {addReviewMutation.isPending ||
-                              updateReviewMutation.isPending
-                                ? "Submitting..."
-                                : userHasReviewed
-                                  ? "Update Review"
-                                  : "Submit Review"}
+                              {(() => {
+                                if (addReviewMutation.isPending || updateReviewMutation.isPending) {
+                                  return "Submitting...";
+                                }
+                                return userHasReviewed ? "Update Review" : "Submit Review";
+                              })()}
                             </Button>
                             {userHasReviewed && (
                               <Button

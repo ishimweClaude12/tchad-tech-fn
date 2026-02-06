@@ -113,7 +113,7 @@ export const useUpdateReview = () => {
       payload: Parameters<typeof ReviewsApi.updateReview>[1];
       courseId?: string;
     }) => ReviewsApi.updateReview(reviewId, payload),
-    onSuccess: (data, variables) => {
+    onSuccess: (_, variables) => {
       toast.success("Review updated successfully!");
       console.log("Invalidating queries for update with:", {
         courseId: variables.courseId,
