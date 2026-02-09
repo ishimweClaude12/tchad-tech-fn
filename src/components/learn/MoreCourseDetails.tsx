@@ -37,6 +37,8 @@ import {
   type CourseEnrollment,
 } from "src/types/Enrollment.types";
 import { useScrollToTop } from "src/utils/hooks/ScrollTop";
+import { useGetCourseReviews } from "src/hooks/learn/useReviewsApi";
+import UserCard from "./UserCard";
 
 const MoreCourseDetails = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -50,10 +52,15 @@ const MoreCourseDetails = () => {
     useCheckEnrollment(data?.data.course.id || "", userId || "");
 
   const enrollmentMutation = useEnrolInCourse();
+  // Reviews
+  const { data: courseReviewsData } = useGetCourseReviews(
+    data?.data.course.id || "",
+  );
 
   // Wishlist hooks
   const { data: wishlistData, isLoading: isWishlistLoading } =
     useCheckCourseWishListed(userId || "", data?.data.course.id || "");
+
   const addToWishlistMutation = useAddCourseToWishList();
   const removeFromWishlistMutation = useRemoveCourseFromWishList();
 
@@ -469,6 +476,148 @@ const MoreCourseDetails = () => {
             Instructor Jeff is an experienced educator with a passion for
             teaching.
           </Typography>
+        </CardContent>
+      </Card>
+
+      {/* Reviews Section */}
+      <Card>
+        <CardContent className="space-y-6">
+          <div className="flex items-center justify-between">
+            <Typography variant="h6" fontWeight={600}>
+              Student Reviews
+            </Typography>
+            <Typography className="text-sm text-gray-600">
+              {courseReviewsData?.data?.reviews.length || 0} review
+              {courseReviewsData?.data?.reviews.length === 1 ? "" : "s"}
+            </Typography>
+          </div>
+
+          {/* Reviews Summary */}
+          {courseReviewsData?.data &&
+            courseReviewsData.data.reviews.length > 0 && (
+              <div className="flex flex-col sm:flex-row gap-6 pb-6 border-b border-gray-200">
+                <div className="flex flex-col items-center justify-center gap-2 sm:min-w-[150px]">
+                  <Typography variant="h3" fontWeight={700}>
+                    {course.ratingAverage?.toFixed(1) ?? "0.0"}
+                  </Typography>
+                  <Rating
+                    value={course.ratingAverage ?? 0}
+                    precision={0.5}
+                    readOnly
+                    size="large"
+                  />
+                  <Typography className="text-sm text-gray-600">
+                    Course Rating
+                  </Typography>
+                </div>
+
+                {/* Rating Distribution */}
+                <div className="flex-1 space-y-2">
+                  {[5, 4, 3, 2, 1].map((star) => {
+                    const count =
+                      courseReviewsData.data?.reviews.filter(
+                        (review) => review.rating === star,
+                      ).length || 0;
+                    const percentage =
+                      courseReviewsData.data &&
+                      courseReviewsData.data.reviews.length > 0
+                        ? (count / courseReviewsData.data.reviews.length) * 100
+                        : 0;
+
+                    return (
+                      <div key={star} className="flex items-center gap-3">
+                        <Typography className="text-sm min-w-[60px]">
+                          {star} stars
+                        </Typography>
+                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-yellow-500 rounded-full transition-all duration-300"
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                        <Typography className="text-sm text-gray-600 min-w-10 text-right">
+                          {count}
+                        </Typography>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+          {/* Reviews List */}
+          {courseReviewsData?.data &&
+          courseReviewsData.data.reviews.length > 0 ? (
+            <div className="space-y-6">
+              {courseReviewsData.data.reviews.map((review) => (
+                <div
+                  key={review.id}
+                  className="border-b border-gray-100 last:border-0 pb-6 last:pb-0"
+                >
+                  <div className="flex flex-col gap-4">
+                    {/* User Card */}
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                      <div className="flex-1">
+                        <UserCard userId={review.user.userId} />
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Rating value={review.rating} size="small" readOnly />
+                          {review.isVerifiedPurchase && (
+                            <Chip
+                              label="Verified Purchase"
+                              size="small"
+                              color="success"
+                              variant="outlined"
+                              icon={<CheckCircleIcon />}
+                              className="h-6"
+                            />
+                          )}
+                        </div>
+                        <Typography className="text-sm text-gray-500">
+                          {new Date(review.createdAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            },
+                          )}
+                        </Typography>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      {/* Review Title */}
+                      {review.title && (
+                        <Typography fontWeight={600} className="text-gray-900">
+                          {review.title}
+                        </Typography>
+                      )}
+
+                      {/* Review Comment */}
+                      <Typography className="text-gray-700">
+                        {review.comment}
+                      </Typography>
+
+                      {/* Review Footer */}
+                      {review.helpfulCount > 0 && (
+                        <Typography className="text-sm text-gray-500">
+                          {review.helpfulCount} people found this helpful
+                        </Typography>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <Typography className="text-gray-500">
+                No reviews yet. Be the first to review this course!
+              </Typography>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
