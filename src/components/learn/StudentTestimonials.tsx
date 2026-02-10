@@ -7,6 +7,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { Button } from "@mui/material";
 
 // Translations object
 const translations = {
@@ -426,7 +427,7 @@ const StudentTestimonials = () => {
           {/* Navigation Buttons */}
           {t.stories.length > storiesPerView && (
             <>
-              <button
+              <Button
                 onClick={handlePrevious}
                 disabled={currentIndex === 0}
                 className={`absolute ${
@@ -439,8 +440,8 @@ const StudentTestimonials = () => {
                 ) : (
                   <ChevronLeft className="w-6 h-6 text-gray-700" />
                 )}
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleNext}
                 disabled={currentIndex >= maxIndex}
                 className={`absolute ${
@@ -453,7 +454,7 @@ const StudentTestimonials = () => {
                 ) : (
                   <ChevronRight className="w-6 h-6 text-gray-700" />
                 )}
-              </button>
+              </Button>
             </>
           )}
 

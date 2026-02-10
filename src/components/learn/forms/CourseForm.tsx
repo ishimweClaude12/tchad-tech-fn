@@ -423,7 +423,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto p-6 bg-white rounded-lg  ">
+    <div className="w-full max-w-5xl mx-auto sm:p-6 bg-white rounded-lg  ">
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -457,7 +457,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
         )}
 
         {/* Basic Information */}
-        <section className="bg-white rounded-lg border border-gray-200 p-6">
+        <section className="bg-white rounded-lg border border-gray-200 sm:p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Basic Information
           </h3>

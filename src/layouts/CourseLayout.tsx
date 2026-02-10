@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useParams, useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
+import { useState } from "react";
 import { useCourseById } from "src/hooks/learn/useCourseApi";
 import {
   useCheckEnrollment,
@@ -13,6 +14,7 @@ import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
 import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
 import CloseIcon from "@mui/icons-material/Close";
 import HomeIcon from "@mui/icons-material/Home";
+import MenuIcon from "@mui/icons-material/Menu";
 import { IconButton } from "@mui/material";
 import { ModuleProgressStatus } from "src/types/Enrollment.types";
 
@@ -21,10 +23,12 @@ const ModuleWithLessons = ({
   module,
   courseId,
   enrollmentId,
+  onNavigate,
 }: {
   module: Module;
   courseId: string;
   enrollmentId?: string;
+  onNavigate?: () => void;
 }) => {
   const { data: moduleProgress } = useModuleProgress(
     enrollmentId || "",
@@ -62,6 +66,8 @@ const ModuleWithLessons = ({
         moduleId,
       });
     }
+    // Close sidebar on mobile after navigation
+    onNavigate?.();
   };
 
   return (
@@ -161,6 +167,7 @@ const CourseLayout = () => {
     courseId: string;
   }>();
   const { user } = useUser();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const {
     data: modules,
@@ -178,6 +185,14 @@ const CourseLayout = () => {
     courseId,
     user?.id || "",
   );
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const closeSidebar = () => {
+    setIsSidebarOpen(false);
+  };
 
   if (isLoading || courseLoading) {
     return (
@@ -203,21 +218,72 @@ const CourseLayout = () => {
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
+      {/* Mobile Menu Button - Fixed at top */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+        <h6 className="text-base font-semibold text-gray-900 truncate flex-1 leading-snug">
+          {course?.data.course.title}
+        </h6>
+        <IconButton
+          onClick={toggleSidebar}
+          size="small"
+          className="hover:bg-gray-100"
+          aria-label="Toggle menu"
+        >
+          <MenuIcon />
+        </IconButton>
+      </div>
+
+      {/* Overlay for mobile */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={closeSidebar}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Sidebar Navigation */}
-      <aside className="w-full sm:w-80 md:w-96 lg:w-80 shrink-0 bg-white border-r border-gray-200 flex flex-col h-screen">
+      <aside
+        className={`
+          fixed lg:static
+          top-0 left-0 bottom-0
+          w-80 sm:w-80 md:w-96 lg:w-80
+          shrink-0 bg-white border-r border-gray-200
+          flex flex-col h-screen
+          z-50
+          transform transition-transform duration-300 ease-in-out
+          ${isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+        `}
+      >
         <div className="p-6 border-b border-gray-200 shrink-0">
           <div className="flex items-start justify-between gap-2">
-            <h1 className="text-xl font-bold text-gray-900 line-clamp-2 flex-1">
+            <h6 className="text-lg font-semibold text-gray-800 line-clamp-2 flex-1 leading-relaxed tracking-tight">
               {course?.data.course.title}
-            </h1>
-            <IconButton
-              onClick={() => navigate("/learn")}
-              size="small"
-              className="hover:bg-gray-100"
-              title="Exit course"
-            >
-              <CloseIcon fontSize="small" />
-            </IconButton>
+            </h6>
+            <div className="flex items-center gap-1 shrink-0">
+              {/* Close button for mobile */}
+              <span className="lg:hidden hover:bg-gray-100">
+                {" "}
+                <IconButton
+                  onClick={closeSidebar}
+                  size="small"
+                  title="Close menu"
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </span>
+
+              {/* Exit course button */}
+              <span className="hover:bg-gray-100 hidden lg:inline-flex">
+                <IconButton
+                  onClick={() => navigate("/learn")}
+                  size="small"
+                  title="Exit course"
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </div>
           </div>
         </div>
 
@@ -227,6 +293,7 @@ const CourseLayout = () => {
             <NavLink
               to={`/learn/enrollment/${isUserEnrolledData?.data.enrollment?.id}/course/${courseId}`}
               end
+              onClick={closeSidebar}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                   isActive
@@ -251,6 +318,7 @@ const CourseLayout = () => {
                 module={module}
                 courseId={courseId}
                 enrollmentId={isUserEnrolledData?.data.enrollment?.id}
+                onNavigate={closeSidebar}
               />
             ))}
           </ul>
@@ -264,7 +332,7 @@ const CourseLayout = () => {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto h-screen">
+      <main className="flex-1 overflow-y-auto h-screen pt-16 lg:pt-0">
         <div className="mx-auto">
           <Outlet />
         </div>

@@ -25,35 +25,46 @@ const MainLayout: React.FC = () => {
       {/* Top Navigation - Hidden on dashboard routes */}
       {!isDashboardRoute && (
         <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-          <div className="  mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
+          <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 xl:px-8">
+            <div className="flex items-center justify-between gap-2 sm:gap-3 lg:gap-4 h-16">
               {/* Logo */}
-
-              <div className="flex items-center">
-                <img className="h-8" src={logo} alt="Chad Tech Hub Logo" />
+              <div className="flex items-center shrink-0">
+                <img
+                  className="h-6 sm:h-7 md:h-8 w-auto"
+                  src={logo}
+                  alt="Chad Tech Hub Logo"
+                />
               </div>
 
-              {/* Navigation Component */}
-              <Navigation
-                currentLanguage={language}
-                onLanguageChange={(lang: string) =>
-                  setLanguage(lang as "en" | "fr" | "ar")
-                }
-              />
+              {/* Navigation Component - Hidden on mobile */}
+              <div className="flex-1 flex justify-center overflow-x-auto scrollbar-hide">
+                <Navigation
+                  currentLanguage={language}
+                  onLanguageChange={(lang: string) =>
+                    setLanguage(lang as "en" | "fr" | "ar")
+                  }
+                />
+              </div>
 
-              {/* Right side items */}
               {/* Auth Section */}
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center gap-2 sm:gap-3 flex-0">
                 <SignedOut>
                   <SignInButton mode="modal">
-                    <Button variant="contained">Sign In</Button>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      className="text-xs! sm:text-sm! px-3! sm:px-4! py-1.5! sm:py-2!"
+                    >
+                      <span className="hidden sm:inline">Sign In</span>
+                      <span className="sm:hidden">Sign In</span>
+                    </Button>
                   </SignInButton>
                 </SignedOut>
                 <SignedIn>
                   <UserButton
                     appearance={{
                       elements: {
-                        avatarBox: "w-8 h-8",
+                        avatarBox: "w-7 h-7 sm:w-8 sm:h-8",
                         userButtonPopoverCard: "shadow-lg",
                       },
                     }}
@@ -68,7 +79,7 @@ const MainLayout: React.FC = () => {
       )}
 
       {/* Page content */}
-      <main>
+      <main className="w-full min-w-screen max-w-screen box-border">
         <Outlet />
       </main>
 
@@ -77,6 +88,17 @@ const MainLayout: React.FC = () => {
 
       {/* WhatsApp Floating Button - Hidden on dashboard routes */}
       {!isDashboardRoute && <WhatsAppFloatingButton />}
+
+      {/* Scrollbar hide styles */}
+      <style>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </div>
   );
 };

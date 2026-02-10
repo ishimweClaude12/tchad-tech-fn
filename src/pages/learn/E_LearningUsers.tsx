@@ -111,7 +111,7 @@ const ELearningUsersAdmin: React.FC = () => {
       });
 
       toast.success(
-        `User role updated successfully to ${getRoleDisplayName(newRole)}`
+        `User role updated successfully to ${getRoleDisplayName(newRole)}`,
       );
     } catch (error) {
       console.error("Failed to update user role:", error);
@@ -145,10 +145,10 @@ const ELearningUsersAdmin: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[400px] px-4">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600 text-sm sm:text-base">Loading...</p>
         </div>
       </div>
     );
@@ -181,33 +181,33 @@ const ELearningUsersAdmin: React.FC = () => {
     }
 
     return (
-      <div className="flex items-center justify-center min-h-[400px] p-6">
-        <div className="text-center max-w-lg mx-auto">
+      <div className="flex items-center justify-center min-h-[400px] p-4 sm:p-6">
+        <div className="text-center max-w-lg mx-auto w-full">
           {/* Status Code Display */}
           {statusCode && (
-            <div className="mb-6">
-              <div className="text-9xl font-black text-red-500 mb-2 leading-none">
+            <div className="mb-4 sm:mb-6">
+              <div className="text-6xl sm:text-7xl md:text-9xl font-black text-red-500 mb-2 leading-none">
                 {statusCode}
               </div>
-              <div className="text-sm font-semibold text-red-600 uppercase tracking-wider">
+              <div className="text-xs sm:text-sm font-semibold text-red-600 uppercase tracking-wider">
                 Error Code
               </div>
             </div>
           )}
 
           {/* Error Icon */}
-          <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-            <AlertCircle className="w-10 h-10 text-red-600" />
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-linear-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg">
+            <AlertCircle className="w-8 h-8 sm:w-10 sm:h-10 text-red-600" />
           </div>
 
           {/* Error Title */}
-          <h3 className="text-2xl font-bold text-gray-900 mb-3">
+          <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 px-4">
             Failed to Load Users
           </h3>
 
           {/* Error Message */}
-          <div className="bg-red-50 border border-red-200 rounded-lg px-6 py-4 mb-6">
-            <p className="text-gray-800 text-base leading-relaxed">
+          <div className="bg-red-50 border border-red-200 rounded-lg px-4 sm:px-6 py-3 sm:py-4 mb-4 sm:mb-6">
+            <p className="text-gray-800 text-sm sm:text-base leading-relaxed">
               {errorMessage}
             </p>
           </div>
@@ -218,11 +218,11 @@ const ELearningUsersAdmin: React.FC = () => {
             variant="contained"
             color="error"
             size="large"
-            startIcon={<RefreshCw className="w-5 h-5" />}
+            startIcon={<RefreshCw className="w-4 h-4 sm:w-5 sm:h-5" />}
             sx={{
-              paddingX: 4,
-              paddingY: 1.5,
-              fontSize: "1rem",
+              paddingX: { xs: 3, sm: 4 },
+              paddingY: { xs: 1.25, sm: 1.5 },
+              fontSize: { xs: "0.875rem", sm: "1rem" },
               fontWeight: 600,
               textTransform: "none",
               borderRadius: "12px",
@@ -240,21 +240,21 @@ const ELearningUsersAdmin: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 text-left">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+        <div className="text-left">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
             User Management
           </h1>
-          <p className="text-gray-600 mt-1 text-left">
+          <p className="text-sm sm:text-base text-gray-600 mt-1">
             Manage user roles and permissions
           </p>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white relative h-full rounded-lg shadow-sm border border-gray-200">
+      {/* Desktop Table View - Hidden on mobile/tablet */}
+      <div className="hidden lg:block bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead className="bg-gray-50">
@@ -322,7 +322,7 @@ const ELearningUsersAdmin: React.FC = () => {
                         )}
                         <span
                           className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${getRoleBadgeColor(
-                            user.role
+                            user.role,
                           )}`}
                         >
                           <Shield className="w-3 h-3" />
@@ -417,9 +417,9 @@ const ELearningUsersAdmin: React.FC = () => {
           </table>
         </div>
 
-        {/* Pagination */}
+        {/* Pagination for Desktop */}
         {meta && meta.totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+          <div className="px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-sm text-gray-700">
               Showing{" "}
               <span className="font-medium">
@@ -429,7 +429,7 @@ const ELearningUsersAdmin: React.FC = () => {
               <span className="font-medium">
                 {Math.min(
                   meta.currentPage * meta.itemsPerPage,
-                  meta.totalItems
+                  meta.totalItems,
                 )}
               </span>{" "}
               of <span className="font-medium">{meta.totalItems}</span> users
@@ -447,6 +447,190 @@ const ELearningUsersAdmin: React.FC = () => {
         )}
       </div>
 
+      {/* Mobile/Tablet Card View - Hidden on desktop */}
+      <div className="lg:hidden space-y-3 sm:space-y-4">
+        {users.length > 0 ? (
+          users.map((user: User) => (
+            <div
+              key={user.userId}
+              className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-5 hover:shadow-md transition-shadow"
+            >
+              {/* User Header */}
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="shrink-0">
+                    <img
+                      src={user.clerkProfile.imageUrl}
+                      alt={`${user.clerkProfile.firstName} ${user.clerkProfile.lastName}`}
+                      className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover ring-2 ring-gray-100"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
+                      {user.clerkProfile.firstName} {user.clerkProfile.lastName}
+                    </h3>
+                    <div className="text-xs sm:text-sm text-gray-500 flex items-center gap-1 mt-0.5">
+                      <Mail className="w-3 h-3 shrink-0" />
+                      <span className="truncate">
+                        {user.clerkProfile.emailAddresses[0]?.emailAddress}
+                      </span>
+                    </div>
+                    {user.clerkProfile.username && (
+                      <div className="text-xs text-gray-400 mt-0.5">
+                        @{user.clerkProfile.username}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Button */}
+                <Button
+                  onClick={() => handleOpen(user.userId)}
+                  disabled={updatingUserId === user.userId}
+                  className={`p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors shrink-0 ${
+                    updatingUserId === user.userId
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
+                >
+                  {updatingUserId === user.userId ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <MoreVertical className="w-5 h-5" />
+                  )}
+                </Button>
+              </div>
+
+              {/* User Details Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                {/* Role */}
+                <div>
+                  <div className="text-xs text-gray-500 mb-1.5 flex items-center gap-1">
+                    <Shield className="w-3 h-3" />
+                    Role
+                  </div>
+                  <span
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${getRoleBadgeColor(
+                      user.role,
+                    )}`}
+                  >
+                    <Shield className="w-3 h-3" />
+                    {getRoleDisplayName(user.role)}
+                  </span>
+                </div>
+
+                {/* Status */}
+                <div>
+                  <div className="text-xs text-gray-500 mb-1.5 flex items-center gap-1">
+                    {/* <User className="w-3 h-3" /> */}
+                    Status
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {user.clerkProfile.banned ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
+                        <UserX className="w-3 h-3" />
+                        Banned
+                      </span>
+                    ) : user.clerkProfile.locked ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200">
+                        <UserX className="w-3 h-3" />
+                        Locked
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                        <UserCheck className="w-3 h-3" />
+                        Active
+                      </span>
+                    )}
+                    {user.clerkProfile.emailAddresses[0]?.verification
+                      .status === "verified" && (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                        <Mail className="w-3 h-3" />
+                        Verified
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Last Sign In */}
+                <div>
+                  <div className="text-xs text-gray-500 mb-1.5">
+                    Last Sign In
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-gray-900">
+                      {formatRelativeTime(user.clerkProfile.lastSignInAt)}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {formatDate(user.clerkProfile.lastSignInAt)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Joined Date */}
+                <div>
+                  <div className="text-xs text-gray-500 mb-1.5">Joined</div>
+                  <div className="flex items-center gap-1.5 text-sm font-medium text-gray-900">
+                    <Calendar className="w-4 h-4 text-gray-400" />
+                    {formatDate(user.clerkProfile.createdAt)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 sm:p-12 text-center">
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                <UserX className="w-8 h-8 text-gray-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-medium text-gray-900">
+                  No Users Found
+                </h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  Try adjusting your search or filter criteria
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Pagination for Mobile/Tablet */}
+        {meta && meta.totalPages > 1 && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="flex flex-col gap-3">
+              <div className="text-xs sm:text-sm text-gray-700 text-center">
+                Showing{" "}
+                <span className="font-medium">
+                  {(meta.currentPage - 1) * meta.itemsPerPage + 1}
+                </span>{" "}
+                to{" "}
+                <span className="font-medium">
+                  {Math.min(
+                    meta.currentPage * meta.itemsPerPage,
+                    meta.totalItems,
+                  )}
+                </span>{" "}
+                of <span className="font-medium">{meta.totalItems}</span> users
+              </div>
+              <div className="flex justify-center">
+                <Pagination
+                  count={meta.totalPages}
+                  page={meta.currentPage}
+                  onChange={(_, page) => setCurrentPage(page)}
+                  color="primary"
+                  shape="rounded"
+                  size="small"
+                  siblingCount={0}
+                  boundaryCount={1}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Role Change Modal */}
       <Modal
         open={open}
@@ -457,16 +641,17 @@ const ELearningUsersAdmin: React.FC = () => {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          padding: { xs: 2, sm: 3 },
         }}
       >
         <Box
           sx={{
             position: "relative",
-            width: "90%",
-            maxWidth: "480px",
-            maxHeight: "90vh",
+            width: "100%",
+            maxWidth: { xs: "100%", sm: "480px" },
+            maxHeight: { xs: "95vh", sm: "90vh" },
             bgcolor: "background.paper",
-            borderRadius: "16px",
+            borderRadius: { xs: "12px", sm: "16px" },
             boxShadow:
               "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
             outline: "none",
@@ -475,25 +660,28 @@ const ELearningUsersAdmin: React.FC = () => {
           onClick={(e) => e.stopPropagation()}
         >
           {/* Modal Header */}
-          <div className="px-6 py-5 border-b border-gray-200 bg-linear-to-r from-primary-50 to-primary-100 text-left">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-primary-600" />
-                  Change User Role
+          <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200 bg-linear-to-r from-primary-50 to-primary-100 text-left">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
+                  <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-primary-600 shrink-0" />
+                  <span className="truncate">Change User Role</span>
                 </h3>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-xs sm:text-sm text-gray-600 mt-1">
                   Select a new role for the user
                 </p>
               </div>
-              <Button onClick={handleClose} variant="outlined" color="error">
+              <Button
+                onClick={handleClose}
+                className="p-1.5 sm:p-2 text-gray-500 hover:text-gray-700 hover:bg-white/50 rounded-lg transition-colors shrink-0"
+              >
                 <X className="w-5 h-5" />
               </Button>
             </div>
 
             {/* Current User Info */}
             {selectedUser && (
-              <div className="mt-4 p-3 bg-white rounded-lg border border-gray-200 flex items-center gap-3">
+              <div className="mt-3 sm:mt-4 p-3 bg-white rounded-lg border border-gray-200 flex items-center gap-3">
                 <div className="shrink-0">
                   {selectedUser.clerkProfile.hasImage ? (
                     <img
@@ -508,18 +696,18 @@ const ELearningUsersAdmin: React.FC = () => {
                     </div>
                   )}
                 </div>
-                <div className="flex-1 text-left">
-                  <div className="font-semibold text-gray-900 text-sm">
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-gray-900 text-xs sm:text-sm truncate">
                     {selectedUser.clerkProfile.firstName}{" "}
                     {selectedUser.clerkProfile.lastName}
                   </div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-gray-500 truncate">
                     {selectedUser.clerkProfile.emailAddresses[0]?.emailAddress}
                   </div>
                 </div>
                 <span
-                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${getRoleBadgeColor(
-                    selectedUser.role
+                  className={`inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-full text-xs font-medium border shrink-0 ${getRoleBadgeColor(
+                    selectedUser.role,
                   )}`}
                 >
                   {getRoleDisplayName(selectedUser.role)}
@@ -529,7 +717,7 @@ const ELearningUsersAdmin: React.FC = () => {
           </div>
 
           {/* Modal Body - Scrollable Role List */}
-          <div className="max-h-[calc(90vh-280px)] overflow-y-auto px-6 py-4">
+          <div className="max-h-[calc(95vh-240px)] sm:max-h-[calc(90vh-280px)] overflow-y-auto px-4 sm:px-6 py-3 sm:py-4">
             <div className="space-y-2">
               {availableRoles.map((role) => {
                 const isCurrentRole = selectedUser?.role === role;
@@ -543,10 +731,10 @@ const ELearningUsersAdmin: React.FC = () => {
                       }
                     }}
                     disabled={isCurrentRole}
-                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm transition-all text-left ${
+                    className={`w-full flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-3 sm:py-3.5 rounded-xl text-sm transition-all text-left ${
                       isCurrentRole
                         ? "bg-primary-50 ring-2 ring-primary-500 ring-inset cursor-default shadow-sm"
-                        : "text-gray-700 hover:bg-gray-50 hover:shadow-md border border-gray-200"
+                        : "text-gray-700 hover:bg-gray-50 hover:shadow-md border border-gray-200 active:scale-[0.98]"
                     }`}
                   >
                     <div
@@ -560,12 +748,12 @@ const ELearningUsersAdmin: React.FC = () => {
                         <Check className="w-3 h-3 text-white" strokeWidth={3} />
                       )}
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span
                           className={`inline-block ${getRoleBadgeColor(
-                            role
-                          )} px-3 py-1.5 rounded-lg text-xs font-semibold border shadow-sm`}
+                            role,
+                          )} px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-semibold border shadow-sm`}
                         >
                           {getRoleDisplayName(role)}
                         </span>
@@ -583,12 +771,18 @@ const ELearningUsersAdmin: React.FC = () => {
           </div>
 
           {/* Modal Footer */}
-          <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex gap-3">
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200 bg-gray-50">
             <Button
               variant="contained"
               onClick={handleClose}
               color="error"
               fullWidth
+              sx={{
+                paddingY: { xs: 1.25, sm: 1.5 },
+                fontSize: { xs: "0.875rem", sm: "1rem" },
+                fontWeight: 600,
+                textTransform: "none",
+              }}
             >
               Cancel
             </Button>

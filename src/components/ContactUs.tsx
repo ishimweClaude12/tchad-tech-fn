@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Mail } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
- 
+import { Button } from "@mui/material";
 
 interface FormData {
   firstName: string;
@@ -117,7 +117,7 @@ const ContactUsSection: React.FC = () => {
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -276,7 +276,7 @@ const ContactUsSection: React.FC = () => {
             </div>
 
             {/* Submit Button */}
-            <button
+            <Button
               onClick={handleSubmit}
               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-3 group"
             >
@@ -284,7 +284,7 @@ const ContactUsSection: React.FC = () => {
                 <Mail className="w-5 h-5" />
               </div>
               <span className="font-medium text-lg">{t("sendMessage")}</span>
-            </button>
+            </Button>
           </div>
         </div>
       </div>

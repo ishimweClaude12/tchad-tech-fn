@@ -38,8 +38,8 @@ export const EnrolledCourseSection: React.FC = () => {
     return null;
   }
   return (
-    <div className="bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="bg-gray-50 min-w-screen max-w-screen">
+      <div className="max-w-7xl p-2 mx-auto">
         <Typography variant="h4" className="mb-2 font-bold text-gray-800">
           My Courses
         </Typography>

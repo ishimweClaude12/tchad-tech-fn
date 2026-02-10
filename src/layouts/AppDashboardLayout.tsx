@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { SignedIn, UserButton, useUser } from "@clerk/clerk-react";
 import { useLanguage } from "../contexts/LanguageContext";
+import { Button } from "@mui/material";
 
 interface SubItem {
   id: string;
@@ -50,7 +51,7 @@ const DashboardLayout: React.FC = () => {
     setExpandedItems((prev) =>
       prev.includes(itemId)
         ? prev.filter((id) => id !== itemId)
-        : [...prev, itemId]
+        : [...prev, itemId],
     );
   };
 
@@ -609,7 +610,7 @@ const DashboardLayout: React.FC = () => {
     const isExpanded = expandedItems.includes(item.id);
     const isActive = isCurrentPath(item.path);
     const hasActiveChild = item.subItems?.some((subItem) =>
-      isCurrentPath(subItem.path)
+      isCurrentPath(subItem.path),
     );
 
     return (
@@ -630,7 +631,7 @@ const DashboardLayout: React.FC = () => {
           </Link>
 
           {item.isExpandable && (
-            <button
+            <Button
               onClick={() => toggleExpansion(item.id)}
               className={`p-2 rounded-md text-gray-600 hover:bg-gray-100 transition-colors ${
                 isExpanded ? "rotate-90" : ""
@@ -650,7 +651,7 @@ const DashboardLayout: React.FC = () => {
                   />
                 </svg>
               </span>
-            </button>
+            </Button>
           )}
         </div>
 
@@ -715,12 +716,12 @@ const DashboardLayout: React.FC = () => {
           </div>
 
           {/* Close button for mobile */}
-          <button
+          <Button
             onClick={() => setSidebarOpen(false)}
             className="lg:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100"
           >
             <span className="text-xl">✕</span>
-          </button>
+          </Button>
         </div>
 
         {/* Navigation Menu - Scrollable */}
@@ -732,7 +733,7 @@ const DashboardLayout: React.FC = () => {
 
         {/* Back to Main Site - Fixed at bottom */}
         <div className=" shrink-0 p-4 border-t border-gray-200">
-          <button
+          <Button
             onClick={handleBackToMain}
             className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
           >
@@ -742,7 +743,7 @@ const DashboardLayout: React.FC = () => {
               {language === "fr" && "Retour au site principal"}
               {language === "ar" && "العودة للموقع الرئيسي"}
             </span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -752,12 +753,12 @@ const DashboardLayout: React.FC = () => {
         <header className="shrink-0 bg-white shadow-sm border-b border-gray-200 lg:hidden">
           <div className="flex items-center justify-between h-16 px-4">
             {/* Mobile menu button */}
-            <button
+            <Button
               onClick={() => setSidebarOpen(true)}
               className="p-2 rounded-md text-gray-600 hover:bg-gray-100"
             >
               <span className="text-xl">☰</span>
-            </button>
+            </Button>
 
             {/* Mobile logo */}
             <div className="flex items-center">

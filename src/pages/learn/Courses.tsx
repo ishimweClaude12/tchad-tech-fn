@@ -276,7 +276,10 @@ const CoursesAdmin: React.FC = () => {
   const itemsPerPage = 9;
 
   // Extract courses and categories
-  const courses = coursesData?.data?.courses || [];
+  const courses = useMemo(
+    () => coursesData?.data?.courses || [],
+    [coursesData]
+  );
   const apiCategories = categoriesData || [];
 
   // No search/filters: use all courses as-is
@@ -668,12 +671,17 @@ const CoursesAdmin: React.FC = () => {
           mb: 4,
         }}
       >
-        <Typography variant="h4" component="h1" fontWeight="bold">
+        <Typography
+          variant="h4"
+          component="h6"
+          fontWeight="bold"
+          fontSize="16px"
+        >
           {t.title}
         </Typography>
         <Button
           variant="contained"
-          size="large"
+          size="medium"
           sx={{ borderRadius: 2 }}
           onClick={handleAddCourse}
         >

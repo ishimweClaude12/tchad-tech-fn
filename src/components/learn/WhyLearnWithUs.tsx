@@ -9,6 +9,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { Button } from "@mui/material";
 
 // Translations object
 const translations = {
@@ -308,12 +309,12 @@ const WhyLearnWithUs = () => {
 
         {/* CTA */}
         <div className="text-center">
-          <button
+          <Button
             className="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-300"
             aria-label={t.cta}
           >
             {t.cta}
-          </button>
+          </Button>
         </div>
       </div>
     </section>
