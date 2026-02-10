@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useELearningUser } from "src/hooks/useApi";
 import { useUser } from "@clerk/clerk-react";
 import { UserRole } from "src/types/Users.types";
+import { Button } from "@mui/material";
 
 interface NavigationItem {
   name: string;
@@ -75,6 +76,7 @@ const Navigation: React.FC<NavigationProps> = ({
   const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
   const location = useLocation();
   const languageDropdownRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   // Get current logged in user from Clerk
   const { user } = useUser();
@@ -96,16 +98,10 @@ const Navigation: React.FC<NavigationProps> = ({
   // Determine dashboard route based on current location
   const getDashboardRoute = () => {
     const path = location.pathname;
-    console.log("Current path:", path);
-    if (path.includes("/learn")) {
-      return "/learn/dashboard";
-    } else if (path.includes("/shop")) {
-      return "/shop/dashboard";
-    } else if (path.includes("/hub")) {
-      return "/hub/dashboard";
-    } else if (path.includes("/tech")) {
-      return "/tech/dashboard";
-    }
+    if (path.includes("/learn")) return "/learn/dashboard";
+    if (path.includes("/shop")) return "/shop/dashboard";
+    if (path.includes("/hub")) return "/hub/dashboard";
+    if (path.includes("/tech")) return "/tech/dashboard";
     return "/dashboard";
   };
 
@@ -114,7 +110,7 @@ const Navigation: React.FC<NavigationProps> = ({
     ELearningUser?.role === UserRole.ADMIN ||
     ELearningUser?.role === UserRole.SUPPER_ADMIN;
 
-  // Default navigation with translations - recalculate on location change
+  // Default navigation with translations
   const defaultNavigation: NavigationItem[] = [
     { name: t.home, href: "/" },
     { name: t.techProducts, href: "/shop" },
@@ -129,6 +125,7 @@ const Navigation: React.FC<NavigationProps> = ({
   const navigation = isAdminUser
     ? [...defaultNavigation, { name: t.dashboard, href: getDashboardRoute() }]
     : defaultNavigation;
+
   const selectedLanguage =
     languages.find((lang) => lang.code === currentLanguage) || languages[0];
 
@@ -166,7 +163,7 @@ const Navigation: React.FC<NavigationProps> = ({
     };
   }, []);
 
-  // Close mobile menu on window resize (prevents stuck menus)
+  // Close mobile menu on window resize and prevent body scroll when open
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 768 && mobileMenuOpen) {
@@ -174,32 +171,67 @@ const Navigation: React.FC<NavigationProps> = ({
       }
     };
 
+    // Prevent body scroll when mobile menu is open
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      document.body.style.overflow = "";
+    };
   }, [mobileMenuOpen]);
+
+  // Handle escape key to close mobile menu
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMobileMenuOpen(false);
+        setLanguageDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
 
   return (
     <>
-      {/* Desktop & Tablet Navigation (768px+) */}
+      {/* Desktop Navigation (768px - 1023px: Tablet, 1024px+: Desktop) */}
       <div
-        className={`hidden md:flex items-center space-x-3 lg:space-x-6 xl:space-x-8 ${
-          isRTL ? "flex-row-reverse space-x-reverse" : ""
+        className={`hidden md:flex items-center gap-2 lg:gap-4 xl:gap-6 ${
+          isRTL ? "flex-row-reverse" : ""
         }`}
       >
         <nav
-          className={`flex items-center space-x-2 lg:space-x-4 xl:space-x-6 ${
-            isRTL ? "flex-row-reverse space-x-reverse" : ""
+          className={`flex items-center gap-1 lg:gap-2 xl:gap-3 ${
+            isRTL ? "flex-row-reverse" : ""
           }`}
         >
           {navigation.map((item) => (
             <Link
               key={item.href}
               to={item.href}
-              className={`flex items-center px-2 py-2 md:px-3 lg:px-4 text-xs md:text-sm lg:text-base font-medium rounded-md transition-all duration-200 whitespace-nowrap hover:scale-105 ${
-                isActivePath(item.href)
-                  ? "bg-blue-50 text-blue-700 shadow-sm"
-                  : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-              }`}
+              className={`
+                flex items-center justify-center
+                px-2 py-2 md:px-2.5 lg:px-3 xl:px-4
+                text-xs md:text-sm lg:text-base
+                font-medium rounded-lg
+                transition-all duration-200
+                whitespace-nowrap
+                hover:scale-105 active:scale-95
+                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                ${
+                  isActivePath(item.href)
+                    ? "bg-blue-50 text-blue-700 shadow-sm font-semibold"
+                    : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                }
+              `}
               dir={isRTL ? "rtl" : "ltr"}
             >
               {item.name}
@@ -211,15 +243,27 @@ const Navigation: React.FC<NavigationProps> = ({
         {user && location.pathname.startsWith("/learn") && (
           <Link
             to="/learn/wishlist"
-            className={`flex items-center space-x-2 px-3 py-2 md:px-4 lg:px-4 text-xs md:text-sm lg:text-base font-medium rounded-lg transition-all duration-200 whitespace-nowrap hover:scale-105 shadow-sm border ${
-              isActivePath("/learn/wishlist")
-                ? "bg-pink-50 text-pink-700 border-pink-200"
-                : "bg-white text-gray-700 border-gray-200 hover:bg-pink-50 hover:text-pink-700 hover:border-pink-200"
-            } ${isRTL ? "flex-row-reverse space-x-reverse" : ""}`}
+            className={`
+              flex items-center justify-center gap-1.5 md:gap-2
+              px-2.5 py-2 md:px-3 lg:px-4
+              text-xs md:text-sm lg:text-base
+              font-medium rounded-lg
+              transition-all duration-200
+              whitespace-nowrap
+              hover:scale-105 active:scale-95
+              shadow-sm border
+              focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2
+              ${
+                isActivePath("/learn/wishlist")
+                  ? "bg-pink-50 text-pink-700 border-pink-200 font-semibold"
+                  : "bg-white text-gray-700 border-gray-200 hover:bg-pink-50 hover:text-pink-700 hover:border-pink-200"
+              }
+              ${isRTL ? "flex-row-reverse" : ""}
+            `}
             aria-label={t.wishlist}
           >
             <svg
-              className="w-4 h-4 md:w-5 md:h-5"
+              className="w-4 h-4 md:w-4.5 md:h-4.5 lg:w-5 lg:h-5 shrink-0"
               fill={isActivePath("/learn/wishlist") ? "currentColor" : "none"}
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -237,78 +281,101 @@ const Navigation: React.FC<NavigationProps> = ({
 
         {/* Desktop Language Dropdown */}
         <div className="relative shrink-0" ref={languageDropdownRef}>
-          <button
+          <Button
             onClick={() => setLanguageDropdownOpen(!languageDropdownOpen)}
-            className={`flex items-center space-x-2 px-3 py-2 md:px-4 lg:px-4 text-xs md:text-sm lg:text-base font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 shadow-sm border ${
-              languageDropdownOpen
-                ? "bg-blue-50 text-blue-700 border-blue-200"
-                : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300"
-            } ${isRTL ? "flex-row-reverse space-x-reverse" : ""}`}
+            className={`
+              flex items-center justify-center gap-1.5 md:gap-2
+              px-2.5 py-2 md:px-3 lg:px-4
+              text-xs md:text-sm lg:text-base
+              font-medium rounded-lg
+              transition-all duration-200
+              shadow-sm border
+              hover:scale-105 active:scale-95
+              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+              ${
+                languageDropdownOpen
+                  ? "bg-blue-50 text-blue-700 border-blue-200"
+                  : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300"
+              }
+              ${isRTL ? "flex-row-reverse" : ""}
+            `}
             aria-label={t.language}
-            style={{
-              backgroundColor: languageDropdownOpen ? "#eff6ff" : "white",
-            }}
+            aria-expanded={languageDropdownOpen}
+            aria-haspopup="true"
           >
-            <span className="text-base md:text-lg lg:text-xl">
+            <span className="text-base md:text-lg shrink-0">
               {selectedLanguage.flag}
             </span>
-            <span className="hidden lg:inline font-semibold">
+            <span className="hidden xl:inline font-semibold truncate">
               {selectedLanguage.nativeName}
             </span>
-            <span className="lg:hidden font-semibold">
+            <span className="xl:hidden font-semibold">
               {selectedLanguage.code.toUpperCase()}
             </span>
             <svg
-              className={`w-3 h-3 md:w-4 md:h-4 transition-transform duration-200 ${
+              className={`w-3 h-3 md:w-3.5 md:h-3.5 lg:w-4 lg:h-4 shrink-0 transition-transform duration-200 ${
                 languageDropdownOpen ? "rotate-180" : ""
               }`}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
+              strokeWidth={2.5}
             >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
                 d="M19 9l-7 7-7-7"
               />
             </svg>
-          </button>
+          </Button>
 
+          {/* Language Dropdown Menu */}
           {languageDropdownOpen && (
             <div
-              className={`absolute ${
-                isRTL ? "left-0" : "right-0"
-              } mt-2 w-44 md:w-48 lg:w-52 rounded-lg shadow-xl border border-gray-200 z-50 animate-fadeIn overflow-hidden`}
-              style={{ backgroundColor: "white" }}
+              className={`
+                absolute ${isRTL ? "left-0" : "right-0"} mt-2
+                w-48 md:w-52 lg:w-56
+                rounded-lg shadow-xl
+                border border-gray-200
+                bg-white
+                z-50
+                overflow-hidden
+                animate-fadeIn
+              `}
+              role="menu"
+              aria-orientation="vertical"
             >
-              <div className="py-1" style={{ backgroundColor: "white" }}>
+              <div className="py-1">
                 {languages.map((language) => (
-                  <button
+                  <Button
                     key={language.code}
                     onClick={() => handleLanguageChange(language.code)}
-                    className={`w-full px-3 py-2.5 md:py-3 text-xs md:text-sm flex items-center space-x-3 transition-colors duration-150 ${
-                      currentLanguage === language.code
-                        ? "text-blue-700"
-                        : "text-gray-700 hover:bg-gray-50"
-                    } ${
-                      language.code === "ar"
-                        ? "flex-row-reverse space-x-reverse text-right"
-                        : "text-left"
-                    }`}
-                    style={{
-                      backgroundColor:
+                    role="menuitem"
+                    className={`
+                      w-full px-3 py-2.5 md:py-3
+                      text-xs md:text-sm
+                      flex items-center gap-3
+                      transition-colors duration-150
+                      ${
                         currentLanguage === language.code
-                          ? "#eff6ff"
-                          : "transparent",
-                    }}
+                          ? "bg-blue-50 text-blue-700"
+                          : "text-gray-700 hover:bg-gray-50"
+                      }
+                      ${
+                        language.code === "ar"
+                          ? "flex-row-reverse text-right"
+                          : "text-left"
+                      }
+                    `}
                   >
-                    <span className="text-base md:text-lg">
+                    <span className="text-base md:text-lg shrink-0">
                       {language.flag}
                     </span>
-                    <div className="flex-1">
-                      <div className="font-medium">{language.nativeName}</div>
-                      <div className="text-xs text-gray-500 hidden md:block">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">
+                        {language.nativeName}
+                      </div>
+                      <div className="text-xs text-gray-500 truncate hidden md:block">
                         {language.name}
                       </div>
                     </div>
@@ -325,7 +392,7 @@ const Navigation: React.FC<NavigationProps> = ({
                         />
                       </svg>
                     )}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -333,12 +400,20 @@ const Navigation: React.FC<NavigationProps> = ({
         </div>
       </div>
 
-      {/* Mobile menu button (optimized touch target) */}
-      <button
+      {/* Mobile Menu Button */}
+      <Button
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        className="md:hidden p-3 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200 active:scale-95"
+        sx={{
+          display: { xs: 'inline-flex', md: 'none !important' },
+          minWidth: 'auto',
+          padding: '0.625rem',
+          '@media (min-width: 640px)': {
+            padding: '0.75rem',
+          },
+        }}
         aria-label={t.openMenu}
         aria-expanded={mobileMenuOpen}
+        aria-controls="mobile-menu"
       >
         <span className="sr-only">{t.openMenu}</span>
         {mobileMenuOpen ? (
@@ -347,11 +422,11 @@ const Navigation: React.FC<NavigationProps> = ({
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
+            strokeWidth={2.5}
           >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeWidth={2}
               d="M6 18L18 6M6 6l12 12"
             />
           </svg>
@@ -361,63 +436,97 @@ const Navigation: React.FC<NavigationProps> = ({
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
+            strokeWidth={2.5}
           >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeWidth={2}
               d="M4 6h16M4 12h16M4 18h16"
             />
           </svg>
         )}
-      </button>
+      </Button>
 
-      {/* Mobile Navigation Menu with smooth transitions */}
+      {/* Mobile Navigation Menu */}
       {mobileMenuOpen && (
         <>
-          {/* Backdrop overlay */}
+          {/* Backdrop overlay with improved touch handling */}
           <div
-            className="fixed inset-0   z-30 md:hidden animate-fadeIn"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden animate-fadeIn"
             onClick={() => setMobileMenuOpen(false)}
             aria-hidden="true"
           />
 
           {/* Mobile menu panel */}
           <div
-            className="fixed top-16 left-0 right-0 bottom-0 md:hidden bg-white shadow-2xl z-40 overflow-y-auto animate-slideDown"
+            id="mobile-menu"
+            ref={mobileMenuRef}
+            className={`
+              fixed top-16 bottom-0
+              ${isRTL ? "right-0 left-auto" : "left-0 right-auto"}
+              w-full sm:w-80 md:hidden
+              bg-white
+              shadow-2xl
+              z-50
+              overflow-y-auto
+              overscroll-contain
+              animate-slideIn
+            `}
             dir={isRTL ? "rtl" : "ltr"}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t.openMenu}
           >
             <div className="min-h-full flex flex-col">
               {/* Navigation Links */}
-              <div className="px-3 pt-4 pb-3 space-y-1 flex-1">
+              <nav className="px-3 sm:px-4 pt-4 pb-3 space-y-1 flex-1">
                 {navigation.map((item) => (
                   <Link
                     key={item.href}
                     to={item.href}
-                    className={`flex items-center px-4 py-3.5 text-base font-medium rounded-lg transition-all duration-200 active:scale-98 ${
-                      isActivePath(item.href)
-                        ? "bg-blue-50 text-blue-700 shadow-sm"
-                        : "text-gray-700 hover:bg-gray-50 hover:text-gray-900 active:bg-gray-100"
-                    }`}
+                    className={`
+                      flex items-center
+                      px-4 py-3.5
+                      text-base font-medium
+                      rounded-lg
+                      transition-all duration-200
+                      active:scale-98
+                      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset
+                      ${
+                        isActivePath(item.href)
+                          ? "bg-blue-50 text-blue-700 shadow-sm font-semibold"
+                          : "text-gray-700 hover:bg-gray-50 hover:text-gray-900 active:bg-gray-100"
+                      }
+                    `}
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {item.name}
                   </Link>
                 ))}
 
-                {/* Wishlist Link - Only show on /learn when user is logged in */}
+                {/* Mobile Wishlist Link */}
                 {user && location.pathname.startsWith("/learn") && (
                   <Link
                     to="/learn/wishlist"
-                    className={`flex items-center space-x-3 px-4 py-3.5 text-base font-medium rounded-lg transition-all duration-200 active:scale-98 ${
-                      isActivePath("/learn/wishlist")
-                        ? "bg-pink-50 text-pink-700 shadow-sm"
-                        : "text-gray-700 hover:bg-pink-50 hover:text-pink-700 active:bg-pink-100"
-                    } ${isRTL ? "flex-row-reverse space-x-reverse" : ""}`}
+                    className={`
+                      flex items-center gap-3
+                      px-4 py-3.5
+                      text-base font-medium
+                      rounded-lg
+                      transition-all duration-200
+                      active:scale-98
+                      focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-inset
+                      ${
+                        isActivePath("/learn/wishlist")
+                          ? "bg-pink-50 text-pink-700 shadow-sm font-semibold"
+                          : "text-gray-700 hover:bg-pink-50 hover:text-pink-700 active:bg-pink-100"
+                      }
+                      ${isRTL ? "flex-row-reverse" : ""}
+                    `}
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <svg
-                      className="w-5 h-5"
+                      className="w-5 h-5 shrink-0"
                       fill={
                         isActivePath("/learn/wishlist")
                           ? "currentColor"
@@ -436,100 +545,117 @@ const Navigation: React.FC<NavigationProps> = ({
                     <span>{t.wishlist}</span>
                   </Link>
                 )}
-              </div>
+              </nav>
 
               {/* Mobile Language Selector */}
               <div className="px-4 py-4 border-t border-gray-200 bg-gray-50">
-                <div className="mb-3">
-                  <p
-                    className={`text-sm font-semibold text-gray-900 mb-3 ${
-                      isRTL ? "text-right" : "text-left"
-                    }`}
-                  >
-                    {t.language}
-                  </p>
-                  <div className="space-y-2">
-                    {languages.map((language) => (
-                      <button
-                        key={language.code}
-                        onClick={() => {
-                          handleLanguageChange(language.code);
-                          setMobileMenuOpen(false);
-                        }}
-                        className={`w-full px-4 py-3.5 text-sm rounded-lg flex items-center space-x-3 transition-all duration-200 active:scale-98 ${
+                <p
+                  className={`
+                    text-sm font-semibold text-gray-900 mb-3
+                    ${isRTL ? "text-right" : "text-left"}
+                  `}
+                >
+                  {t.language}
+                </p>
+                <div className="space-y-2">
+                  {languages.map((language) => (
+                    <Button
+                      key={language.code}
+                      onClick={() => {
+                        handleLanguageChange(language.code);
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`
+                        w-full px-4 py-3.5
+                        text-sm rounded-lg
+                        flex items-center gap-3
+                        transition-all duration-200
+                        active:scale-98
+                        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset
+                        ${
                           currentLanguage === language.code
                             ? "bg-blue-600 text-white shadow-md"
                             : "bg-white text-gray-700 hover:bg-gray-100 active:bg-gray-200 border border-gray-200"
-                        } ${
+                        }
+                        ${
                           language.code === "ar"
-                            ? "flex-row-reverse space-x-reverse text-right"
+                            ? "flex-row-reverse text-right"
                             : "text-left"
-                        }`}
-                        dir={language.code === "ar" ? "rtl" : "ltr"}
-                      >
-                        <span className="text-xl">{language.flag}</span>
-                        <div className="flex-1">
-                          <div className="font-semibold">
-                            {language.nativeName}
-                          </div>
-                          <div
-                            className={`text-xs ${
+                        }
+                      `}
+                      dir={language.code === "ar" ? "rtl" : "ltr"}
+                    >
+                      <span className="text-xl shrink-0">{language.flag}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold truncate">
+                          {language.nativeName}
+                        </div>
+                        <div
+                          className={`
+                            text-xs truncate
+                            ${
                               currentLanguage === language.code
                                 ? "text-blue-100"
                                 : "text-gray-500"
-                            }`}
-                          >
-                            {language.name}
-                          </div>
+                            }
+                          `}
+                        >
+                          {language.name}
                         </div>
-                        {currentLanguage === language.code && (
-                          <svg
-                            className="w-5 h-5  shrink-0"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        )}
-                      </button>
-                    ))}
-                  </div>
+                      </div>
+                      {currentLanguage === language.code && (
+                        <svg
+                          className="w-5 h-5 shrink-0"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      )}
+                    </Button>
+                  ))}
                 </div>
               </div>
 
               {/* Mobile User Info */}
-              <div className="px-4 py-4 border-t border-gray-200 bg-white">
-                <div
-                  className={`flex items-center space-x-3 ${
-                    isRTL ? "flex-row-reverse space-x-reverse" : ""
-                  }`}
-                >
-                  <div className="w-10 h-10 bg-linear-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center shrink-0 shadow-md">
-                    <span className="text-white text-lg">👤</span>
-                  </div>
+              {user && (
+                <div className="px-4 py-4 border-t border-gray-200 bg-white">
                   <div
-                    className={`flex-1 min-w-0 ${
-                      isRTL ? "text-right" : "text-left"
-                    }`}
+                    className={`
+                      flex items-center gap-3
+                      ${isRTL ? "flex-row-reverse" : ""}
+                    `}
                   >
-                    <p className="text-sm font-semibold text-gray-900 truncate">
-                      {t.adminUser}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">
-                      admin@chadtechhub.com
-                    </p>
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center shrink-0 shadow-md">
+                      <span className="text-white text-lg">👤</span>
+                    </div>
+                    <div
+                      className={`
+                        flex-1 min-w-0
+                        ${isRTL ? "text-right" : "text-left"}
+                      `}
+                    >
+                      <p className="text-sm font-semibold text-gray-900 truncate">
+                        {user.fullName || t.adminUser}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {user.primaryEmailAddress?.emailAddress ||
+                          "admin@chadtechhub.com"}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </>
       )}
 
+      {/* Optimized CSS animations */}
       <style>{`
         @keyframes fadeIn {
           from {
@@ -540,13 +666,13 @@ const Navigation: React.FC<NavigationProps> = ({
           }
         }
 
-        @keyframes slideDown {
+        @keyframes slideIn {
           from {
-            transform: translateY(-10px);
-            opacity: 0;
+            transform: translateX(${isRTL ? "100%" : "-100%"});
+            opacity: 0.8;
           }
           to {
-            transform: translateY(0);
+            transform: translateX(0);
             opacity: 1;
           }
         }
@@ -555,12 +681,28 @@ const Navigation: React.FC<NavigationProps> = ({
           animation: fadeIn 0.2s ease-out;
         }
 
-        .animate-slideDown {
-          animation: slideDown 0.3s ease-out;
+        .animate-slideIn {
+          animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .active\\:scale-98:active {
           transform: scale(0.98);
+        }
+
+        .active\\:scale-95:active {
+          transform: scale(0.95);
+        }
+
+        /* Smooth scrolling for mobile menu */
+        #mobile-menu {
+          -webkit-overflow-scrolling: touch;
+          scroll-behavior: smooth;
+        }
+
+        /* Prevent text selection during interactions */
+        button {
+          -webkit-tap-highlight-color: transparent;
+          user-select: none;
         }
       `}</style>
     </>

@@ -16,6 +16,7 @@ import {
   Printer,
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
+import { Button } from "@mui/material";
 
 interface ServiceCategory {
   icon: React.ElementType;
@@ -844,7 +845,7 @@ const ServicesSection: React.FC = () => {
 
         {/* Tab Navigation */}
         <div className="flex flex-wrap justify-center mb-12 gap-2 sm:gap-4">
-          <button
+          <Button
             onClick={() => {
               setActiveTab("services");
               setExpandedCategory(0);
@@ -856,8 +857,8 @@ const ServicesSection: React.FC = () => {
             }`}
           >
             {translations.servicesTab[language]}
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => {
               setActiveTab("products");
               setExpandedCategory(0);
@@ -869,8 +870,8 @@ const ServicesSection: React.FC = () => {
             }`}
           >
             {translations.productsTab[language]}
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => {
               setActiveTab("courses");
               setExpandedCategory(0);
@@ -882,7 +883,7 @@ const ServicesSection: React.FC = () => {
             }`}
           >
             {translations.coursesTab[language]}
-          </button>
+          </Button>
         </div>
 
         {/* Service/Product Categories */}
@@ -896,7 +897,7 @@ const ServicesSection: React.FC = () => {
                 key={index}
                 className="bg-white/10 backdrop-blur-lg rounded-2xl overflow-hidden border border-white/20 hover:border-blue-400/50 transition-all duration-300"
               >
-                <button
+                <Button
                   onClick={() => toggleCategory(index)}
                   className="w-full px-6 py-5 flex items-center justify-between text-left hover:bg-white/5 transition-colors"
                 >
@@ -913,7 +914,7 @@ const ServicesSection: React.FC = () => {
                       isExpanded ? "rotate-180" : ""
                     }`}
                   />
-                </button>
+                </Button>
 
                 <div
                   className={`transition-all duration-300 ease-in-out ${

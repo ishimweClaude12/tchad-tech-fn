@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useScrollToTop } from "../../utils/hooks/ScrollTop";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { Button } from "@mui/material";
 
 interface Translations {
   [key: string]: {
@@ -407,12 +408,12 @@ const AboutUsPage: React.FC = () => {
               {t("joinDescription")}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-lg font-semibold transition-colors text-lg">
+              <Button className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-lg font-semibold transition-colors text-lg">
                 {t("getStarted")}
-              </button>
-              <button className="bg-white hover:bg-slate-50 text-indigo-600 px-8 py-4 rounded-lg font-semibold border-2 border-indigo-600 transition-colors text-lg">
+              </Button>
+              <Button className="bg-white hover:bg-slate-50 text-indigo-600 px-8 py-4 rounded-lg font-semibold border-2 border-indigo-600 transition-colors text-lg">
                 {t("contactUs")}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

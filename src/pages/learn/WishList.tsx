@@ -198,7 +198,7 @@ const WishList = () => {
               sx={{ position: "relative" }}
             >
               {/* Course Image */}
-              <button
+              <Button
                 type="button"
                 className="relative w-full text-left p-0 border-0 cursor-pointer"
                 onClick={() => handleViewCourse(item.course.slug)}
@@ -210,7 +210,7 @@ const WishList = () => {
                   alt={item.course.title}
                   className="h-48 object-cover"
                 />
-              </button>
+              </Button>
 
               {/* Course Content */}
               <CardContent

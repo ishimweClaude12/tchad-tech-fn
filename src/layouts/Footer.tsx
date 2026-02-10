@@ -9,6 +9,7 @@ import {
   Instagram,
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
+import { Button, TextField } from "@mui/material";
 
 interface FormData {
   firstName: string;
@@ -147,7 +148,7 @@ const Footer: React.FC = () => {
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -179,40 +180,45 @@ const Footer: React.FC = () => {
   };
 
   return (
-    <footer className="bg-gradient-to-b from-slate-900 to-black text-white">
+    <footer className="w-screen bg-linear-to-b from-slate-900 to-black text-white pt-12 box-border">
       {/* Contact Form Section */}
-      <section className="py-16 px-6" dir={isRTL ? "rtl" : "ltr"}>
-        <div className="max-w-7xl px-8 mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12">
+      <section
+        className="py-6 sm:py-8 md:py-10 px-3 sm:px-4 lg:px-6 w-full  overflow-x-hidden"
+        dir={isRTL ? "rtl" : "ltr"}
+      >
+        <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-6 lg:gap-8  box-border">
           {/* Left Column - Support Information */}
-          <div className="space-y-8">
-            <div>
-              <h2 className="text-4xl md:text-5xl font-light mb-4">
+          <div className="space-y-4 sm:space-y-6 w-full lg:w-1/2  min-w-0 box-border shrink-0">
+            <div className="w-full max-w-full">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-light mb-3 wrap-break-words">
                 {t("contactUs")}
               </h2>
-              <p className="text-slate-300 text-lg leading-relaxed mb-6">
+              <p className="text-slate-300 text-sm sm:text-base leading-relaxed mb-4 wrap-break-words">
                 {t("reachAnytime")}
               </p>
 
               {/* Contact Details */}
-              <div className="space-y-3 text-slate-300">
-                <div className="flex items-start gap-3">
-                  <MapPin className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-1" />
-                  <span>Tchad Tech Hub, N'Djamena - Tchad</span>
+              <div className="space-y-2 text-slate-300 w-full text-sm">
+                <div className="flex items-start gap-3 w-full">
+                  <MapPin className="w-5 h-5 text-indigo-400 shrink-0 mt-1" />
+                  <span className="wrap-break-words flex-1 min-w-0">
+                    Tchad Tech Hub, N'Djamena - Tchad
+                  </span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Mail className="w-5 h-5 text-indigo-400 flex-shrink-0" />
+                <div className="flex items-center gap-3 w-full">
+                  <Mail className="w-5 h-5 text-indigo-400 shrink-0" />
                   <a
                     href="mailto:tchadtechhub.com"
-                    className="hover:text-indigo-400 transition-colors"
+                    className="hover:text-indigo-400 transition-colors wrap-break-words flex-1 min-w-0"
                   >
                     tchadtechhub.com
                   </a>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Phone className="w-5 h-5 text-indigo-400 flex-shrink-0" />
+                <div className="flex items-center gap-3 w-full">
+                  <Phone className="w-5 h-5 text-indigo-400 shrink-0" />
                   <a
                     href="tel:+250790353162"
-                    className="hover:text-indigo-400 transition-colors"
+                    className="hover:text-indigo-400 transition-colors wrap-break-words flex-1 min-w-0"
                   >
                     +250 790 353 162
                   </a>
@@ -221,30 +227,30 @@ const Footer: React.FC = () => {
             </div>
 
             {/* Support Sections */}
-            <div className="space-y-6 pt-8">
-              <div>
-                <h3 className="text-xl font-semibold mb-2 text-indigo-300">
+            <div className="space-y-4 pt-4 w-full max-w-full">
+              <div className="w-full max-w-full">
+                <h3 className="text-base sm:text-lg font-semibold mb-1.5 text-indigo-300 wrap-break-words">
                   {t("customerSupport")}
                 </h3>
-                <p className="text-slate-400 text-sm leading-relaxed">
+                <p className="text-slate-400 text-sm leading-relaxed wrap-break-words">
                   {t("customerSupportDesc")}
                 </p>
               </div>
 
-              <div>
-                <h3 className="text-xl font-semibold mb-2 text-indigo-300">
+              <div className="w-full max-w-full">
+                <h3 className="text-base sm:text-lg font-semibold mb-1.5 text-indigo-300 wrap-break-words">
                   {t("feedback")}
                 </h3>
-                <p className="text-slate-400 text-sm leading-relaxed">
+                <p className="text-slate-400 text-sm leading-relaxed wrap-break-words">
                   {t("feedbackDesc")}
                 </p>
               </div>
 
-              <div>
-                <h3 className="text-xl font-semibold mb-2 text-indigo-300">
+              <div className="w-full max-w-full">
+                <h3 className="text-base sm:text-lg font-semibold mb-1.5 text-indigo-300 wrap-break-words">
                   {t("mediaInquiries")}
                 </h3>
-                <p className="text-slate-400 text-sm leading-relaxed">
+                <p className="text-slate-400 text-sm leading-relaxed wrap-break-words">
                   {t("mediaInquiriesDesc")}
                 </p>
               </div>
@@ -252,88 +258,139 @@ const Footer: React.FC = () => {
           </div>
 
           {/* Right Column - Contact Form */}
-          <div className="bg-white rounded-2xl p-8 shadow-2xl">
-            <div className="mb-6">
-              <h2 className="text-2xl md:text-3xl font-light text-slate-800 mb-2">
+          <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-2xl w-full lg:w-1/2 max-w-full min-w-0 box-border overflow-hidden shrink-0">
+            <div className="mb-4 w-full max-w-full">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-light text-slate-800 mb-1.5 wrap-break-words">
                 {t("getInTouch")}
               </h2>
-              <p className="text-slate-500 text-sm">{t("reachAnytime")}</p>
+              <p className="text-slate-500 text-xs sm:text-sm wrap-break-words">
+                {t("reachAnytime")}
+              </p>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <input
-                  type="text"
-                  name="firstName"
-                  placeholder={t("firstName")}
-                  value={formData.firstName}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-slate-800 placeholder-slate-400"
-                />
-              </div>
+            <div className="space-y-2.5 sm:space-y-3">
+              <TextField
+                fullWidth
+                type="text"
+                name="firstName"
+                label={t("firstName")}
+                placeholder={t("firstName")}
+                value={formData.firstName}
+                onChange={handleInputChange}
+                variant="outlined"
+                size="small"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                  },
+                }}
+              />
 
-              <div>
-                <input
-                  type="text"
-                  name="lastName"
-                  placeholder={t("lastName")}
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-slate-800 placeholder-slate-400"
-                />
-              </div>
+              <TextField
+                fullWidth
+                type="text"
+                name="lastName"
+                label={t("lastName")}
+                placeholder={t("lastName")}
+                value={formData.lastName}
+                onChange={handleInputChange}
+                variant="outlined"
+                size="small"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                  },
+                }}
+              />
 
-              <div>
-                <input
-                  type="tel"
-                  name="phoneNumber"
-                  placeholder={t("phoneNumber")}
-                  value={formData.phoneNumber}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-slate-800 placeholder-slate-400"
-                />
-              </div>
+              <TextField
+                fullWidth
+                type="tel"
+                name="phoneNumber"
+                label={t("phoneNumber")}
+                placeholder={t("phoneNumber")}
+                value={formData.phoneNumber}
+                onChange={handleInputChange}
+                variant="outlined"
+                size="small"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                  },
+                }}
+              />
 
-              <div>
-                <input
-                  type="email"
-                  name="email"
-                  placeholder={t("email")}
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-slate-800 placeholder-slate-400"
-                />
-              </div>
+              <TextField
+                fullWidth
+                type="email"
+                name="email"
+                label={t("email")}
+                placeholder={t("email")}
+                value={formData.email}
+                onChange={handleInputChange}
+                variant="outlined"
+                size="small"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                  },
+                }}
+              />
 
-              <div>
-                <textarea
-                  name="message"
-                  placeholder={t("howCanWeHelp")}
-                  value={formData.message}
-                  onChange={handleInputChange}
-                  rows={5}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-slate-800 placeholder-slate-400 resize-none"
-                />
-              </div>
+              <TextField
+                fullWidth
+                multiline
+                rows={5}
+                name="message"
+                label={t("howCanWeHelp")}
+                placeholder={t("howCanWeHelp")}
+                value={formData.message}
+                onChange={handleInputChange}
+                variant="outlined"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                  },
+                }}
+              />
 
-              <button
+              <Button
+                fullWidth
+                variant="contained"
                 onClick={handleSubmit}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-3 group"
+                size="large"
+                sx={{
+                  backgroundColor: "#4f46e5",
+                  "&:hover": {
+                    backgroundColor: "#4338ca",
+                  },
+                  py: 1.5,
+                  textTransform: "none",
+                  fontSize: { xs: "0.875rem", sm: "1rem" },
+                  fontWeight: 500,
+                  maxWidth: "100%",
+                  boxSizing: "border-box",
+                }}
+                startIcon={
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-indigo-700 rounded-lg flex items-center justify-center">
+                    <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </div>
+                }
               >
-                <div className="w-10 h-10 bg-indigo-700 rounded-lg flex items-center justify-center group-hover:bg-indigo-800 transition-colors">
-                  <Mail className="w-5 h-5" />
-                </div>
-                <span className="font-medium text-lg">{t("sendMessage")}</span>
-              </button>
+                {t("sendMessage")}
+              </Button>
             </div>
           </div>
         </div>
       </section>
 
       {/* Traditional Footer Content */}
-      <div className="border-t border-slate-800" dir={isRTL ? "rtl" : "ltr"}>
-        <div className="max-w-7xl mx-auto px-6 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div
+        className="border-t border-slate-800 w-full max-w-full overflow-x-hidden box-border"
+        dir={isRTL ? "rtl" : "ltr"}
+      >
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-8 sm:py-10 md:py-12 w-full box-border">
+          <div>
             {/* Company Info */}
             <div className="space-y-4">
               <div className="flex items-center gap-3">
@@ -433,24 +490,24 @@ const Footer: React.FC = () => {
               <p className="text-sm text-slate-400 leading-relaxed">
                 {t("helpDescription")}
               </p>
-              <button
-                className="flex items-center gap-3 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg transition-colors w-full justify-center group"
+              <Button
+                className="flex items-center gap-3  text-white px-6 py-3 rounded-lg transition-colors w-full justify-center group"
                 onClick={() => console.log("Apply clicked")}
               >
                 <span className="font-medium">{t("apply")}</span>
                 <div className="w-8 h-8 bg-indigo-700 rounded-md flex items-center justify-center group-hover:bg-indigo-800 transition-colors">
                   <Mail className="w-4 h-4" />
                 </div>
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       </div>
 
       {/* Copyright Bar */}
-      <div className="border-t border-slate-800">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <p className="text-sm text-slate-400 text-center">
+      <div className="border-t border-slate-800 w-full max-w-full box-border">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-3 sm:py-4 w-full box-border">
+          <p className="text-xs sm:text-sm text-slate-400 text-center wrap-break-words">
             © 2025 TCHAD TECH HUB. {t("rights")}
           </p>
         </div>
