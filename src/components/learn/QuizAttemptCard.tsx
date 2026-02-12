@@ -2,11 +2,11 @@ import { Card, CardContent, Chip, Typography } from "@mui/material";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
-import type { Quiz, QuiAttempt } from "../../types/Quiz.types";
+import type { Quiz, QuizAttempt } from "../../types/Quiz.types";
 
 interface QuizAttemptCardProps {
   quiz: Quiz;
-  attempt?: QuiAttempt;
+  attempt?: QuizAttempt;
   onClick?: () => void;
   showMenu?: boolean;
 }
