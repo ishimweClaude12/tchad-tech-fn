@@ -14,7 +14,7 @@ const CoursesSection = () => {
   }
 
   return (
-    <section className="bg-white max-w-7xl mx-auto mt-4 p-2">
+    <section className="max-w-7xl mx-auto mt-4 p-2">
       <Typography variant="h4" className="mb-2 font-bold text-gray-800">
         Browse Courses
       </Typography>

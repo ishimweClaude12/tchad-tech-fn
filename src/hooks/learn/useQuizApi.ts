@@ -285,3 +285,11 @@ export const useAllQuizzes = () => {
     queryFn: () => quizApi.getAllQuizzes(),
   });
 };
+
+export const useInstructorQuizAttempts = (quizId: string) => {
+  return useQuery({
+    queryKey: ["instructorQuizAttempts", quizId],
+    queryFn: () => quizApi.getInstructorQuizAttempts(quizId),
+    enabled: !!quizId,
+  });
+};

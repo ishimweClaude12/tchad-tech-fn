@@ -21,7 +21,7 @@ const MainLayout: React.FC = () => {
   const isDashboardRoute = location.pathname.includes("/dashboard");
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
       {/* Top Navigation - Hidden on dashboard routes */}
       {!isDashboardRoute && (
         <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
@@ -79,7 +79,7 @@ const MainLayout: React.FC = () => {
       )}
 
       {/* Page content */}
-      <main className="w-full min-w-screen max-w-screen box-border">
+      <main className="w-full overflow-x-hidden">
         <Outlet />
       </main>
 

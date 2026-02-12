@@ -228,7 +228,7 @@ const WhyLearnWithUs = () => {
 
   return (
     <section
-      className={`py-16 px-4 bg-linear-to-b from-white to-blue-50 ${
+      className={`py-16 px-4 bg-linear-to-b from-gray-50 to-blue-50 ${
         isRTL ? "rtl" : "ltr"
       }`}
     >

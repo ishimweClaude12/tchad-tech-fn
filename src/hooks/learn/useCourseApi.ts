@@ -207,3 +207,12 @@ export const useClearUserWishList = () => {
     },
   });
 };
+
+// Get courses for instructor
+export const useInstructorCourses = (instructorId: string) => {
+  return useQuery({
+    queryKey: queryKeys.courses.instructor(instructorId),
+    queryFn: () => coursesApi.getInstructorCourses(instructorId),
+    enabled: !!instructorId,
+  });
+};

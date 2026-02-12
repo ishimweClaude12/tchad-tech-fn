@@ -19,13 +19,31 @@ import {
 } from "lucide-react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { Button } from "@mui/material";
+import { useELearningUser } from "src/hooks/useApi";
+import { useUser } from "@clerk/clerk-react";
+import { UserRole } from "src/types/Users.types";
 
 const LearnDashboardLayout: React.FC = () => {
   const location = useLocation();
   const currentPath = location.pathname;
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const navigation = [
+  // Get current logged in user from Clerk
+  const { user } = useUser();
+
+  // Fetch user data from backend using Clerk user ID
+  const { data: ELearningUser } = useELearningUser(user?.id || "");
+
+  // Check if user is admin or super admin
+  const isAdminUser =
+    ELearningUser?.role === UserRole.ADMIN ||
+    ELearningUser?.role === UserRole.SUPPER_ADMIN;
+
+  // Check if user is an instructor
+  const isInstructor = ELearningUser?.role === UserRole.INSTRUCTOR;
+
+  // Admin navigation (full access)
+  const adminNavigation = [
     {
       name: "Dashboard",
       href: "/learn/dashboard",
@@ -105,6 +123,30 @@ const LearnDashboardLayout: React.FC = () => {
       current: currentPath === "/learn/dashboard/settings",
     },
   ];
+
+  // Instructor navigation (limited access)
+  const instructorNavigation = [
+    {
+      name: "Courses",
+      href: "/learn/dashboard/instructor/courses",
+      icon: BookOpen,
+      current: currentPath === "/learn/dashboard/instructor/courses",
+    },
+    {
+      name: "Announcements",
+      href: "/learn/dashboard/announcements",
+      icon: Megaphone,
+      current: currentPath === "/learn/dashboard/announcements",
+    },
+  ];
+
+  // Determine which navigation to use based on role
+  let navigation = adminNavigation;
+  if (isInstructor) {
+    navigation = instructorNavigation;
+  } else if (isAdminUser) {
+    navigation = adminNavigation;
+  }
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -221,7 +263,7 @@ const LearnDashboardLayout: React.FC = () => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <main className="flex-1 overflow-y-auto bg-gray-50 min-w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <Outlet />
         </main>
       </div>

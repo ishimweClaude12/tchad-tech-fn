@@ -498,7 +498,7 @@ const MoreCourseDetails = () => {
               <div className="flex flex-col sm:flex-row gap-6 pb-6 border-b border-gray-200">
                 <div className="flex flex-col items-center justify-center gap-2 sm:min-w-[150px]">
                   <Typography variant="h3" fontWeight={700}>
-                    {course.ratingAverage?.toFixed(1) ?? "0.0"}
+                    {course.ratingAverage ?? "0.0"}
                   </Typography>
                   <Rating
                     value={course.ratingAverage ?? 0}

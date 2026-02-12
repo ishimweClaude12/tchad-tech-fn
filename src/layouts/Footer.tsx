@@ -180,7 +180,7 @@ const Footer: React.FC = () => {
   };
 
   return (
-    <footer className="w-screen bg-linear-to-b from-slate-900 to-black text-white pt-12 box-border">
+    <footer className="w-full bg-linear-to-b from-slate-900 to-black text-white pt-12 box-border">
       {/* Contact Form Section */}
       <section
         className="py-6 sm:py-8 md:py-10 px-3 sm:px-4 lg:px-6 w-full  overflow-x-hidden"

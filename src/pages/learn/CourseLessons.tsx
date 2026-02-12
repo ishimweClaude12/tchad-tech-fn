@@ -32,7 +32,7 @@ export default function CourseLessons() {
   const lessons = data?.data.lessons ?? [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6 max-w-5xl mx-auto">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <Typography variant="h5" fontWeight={600}>

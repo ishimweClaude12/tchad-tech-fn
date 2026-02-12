@@ -5,8 +5,8 @@ import type {
   QuestionOption,
   QuestionOptionPayload,
   QuestionPayload,
-  QuiAttempt,
   Quiz,
+  QuizAttempt,
   QuizAttemptPayload,
   QuizPayload,
 } from "../../types/Quiz.types";
@@ -149,7 +149,7 @@ export const quizApi = {
   getQuizAttempts: async (quizId: string, userId: string) => {
     const { data } = await axiosInstance.get<
       ApiResponse<{
-        attempts: QuiAttempt[];
+        attempts: QuizAttempt[];
       }>
     >(`/quiz-attempts/user/${userId}/quiz/${quizId}`);
     return data;
@@ -160,6 +160,14 @@ export const quizApi = {
         quizzes: Quiz[];
       }>
     >(`/quizzes/`);
+    return data;
+  },
+  getInstructorQuizAttempts: async (quizId: string) => {
+    const { data } = await axiosInstance.get<
+      ApiResponse<{
+        attempts: QuizAttempt[];
+      }>
+    >(`/quiz-attempts/quiz/${quizId}`);
     return data;
   },
 };

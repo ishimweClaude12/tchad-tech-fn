@@ -392,8 +392,7 @@ const CoursesAdmin: React.FC = () => {
       } else if (selectedCourse) {
         await updateCourseMutation.mutateAsync({
           id: selectedCourse.id,
-          // remove instructorId from data if present
-          data: { ...data, instructorId: undefined },
+          data,
         });
       }
       setCourseModalOpen(false);
@@ -980,8 +979,7 @@ const CoursesAdmin: React.FC = () => {
                       | "BIGINNER"
                       | "INTERMEDIATE"
                       | "ADVANCED",
-                    estimatedDurationHours:
-                      selectedCourse.estimatedDurationHours,
+
                     price: Number.parseFloat(selectedCourse.price),
                     discountPrice: Number.parseFloat(
                       selectedCourse.discountPrice || "0",

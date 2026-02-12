@@ -40,6 +40,10 @@ import Announcements from "./pages/learn/Announcements";
 import CourseAnnouncements from "./pages/learn/CourseAnnouncements";
 import Notifications from "./pages/learn/Notifications";
 import Reviews from "./pages/learn/Reviews";
+import InstructorCourses from "./pages/learn/InstructorCourses";
+import InstructorCourseDetails from "./pages/learn/InstructorCourseDetails";
+import QuizAttempts from "./pages/learn/QuizAttempts";
+import { InstructorModuleDetails } from "./pages/learn/InstructorModuleDetails";
 
 export default function AppRouter() {
   return (
@@ -97,6 +101,25 @@ export default function AppRouter() {
         <Route path="notifications" element={<Notifications />} />
         <Route path="reviews" element={<Reviews />} />
         <Route path="settings" element={<div>Settings Page</div>} />
+
+        {/* Instructor-specific routes */}
+        <Route path="instructor/courses" element={<InstructorCourses />} />
+        <Route
+          path="instructor/course/:courseId"
+          element={<InstructorCourseDetails />}
+        />
+        <Route
+          path="instructor/course/:courseId/quiz-attempts/:quizId"
+          element={<QuizAttempts />}
+        />
+        <Route
+          path="instructor/course/:courseId/module/:moduleId"
+          element={<InstructorModuleDetails />}
+        />
+        <Route
+          path="instructor/course/:courseId/module/:moduleId/quiz/:quizId"
+          element={<QuizAttempts />}
+        />
       </Route>
 
       {/* E-Learning Course Learning  - /learn/progress */}
