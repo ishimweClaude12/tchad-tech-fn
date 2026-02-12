@@ -39,7 +39,6 @@ interface CourseFormData {
   subcategoryId: string;
   tags: string[];
   hasCertificate: boolean;
-  estimatedDurationHours?: string;
 }
 
 interface CourseFormProps {
@@ -1046,8 +1045,9 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 value={formData.price || ""}
                 onChange={handleInputChange}
                 onBlur={() => handleBlur("price")}
-                placeholder="e.g., 49000"
+                placeholder="e.g., 49000 or 49000.50"
                 min="0"
+                step="0.01"
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
                   errors.price && touched.price
                     ? "border-red-500 bg-red-50"
@@ -1074,8 +1074,9 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 value={formData.discountPrice || ""}
                 onChange={handleInputChange}
                 onBlur={() => handleBlur("discountPrice")}
-                placeholder="e.g., 29000"
+                placeholder="e.g., 29000 or 29000.50"
                 min="0"
+                step="0.01"
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
                   errors.discountPrice && touched.discountPrice
                     ? "border-red-500 bg-red-50"

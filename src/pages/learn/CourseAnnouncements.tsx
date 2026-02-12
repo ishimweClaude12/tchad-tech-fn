@@ -131,13 +131,7 @@ const CourseAnnouncements = () => {
     );
   }
 
-  if (!announcements?.data.announcements.length) {
-    return (
-      <div className="p-6">
-        <Alert severity="info">No announcements available at the moment.</Alert>
-      </div>
-    );
-  }
+ 
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -164,9 +158,9 @@ const CourseAnnouncements = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="w-full h-full p-4 sm:p-6">
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Announcements
@@ -308,8 +302,15 @@ const CourseAnnouncements = () => {
       </Dialog>
 
       {/* Announcements List */}
-      <div className="space-y-4 max-w-5xl">
-        {announcements.data.announcements.map((announcement) => (
+      <div className="space-y-4 w-full">
+        {!announcements?.data.announcements.length && (
+          <div className="p-6">
+            <Alert severity="info">
+              No announcements available at the moment.
+            </Alert>
+          </div>
+        )}
+        {announcements?.data.announcements.map((announcement) => (
           <Card
             key={announcement.id}
             className="hover:shadow-lg transition-shadow duration-300"

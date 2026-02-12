@@ -26,6 +26,8 @@ export const queryKeys = {
     published: () => [...queryKeys.courses.all, "published"] as const,
     wishListCheck: (userId: string, courseId: string) =>
       [...queryKeys.courses.all, "wishListCheck", userId, courseId] as const,
+    instructor: (instructorId: string) =>
+      [...queryKeys.courses.all, "instructor", instructorId] as const,
   },
   instructors: {
     all: ["instructors"] as const,

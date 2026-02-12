@@ -194,7 +194,7 @@ export const Hero: React.FC<HeroProps> = ({
 
   return (
     <section
-      className="relative bg-linear-to-br from-blue-600 via-blue-700 to-indigo-800 text-white  min-w-screen max-w-screen"
+      className="relative bg-linear-to-br from-blue-600 via-blue-700 to-indigo-800 text-white w-full"
       dir={isRTL ? "rtl" : "ltr"}
       aria-label="Hero section"
     >

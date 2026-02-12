@@ -120,7 +120,7 @@ export interface QuizAttemptPayload {
   }[];
 }
 
-export interface QuiAttempt {
+export interface QuizAttempt {
   id: string;
   quizId: string;
   userId: string;
@@ -129,7 +129,7 @@ export interface QuiAttempt {
   completedAt: string;
   totalScore: string;
   maxPossibleScore: string;
-  gradingStatus: "finalized";
+  gradingStatus: "finalized" | "auto-graded";
   isPassed: boolean;
   createdAt: string;
   updatedAt: string;

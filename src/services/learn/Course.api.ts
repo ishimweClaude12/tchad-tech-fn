@@ -38,7 +38,6 @@ export const coursesApi = {
   update: async (id: string, course: Partial<Course>) => {
     const { data } = await axiosInstance.put<Course>(`/courses/${id}`, {
       ...course,
-      estimatedDurationHours: Number(course.estimatedDurationHours),
     });
     return data;
   },
@@ -151,4 +150,12 @@ export const coursesApi = {
     >(`/wishlist/user/${userId}/clear`);
     return data;
   },
+  getInstructorCourses: async (instructorId: string) => {
+    const { data } = await axiosInstance.get<
+      ApiResponse<{
+        courses: Course[];
+      }>
+    >(`/instructor/${instructorId}`);
+    return data;
+  }
 };

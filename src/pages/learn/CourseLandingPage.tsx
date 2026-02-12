@@ -533,7 +533,7 @@ const CourseLandingPage = () => {
                       size="small"
                     />
                     <Typography variant="body2" className="font-semibold">
-                      {course.ratingAverage.toFixed(1)}
+                      {course.ratingAverage ?? "0.0"}
                     </Typography>
                     <Typography variant="body2" className="text-gray-500">
                       ({course.ratingCount} ratings)
@@ -928,10 +928,15 @@ const CourseLandingPage = () => {
                               }
                             >
                               {(() => {
-                                if (addReviewMutation.isPending || updateReviewMutation.isPending) {
+                                if (
+                                  addReviewMutation.isPending ||
+                                  updateReviewMutation.isPending
+                                ) {
                                   return "Submitting...";
                                 }
-                                return userHasReviewed ? "Update Review" : "Submit Review";
+                                return userHasReviewed
+                                  ? "Update Review"
+                                  : "Submit Review";
                               })()}
                             </Button>
                             {userHasReviewed && (

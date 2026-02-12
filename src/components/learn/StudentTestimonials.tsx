@@ -423,7 +423,7 @@ const StudentTestimonials = () => {
         </div>
 
         {/* Testimonials Carousel */}
-        <div className="relative mb-12">
+        <div className="relative mb-12 overflow-x-clip">
           {/* Navigation Buttons */}
           {t.stories.length > storiesPerView && (
             <>
