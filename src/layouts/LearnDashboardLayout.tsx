@@ -116,6 +116,14 @@ const LearnDashboardLayout: React.FC = () => {
       icon: Star,
       current: currentPath === "/learn/dashboard/reviews",
     },
+    // forum
+    {
+      name: "Forum",
+      href: "/learn/dashboard/forum",
+      // forum <mat-icon class="mat-18">ligature</mat-icon>
+      icon: Users,
+      current: currentPath === "/learn/dashboard/forum",
+    },
     {
       name: "Settings",
       href: "/learn/dashboard/settings",
@@ -137,6 +145,14 @@ const LearnDashboardLayout: React.FC = () => {
       href: "/learn/dashboard/announcements",
       icon: Megaphone,
       current: currentPath === "/learn/dashboard/announcements",
+    },
+    // forum
+    {
+      name: "Forum",
+      href: "/learn/dashboard/forum",
+      // forum <mat-icon class="mat-18">ligature</mat-icon>
+      icon: Users,
+      current: currentPath === "/learn/dashboard/forum",
     },
   ];
 

@@ -1,6 +1,7 @@
 import axiosInstance from "src/lib/axios";
 import type { ApiResponse } from "src/types/Api.types";
 import type {
+  Post,
   Review,
   ReviewModerationStatus,
   ReviewPayload,
@@ -69,6 +70,45 @@ export const ReviewsApi = {
         review: Review;
       }>
     >(`/reviews/${reviewId}`, payload);
+    return data;
+  },
+  getPosts: async () => {
+    const { data } = await axiosInstance.get<
+      ApiResponse<{
+        posts: Post[];
+        postCount: number;
+      }>
+    >(`/forum/`);
+    return data;
+  },
+  createPost: async (payload: { title: string; content: string }) => {
+    const fullPayload = {
+      ...payload,
+      attachment: null,
+      view_count: 0,
+      comment_count: 0,
+    };
+    const { data } = await axiosInstance.post<
+      ApiResponse<{
+        post: Post;
+      }>
+    >(`/forum/`, fullPayload);
+    return data;
+  },
+  updatePost: async (postId: string, payload: Partial<Post>) => {
+    const { data } = await axiosInstance.patch<
+      ApiResponse<{
+        post: Post;
+      }>
+    >(`/forum/${postId}`, payload);
+    return data;
+  },
+  deletePost: async (postId: string) => {
+    const { data } = await axiosInstance.delete<
+      ApiResponse<{
+        message: string;
+      }>
+    >(`/forum/${postId}`);
     return data;
   },
 };

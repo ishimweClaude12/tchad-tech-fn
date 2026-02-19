@@ -39,3 +39,16 @@ export interface ReviewPayload {
   title: string;
   comment: string;
 }
+
+export interface Post {
+  post_id: string;
+  user_id: string;
+  title: string;
+  content: string;
+  attachment: string | null;
+  created_at: string;
+  updated_at: string;
+  view_count: number;
+  comment_count: number;
+  isDeleted: boolean;
+}

@@ -2,6 +2,7 @@ import type {
   QuestionOptionPayload,
   QuestionPayload,
   QuizPayload,
+  QuizAttemptUpdatePayload,
 } from "../../types/Quiz.types";
 import { quizApi } from "../../services/learn/Quiz.api";
 
@@ -291,5 +292,34 @@ export const useInstructorQuizAttempts = (quizId: string) => {
     queryKey: ["instructorQuizAttempts", quizId],
     queryFn: () => quizApi.getInstructorQuizAttempts(quizId),
     enabled: !!quizId,
+  });
+};
+
+export const useQuizAttemptDetails = (attemptId: string) => {
+  return useQuery({
+    queryKey: ["quizAttemptDetails", attemptId],
+    queryFn: () => quizApi.getQuizAttemptDetails(attemptId),
+    enabled: !!attemptId,
+  });
+};
+
+export const useUpdateQuizAttemptMarks = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ attemptId, ...payload }: QuizAttemptUpdatePayload & { attemptId: string }) =>
+      quizApi.updateQuizAttemptMarks(attemptId, payload),
+    onError: (error) => {
+      toast.error("Failed to update quiz attempt marks.");
+      console.error("Update Quiz Attempt Marks Error:", error);
+    },
+    onSuccess: (_, vars) => {
+      toast.success("Quiz attempt marks updated successfully.");
+      queryClient.invalidateQueries({
+        queryKey: ["quizAttemptDetails", vars.attemptId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["instructorQuizAttempts"],
+      });
+    },
   });
 };

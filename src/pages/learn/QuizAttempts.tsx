@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Typography,
@@ -7,40 +7,61 @@ import {
   IconButton,
   Menu,
   MenuItem,
-  Tooltip,
   Card,
   CardContent,
   LinearProgress,
   Box,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
 import {
   CheckCircle,
   Cancel,
   Schedule,
   TrendingUp,
-  FileDownload,
   Visibility,
   MoreVert,
 } from "@mui/icons-material";
-import { useInstructorQuizAttempts } from "src/hooks/learn/useQuizApi";
+import EditIcon from "@mui/icons-material/Edit";
+import {
+  useInstructorQuizAttempts,
+  useUpdateQuizAttemptMarks,
+} from "src/hooks/learn/useQuizApi";
 import UserCard from "src/components/learn/UserCard";
 import { Button } from "@/components/tiptap-ui-primitive/button/button";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 const QuizAttempts: React.FC = () => {
-  const { courseId, quizId } = useParams();
+  const { quizId } = useParams();
   const navigate = useNavigate();
 
   // State management
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const [selectedAttempt, setSelectedAttempt] = React.useState<string | null>(
-    null,
-  );
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedAttempt, setSelectedAttempt] = useState<string | null>(null);
+  const [updateModalOpen, setUpdateModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    attemptId: "",
+    totalScore: 0,
+    maxPossibleScore: 0,
+    gradingStatus: "finalized" as "finalized" | "auto-graded",
+    isPassed: false,
+  });
 
   // Fetch quiz attempts
   const { data: quizAttemptsData, isLoading } = useInstructorQuizAttempts(
     quizId || "",
   );
+
+  // Update marks mutation
+  const updateMarksMutation = useUpdateQuizAttemptMarks();
 
   // Calculate statistics
   const statistics = useMemo(() => {
@@ -86,16 +107,65 @@ const QuizAttempts: React.FC = () => {
   };
 
   const handleViewDetails = (attemptId: string) => {
-    navigate(
-      `/instructor/courses/${courseId}/quizzes/${quizId}/attempts/${attemptId}`,
-    );
+    navigate(`attempt/${attemptId}`);
     handleMenuClose();
   };
 
-  const handleExportData = () => {
-    // Implement export functionality
-    console.log("Exporting data...");
+  const handleUpdateMarks = () => {
+    if (!selectedAttempt) return;
+
+    // Find the selected attempt to populate the form
+    const attempt = quizAttemptsData?.data.attempts.find(
+      (a) => a.id === selectedAttempt,
+    );
+
+    if (attempt) {
+      setFormData({
+        attemptId: selectedAttempt,
+        totalScore: Number.parseFloat(attempt.totalScore),
+        maxPossibleScore: Number.parseFloat(attempt.maxPossibleScore),
+        gradingStatus: attempt.gradingStatus,
+        isPassed: attempt.isPassed,
+      });
+      setUpdateModalOpen(true);
+    }
     handleMenuClose();
+  };
+
+  const handleCloseModal = () => {
+    setUpdateModalOpen(false);
+    setSelectedAttempt(null);
+    setFormData({
+      attemptId: "",
+      totalScore: 0,
+      maxPossibleScore: 0,
+      gradingStatus: "finalized",
+      isPassed: false,
+    });
+  };
+
+  const handleFormChange = (field: string, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmitUpdate = async () => {
+    if (!formData.attemptId) {
+      console.error("No attempt ID found in formData");
+      return;
+    }
+
+    try {
+      await updateMarksMutation.mutateAsync({
+        attemptId: formData.attemptId,
+        totalScore: formData.totalScore,
+        maxPossibleScore: formData.maxPossibleScore,
+        gradingStatus: formData.gradingStatus,
+        isPassed: formData.isPassed,
+      });
+      handleCloseModal();
+    } catch (error) {
+      console.error("Failed to update marks:", error);
+    }
   };
 
   const getScoreColor = (score: number, maxScore: number) => {
@@ -199,11 +269,6 @@ const QuizAttempts: React.FC = () => {
           <Typography variant="h4" fontWeight={700}>
             Quiz Attempts
           </Typography>
-          <Tooltip title="Export data">
-            <IconButton onClick={handleExportData} className="text-gray-600">
-              <FileDownload />
-            </IconButton>
-          </Tooltip>
         </div>
         <Typography variant="body1" color="textSecondary">
           Review student performance and track progress
@@ -383,13 +448,6 @@ const QuizAttempts: React.FC = () => {
                           variant="outlined"
                         />
                       )}
-                      {attempt.gradingStatus !== "finalized" && (
-                        <Chip
-                          label="Pending"
-                          size="small"
-                          className="ml-2 bg-yellow-100 text-yellow-800"
-                        />
-                      )}
                     </div>
                   </div>
                 </div>
@@ -467,11 +525,113 @@ const QuizAttempts: React.FC = () => {
           <Visibility className="mr-2" fontSize="small" />
           View Details
         </MenuItem>
-        <MenuItem onClick={handleExportData}>
-          <FileDownload className="mr-2" fontSize="small" />
-          Export Data
+        <MenuItem onClick={handleUpdateMarks}>
+          <EditIcon className="mr-2" fontSize="small" />
+          Update Marks
         </MenuItem>
       </Menu>
+
+      {/* Update Marks Modal */}
+      <Dialog
+        open={updateModalOpen}
+        onClose={handleCloseModal}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          <Typography variant="h6" fontWeight={600}>
+            Update Quiz Attempt Marks
+          </Typography>
+        </DialogTitle>
+        <DialogContent dividers>
+          <div className="space-y-4 pt-2">
+            <TextField
+              label="Total Score"
+              type="number"
+              fullWidth
+              value={formData.totalScore}
+              onChange={(e) =>
+                handleFormChange(
+                  "totalScore",
+                  Number.parseFloat(e.target.value),
+                )
+              }
+              inputProps={{ min: 0, step: 0.1 }}
+              helperText="The total score earned by the student"
+            />
+            <TextField
+              label="Max Possible Score"
+              type="number"
+              fullWidth
+              value={formData.maxPossibleScore}
+              onChange={(e) =>
+                handleFormChange(
+                  "maxPossibleScore",
+                  Number.parseFloat(e.target.value),
+                )
+              }
+              inputProps={{ min: 0, step: 0.1 }}
+              helperText="The maximum score possible for this quiz"
+            />
+            <FormControl fullWidth>
+              <InputLabel>Grading Status</InputLabel>
+              <Select
+                value={formData.gradingStatus}
+                label="Grading Status"
+                onChange={(e) =>
+                  handleFormChange(
+                    "gradingStatus",
+                    e.target.value as "finalized" | "auto-graded",
+                  )
+                }
+                native
+              >
+                <option value="auto-graded">Auto-graded</option>
+                <option value="finalized">Finalized</option>
+              </Select>
+            </FormControl>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={formData.isPassed}
+                  onChange={(e) =>
+                    handleFormChange("isPassed", e.target.checked)
+                  }
+                  color="success"
+                />
+              }
+              label="Passed"
+            />
+            <Paper className="p-3 bg-blue-50 border border-blue-200">
+              <Typography variant="body2" color="textSecondary">
+                <strong>Score Percentage:</strong>{" "}
+                {formData.maxPossibleScore > 0
+                  ? (
+                      (formData.totalScore / formData.maxPossibleScore) *
+                      100
+                    ).toFixed(1)
+                  : 0}
+                %
+              </Typography>
+            </Paper>
+          </div>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleCloseModal}
+            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmitUpdate}
+            className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded"
+            disabled={updateMarksMutation.isPending}
+          >
+            {updateMarksMutation.isPending ? "Updating..." : "Update Marks"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

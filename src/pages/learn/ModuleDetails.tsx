@@ -243,7 +243,7 @@ export const ModuleDetails = () => {
   const lessons = lessonsData?.data.lessons ?? [];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 p-6">
       <div>
         <Breadcrumbs aria-label="breadcrumb">
           <Link color="inherit" to="/learn/dashboard/courses">

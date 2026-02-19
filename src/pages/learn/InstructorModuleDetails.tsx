@@ -8,18 +8,39 @@ import {
   Modal,
   Box,
   Breadcrumbs,
+  IconButton,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useModuleById } from "../../hooks/learn/useModulesApi";
-import { useLessonsByModuleId } from "../../hooks/learn/useLessonApi";
+import {
+  useDeleteLesson,
+  useLessonsByModuleId,
+  usePublishLesson,
+} from "../../hooks/learn/useLessonApi";
 import { useState } from "react";
 
 import type { Lesson } from "src/types/CourseLessons.types";
 import {
   useModuleQuizzes,
   useLessonQuizzes,
+  useCreateQuiz,
+  useDeleteQuiz,
+  useUpdateQuiz,
 } from "../../hooks/learn/useQuizApi";
 import QuizCard from "../../components/learn/QuizCard";
+import { useQueryClient } from "@tanstack/react-query";
+import { EditIcon } from "lucide-react";
+import LessonForm from "src/components/learn/forms/LessonForm";
+import QuizFormModal from "src/components/learn/forms/QuizForm";
+import type { Quiz } from "src/types/Quiz.types";
+import MoreVertOutlinedIcon from "@mui/icons-material/MoreVertOutlined";
+import PublishIcon from "@mui/icons-material/Publish";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
 // Decode HTML entities while preserving HTML structure
 const decodeHTMLEntities = (text: string): string => {
@@ -28,14 +49,150 @@ const decodeHTMLEntities = (text: string): string => {
   return textarea.value;
 };
 
+const style = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: 1200,
+  bgcolor: "background.paper",
+  boxShadow: 24,
+  p: 4,
+};
+
 export const InstructorModuleDetails = () => {
   const { moduleId } = useParams<{ moduleId: string }>();
   const navigate = useNavigate();
-
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [menuTargetLesson, setMenuTargetLesson] = useState<Lesson | null>(null);
+  const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [lessonToDelete, setLessonToDelete] = useState<Lesson | null>(null);
+  const [publishConfirmOpen, setPublishConfirmOpen] = useState(false);
+  const [lessonToPublish, setLessonToPublish] = useState<Lesson | null>(null);
+  const [openQuizForm, setOpenQuizForm] = useState<boolean>(false);
+  const [openQuizDelete, setOpenQuizDelete] = useState<boolean>(false);
+  const [editingQuiz, setEditingQuiz] = useState<Quiz | null>(null);
+  const [quizToDelete, setQuizToDelete] = useState<Quiz | null>(null);
+  const [openLessonQuizForm, setOpenLessonQuizForm] = useState<boolean>(false);
+  const [editingLessonQuiz, setEditingLessonQuiz] = useState<Quiz | null>(null);
+  const [lessonQuizToDelete, setLessonQuizToDelete] = useState<Quiz | null>(
+    null,
+  );
+  const [openLessonQuizDelete, setOpenLessonQuizDelete] =
+    useState<boolean>(false);
+  // Handlers
+  const handleOpen = () => {
+    setEditingLesson(null);
+    setOpen(true);
+  };
+  const handleClose = () => setOpen(false);
+  const handleMenuOpen = (
+    event: React.MouseEvent<HTMLElement>,
+    lesson?: Lesson | null,
+  ) => {
+    setAnchorEl(event.currentTarget);
+    setMenuTargetLesson(lesson ?? null);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setMenuTargetLesson(null);
+  };
+
+  const handleEdit = () => {
+    // Open the lesson form modal in edit mode for the selected menu target
+    if (menuTargetLesson) {
+      setEditingLesson(menuTargetLesson);
+      setOpen(true);
+    }
+
+    handleMenuClose();
+  };
+
+  const handleDeleteClick = () => {
+    // open confirmation modal for the targeted lesson
+    if (menuTargetLesson) {
+      setLessonToDelete(menuTargetLesson);
+      setDeleteConfirmOpen(true);
+    }
+
+    handleMenuClose();
+  };
+
+  const handlePublishClick = () => {
+    if (menuTargetLesson) {
+      setLessonToPublish(menuTargetLesson);
+      setPublishConfirmOpen(true);
+    }
+
+    handleMenuClose();
+  };
 
   const handleViewLesson = (lesson: Lesson) => {
     setSelectedLesson(lesson);
+  };
+
+  // Quiz handlers
+  const handleOpenQuizForm = () => {
+    setEditingQuiz(null);
+    setOpenQuizForm(true);
+  };
+
+  const handleEditQuiz = (quiz: Quiz) => {
+    setEditingQuiz(quiz);
+    setOpenQuizForm(true);
+  };
+
+  const handleDeleteQuiz = (quiz: Quiz) => {
+    setQuizToDelete(quiz);
+    setOpenQuizDelete(true);
+  };
+
+  const handleConfirmDeleteQuiz = () => {
+    if (!quizToDelete) return;
+    deleteQuizMutation.mutate(quizToDelete.id, {
+      onSuccess: () => {
+        setOpenQuizDelete(false);
+        setQuizToDelete(null);
+        queryClient.invalidateQueries({
+          queryKey: ["moduleQuizzes", moduleId],
+        });
+      },
+    });
+  };
+
+  // Lesson-specific quiz handlers
+  const handleOpenLessonQuizForm = () => {
+    setEditingLessonQuiz(null);
+
+    setOpenLessonQuizForm(true);
+  };
+
+  const handleEditLessonQuiz = (quiz: Quiz) => {
+    setEditingLessonQuiz(quiz);
+    setOpenLessonQuizForm(true);
+  };
+
+  const handleDeleteLessonQuiz = (quiz: Quiz) => {
+    setLessonQuizToDelete(quiz);
+    setOpenLessonQuizDelete(true);
+  };
+
+  const handleConfirmDeleteLessonQuiz = () => {
+    if (!lessonQuizToDelete) return;
+    deleteQuizMutation.mutate(lessonQuizToDelete.id, {
+      onSuccess: () => {
+        setOpenLessonQuizDelete(false);
+        setLessonQuizToDelete(null);
+        queryClient.invalidateQueries({
+          queryKey: ["lessonQuizzes", selectedLesson?.id],
+        });
+      },
+    });
   };
 
   const {
@@ -59,6 +216,12 @@ export const InstructorModuleDetails = () => {
   const { data: lessonQuizes, isLoading: lessonQuizesLoading } =
     useLessonQuizzes(selectedLesson?.id || "");
 
+  const deleteLessonMutation = useDeleteLesson();
+  const publishLessonMutation = usePublishLesson();
+  const createQuizMutation = useCreateQuiz();
+  const updateQuizMutation = useUpdateQuiz();
+  const deleteQuizMutation = useDeleteQuiz();
+
   if (isLoading || lessonsLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -79,7 +242,7 @@ export const InstructorModuleDetails = () => {
   const lessons = lessonsData?.data.lessons ?? [];
 
   return (
-    <div className="space-y-8 p-6 max-w-7xl mx-auto">
+    <div className="space-y-8 p-6">
       <div>
         <Breadcrumbs aria-label="breadcrumb">
           <Link color="inherit" to="/learn/dashboard/instructor/courses">
@@ -123,6 +286,15 @@ export const InstructorModuleDetails = () => {
               label={`${module.estimatedDurationMinutes} minutes`}
               variant="outlined"
             />
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button variant="outlined" onClick={handleOpen}>
+              Add Lesson
+            </Button>
+            <Button variant="contained" onClick={handleOpenQuizForm}>
+              Add Quiz
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -177,6 +349,17 @@ export const InstructorModuleDetails = () => {
                   color={lesson.isPublished ? "success" : "default"}
                   size="small"
                 />
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleMenuOpen(e, lesson);
+                  }}
+                  sx={{ position: "relative", zIndex: 2000 }}
+                  aria-label="lesson actions"
+                >
+                  <MoreVertOutlinedIcon />
+                </IconButton>
               </div>
             </CardContent>
           </Card>
@@ -212,8 +395,18 @@ export const InstructorModuleDetails = () => {
             <QuizCard
               key={quiz.id}
               quiz={quiz}
-              showMenu={false}
               onClick={() => {
+                navigate(
+                  `/learn/dashboard/courses/${module.courseId}/module/${moduleId}/quiz/${quiz.id}`,
+                );
+              }}
+              onEdit={(quiz) => {
+                handleEditQuiz(quiz);
+              }}
+              onDelete={(quiz) => {
+                handleDeleteQuiz(quiz);
+              }}
+              onViewAttempts={(quiz) => {
                 navigate(
                   `/learn/dashboard/instructor/course/${module.courseId}/module/${moduleId}/quiz/${quiz.id}`,
                 );
@@ -223,7 +416,207 @@ export const InstructorModuleDetails = () => {
         </div>
       </div>
 
-      {selectedLesson && (
+      {/* Context Menu */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+      >
+        <MenuItem onClick={handleEdit}>
+          <ListItemIcon>
+            <EditIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText> Edit</ListItemText>
+        </MenuItem>
+        {menuTargetLesson && (
+          <MenuItem onClick={handlePublishClick}>
+            <ListItemIcon>
+              {menuTargetLesson.isPublished ? (
+                <VisibilityOffIcon fontSize="small" color="inherit" />
+              ) : (
+                <PublishIcon fontSize="small" color="inherit" />
+              )}
+            </ListItemIcon>
+            <ListItemText>
+              {menuTargetLesson.isPublished ? "Unpublish" : "Publish"}
+            </ListItemText>
+          </MenuItem>
+        )}
+        <MenuItem sx={{ color: "error.main" }} onClick={handleDeleteClick}>
+          <ListItemIcon>
+            <DeleteOutlineIcon fontSize="small" color="error" />
+          </ListItemIcon>
+          <ListItemText>Delete</ListItemText>
+        </MenuItem>
+      </Menu>
+      {/* Publish Confirmation Modal */}
+      <Modal
+        open={publishConfirmOpen}
+        onClose={() => {
+          setPublishConfirmOpen(false);
+          setLessonToPublish(null);
+        }}
+      >
+        <Box sx={{ ...style, width: 480 }}>
+          <Typography variant="h6" fontWeight={600} gutterBottom>
+            {lessonToPublish?.isPublished
+              ? "Unpublish Lesson"
+              : "Publish Lesson"}
+          </Typography>
+
+          <Typography className="mb-4">
+            {lessonToPublish?.isPublished
+              ? `Are you sure you want to unpublish "${lessonToPublish?.title}"? It will no longer be visible to learners.`
+              : `Are you sure you want to publish "${lessonToPublish?.title}"?`}
+          </Typography>
+
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setPublishConfirmOpen(false);
+                setLessonToPublish(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              color={lessonToPublish?.isPublished ? "warning" : "primary"}
+              onClick={() => {
+                if (!lessonToPublish) return;
+                const desiredState = !lessonToPublish.isPublished;
+                publishLessonMutation.mutate(
+                  { lessonId: lessonToPublish.id, isPublished: desiredState },
+                  {
+                    onSuccess: () => {
+                      setPublishConfirmOpen(false);
+                      setLessonToPublish(null);
+                    },
+                  },
+                );
+              }}
+              disabled={publishLessonMutation.isPending}
+            >
+              {(() => {
+                if (publishLessonMutation.isPending) {
+                  return lessonToPublish?.isPublished
+                    ? "Unpublishing..."
+                    : "Publishing...";
+                }
+                return lessonToPublish?.isPublished ? "Unpublish" : "Publish";
+              })()}
+            </Button>
+          </div>
+        </Box>
+      </Modal>
+      {/* Delete Confirmation Modal */}
+      <Modal
+        open={deleteConfirmOpen}
+        onClose={() => {
+          setDeleteConfirmOpen(false);
+          setLessonToDelete(null);
+        }}
+      >
+        <Box sx={{ ...style, width: 480 }}>
+          <Typography variant="h6" fontWeight={600} gutterBottom>
+            Delete Lesson
+          </Typography>
+
+          <Typography className="mb-4">
+            Are you sure you want to delete "{lessonToDelete?.title}"? This
+            action cannot be undone.
+          </Typography>
+
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setDeleteConfirmOpen(false);
+                setLessonToDelete(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              disabled={deleteLessonMutation.isPending}
+              onClick={() => {
+                if (!lessonToDelete) return;
+                deleteLessonMutation.mutate(lessonToDelete.id, {
+                  onSuccess: () => {
+                    setDeleteConfirmOpen(false);
+                    setLessonToDelete(null);
+                    // if currently viewing the deleted lesson, close viewer
+                    setSelectedLesson((prev) =>
+                      prev?.id === lessonToDelete.id ? null : prev,
+                    );
+                  },
+                });
+              }}
+            >
+              {deleteLessonMutation.isPending ? "Deleting..." : "Delete"}
+            </Button>
+          </div>
+        </Box>
+      </Modal>
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box sx={{ ...style, maxHeight: "90vh", overflow: "auto" }}>
+          <LessonForm
+            initialLesson={editingLesson ?? undefined}
+            onClose={() => {
+              setOpen(false);
+              setEditingLesson(null);
+            }}
+          />
+        </Box>
+      </Modal>
+
+      {/* Quiz Form Modal */}
+      <QuizFormModal
+        open={openQuizForm}
+        onClose={() => {
+          setOpenQuizForm(false);
+          setEditingQuiz(null);
+        }}
+        quiz={editingQuiz}
+        createQuizMutation={createQuizMutation}
+        updateQuizMutation={updateQuizMutation}
+        queryClient={queryClient}
+        moduleId={moduleId}
+        onSuccessCallback={() => {
+          queryClient.invalidateQueries({
+            queryKey: ["moduleQuizzes", moduleId],
+          });
+        }}
+      />
+
+      {/* Lesson-specific Quiz Form Modal */}
+      <QuizFormModal
+        open={openLessonQuizForm}
+        onClose={() => {
+          setOpenLessonQuizForm(false);
+          setEditingLessonQuiz(null);
+        }}
+        quiz={editingLessonQuiz}
+        createQuizMutation={createQuizMutation}
+        updateQuizMutation={updateQuizMutation}
+        queryClient={queryClient}
+        lessonId={selectedLesson?.id}
+        onSuccessCallback={() => {
+          queryClient.invalidateQueries({
+            queryKey: ["lessonQuizzes", selectedLesson?.id],
+          });
+        }}
+      />
+
+      {selectedLesson && !openLessonQuizForm && (
         <Modal
           open={Boolean(selectedLesson)}
           onClose={() => setSelectedLesson(null)}
@@ -241,7 +634,6 @@ export const InstructorModuleDetails = () => {
               boxShadow: 24,
               borderRadius: 2,
               overflowY: "auto",
-              zIndex: 1500,
             }}
           >
             <Card elevation={0}>
@@ -360,6 +752,13 @@ export const InstructorModuleDetails = () => {
                     <Typography variant="h6" fontWeight={600}>
                       Associated Quizzes
                     </Typography>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      onClick={handleOpenLessonQuizForm}
+                    >
+                      Add Quiz
+                    </Button>
                   </div>
                   {lessonQuizesLoading && (
                     <div className="flex justify-center items-center h-32">
@@ -377,8 +776,18 @@ export const InstructorModuleDetails = () => {
                       <QuizCard
                         key={quiz.id}
                         quiz={quiz}
-                        showMenu={false}
                         onClick={() => {
+                          navigate(
+                            `/learn/dashboard/courses/${module.courseId}/module/${moduleId}/quiz/${quiz.id}`,
+                          );
+                        }}
+                        onEdit={(quiz) => {
+                          handleEditLessonQuiz(quiz);
+                        }}
+                        onDelete={(quiz) => {
+                          handleDeleteLessonQuiz(quiz);
+                        }}
+                        onViewAttempts={(quiz) => {
                           navigate(
                             `/learn/dashboard/instructor/course/${module.courseId}/module/${moduleId}/quiz/${quiz.id}`,
                           );
@@ -402,6 +811,86 @@ export const InstructorModuleDetails = () => {
           </Box>
         </Modal>
       )}
+
+      {/* Quiz Delete Confirmation Modal */}
+      <Modal
+        open={openQuizDelete}
+        onClose={() => {
+          setOpenQuizDelete(false);
+          setQuizToDelete(null);
+        }}
+      >
+        <Box sx={{ ...style, width: 480 }}>
+          <Typography variant="h6" fontWeight={600} gutterBottom>
+            Delete Quiz
+          </Typography>
+
+          <Typography className="mb-4">
+            Are you sure you want to delete "{quizToDelete?.title}"? This action
+            cannot be undone.
+          </Typography>
+
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setOpenQuizDelete(false);
+                setQuizToDelete(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              disabled={deleteQuizMutation.isPending}
+              onClick={handleConfirmDeleteQuiz}
+            >
+              {deleteQuizMutation.isPending ? "Deleting..." : "Delete"}
+            </Button>
+          </div>
+        </Box>
+      </Modal>
+
+      {/* Lesson Quiz Delete Confirmation Modal */}
+      <Modal
+        open={openLessonQuizDelete}
+        onClose={() => {
+          setOpenLessonQuizDelete(false);
+          setLessonQuizToDelete(null);
+        }}
+      >
+        <Box sx={{ ...style, width: 480 }}>
+          <Typography variant="h6" fontWeight={600} gutterBottom>
+            Delete Quiz
+          </Typography>
+
+          <Typography className="mb-4">
+            Are you sure you want to delete "{lessonQuizToDelete?.title}"? This
+            action cannot be undone.
+          </Typography>
+
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setOpenLessonQuizDelete(false);
+                setLessonQuizToDelete(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              disabled={deleteQuizMutation.isPending}
+              onClick={handleConfirmDeleteLessonQuiz}
+            >
+              {deleteQuizMutation.isPending ? "Deleting..." : "Delete"}
+            </Button>
+          </div>
+        </Box>
+      </Modal>
     </div>
   );
 };

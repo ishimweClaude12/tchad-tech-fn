@@ -6,8 +6,6 @@ import {
   Button,
   Chip,
   Typography,
-  LinearProgress,
-  Box,
   IconButton,
   Tooltip,
 } from "@mui/material";
@@ -25,13 +23,13 @@ import {
   EnrollmentStatus,
   EnrollmentType,
 } from "src/types/Enrollment.types";
+import { useNavigate } from "react-router-dom";
 
 interface CourseEnrollmentCardProps {
   enrollment: CourseEnrollment;
   onContinueLearning?: (enrollmentId: string, courseId: string) => void;
   onCompletePayment?: (enrollmentId: string) => void;
   onViewCertificate?: (courseId: string) => void;
-  onViewDetails?: (courseId: string) => void;
 }
 
 const CourseEnrollmentCard: React.FC<CourseEnrollmentCardProps> = ({
@@ -39,8 +37,8 @@ const CourseEnrollmentCard: React.FC<CourseEnrollmentCardProps> = ({
   onContinueLearning,
   onCompletePayment,
   onViewCertificate,
-  onViewDetails,
 }) => {
+  const navigate = useNavigate();
   const { course, status, enrollmentType, enrolledAt, completedAt } =
     enrollment;
 
@@ -148,6 +146,10 @@ const CourseEnrollmentCard: React.FC<CourseEnrollmentCardProps> = ({
     }
   };
 
+  const onViewDetails = (courseSlug: string) => {
+    navigate(`/learn/course/${courseSlug}`);
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -220,24 +222,6 @@ const CourseEnrollmentCard: React.FC<CourseEnrollmentCardProps> = ({
             {course.description}
           </Typography>
 
-          {status === EnrollmentStatus.ACTIVE && (
-            <Box className="mb-3">
-              <div className="flex justify-between items-center mb-1">
-                <Typography variant="caption" color="text.secondary">
-                  Progress
-                </Typography>
-                <Typography variant="caption" className="font-semibold">
-                  87%
-                </Typography>
-              </div>
-              <LinearProgress
-                variant="determinate"
-                value={87}
-                className="h-2 rounded-full"
-              />
-            </Box>
-          )}
-
           <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
             <AccessTime fontSize="small" />
             <Typography variant="caption">
@@ -281,7 +265,7 @@ const CourseEnrollmentCard: React.FC<CourseEnrollmentCardProps> = ({
           {status !== EnrollmentStatus.CANCELLED && (
             <Tooltip title="View Details">
               <IconButton
-                onClick={() => onViewDetails?.(course.id)}
+                onClick={() => onViewDetails(course.slug)}
                 color="primary"
                 size="small"
               >

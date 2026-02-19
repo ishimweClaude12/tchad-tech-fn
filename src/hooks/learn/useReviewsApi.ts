@@ -77,11 +77,11 @@ export const useAddReview = () => {
         userId: variables.userId,
       });
       queryClient.invalidateQueries({ queryKey: ["reviews"] });
-      queryClient.invalidateQueries({ 
-        queryKey: ["checkUserReview", variables.courseId, variables.userId] 
+      queryClient.invalidateQueries({
+        queryKey: ["checkUserReview", variables.courseId, variables.userId],
       });
-      queryClient.invalidateQueries({ 
-        queryKey: ["courseReviews", variables.courseId] 
+      queryClient.invalidateQueries({
+        queryKey: ["courseReviews", variables.courseId],
       });
     },
     onError: (error) => {
@@ -119,23 +119,31 @@ export const useUpdateReview = () => {
         courseId: variables.courseId,
         userId: variables.payload.userId,
       });
-      
+
       // Invalidate all reviews
       queryClient.invalidateQueries({ queryKey: ["reviews"] });
-      
+
       // Invalidate specific course reviews
       if (variables.courseId) {
         console.log("Invalidating courseReviews for:", variables.courseId);
-        queryClient.invalidateQueries({ 
-          queryKey: ["courseReviews", variables.courseId] 
+        queryClient.invalidateQueries({
+          queryKey: ["courseReviews", variables.courseId],
         });
       }
-      
+
       // Invalidate user review check
       if (variables.payload.userId && variables.courseId) {
-        console.log("Invalidating checkUserReview for:", variables.courseId, variables.payload.userId);
-        queryClient.invalidateQueries({ 
-          queryKey: ["checkUserReview", variables.courseId, variables.payload.userId] 
+        console.log(
+          "Invalidating checkUserReview for:",
+          variables.courseId,
+          variables.payload.userId,
+        );
+        queryClient.invalidateQueries({
+          queryKey: [
+            "checkUserReview",
+            variables.courseId,
+            variables.payload.userId,
+          ],
         });
       }
     },
@@ -145,4 +153,65 @@ export const useUpdateReview = () => {
     },
   });
 };
- 
+
+export const useGetPosts = () => {
+  return useQuery({
+    queryKey: ["forumPosts"],
+    queryFn: async () => {
+      const data = await ReviewsApi.getPosts();
+      return data;
+    },
+  });
+};
+
+export const useAddPost = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: Parameters<typeof ReviewsApi.createPost>[0]) =>
+      ReviewsApi.createPost(payload),
+    onSuccess: () => {
+      toast.success("Post added successfully!");
+      queryClient.invalidateQueries({ queryKey: ["forumPosts"] });
+    },
+    onError: (error) => {
+      toast.error("Failed to add post. Please try again.");
+      console.error("Add post error:", error);
+    },
+  });
+};
+
+export const useUpdatePost = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      postId,
+      payload,
+    }: {
+      postId: string;
+      payload: Parameters<typeof ReviewsApi.updatePost>[1];
+    }) => ReviewsApi.updatePost(postId, payload),
+    onSuccess: () => {
+      toast.success("Post updated successfully!");
+      queryClient.invalidateQueries({ queryKey: ["forumPosts"] });
+    },
+    onError: (error) => {
+      toast.error("Failed to update post. Please try again.");
+      console.error("Update post error:", error);
+    },
+  });
+};
+
+export const useDeletePost = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (postId: string) => ReviewsApi.deletePost(postId),
+    onSuccess: () => {
+      toast.success("Post deleted successfully!");
+      queryClient.invalidateQueries({ queryKey: ["forumPosts"] });
+    },
+    onError: (error) => {
+      toast.error("Failed to delete post. Please try again.");
+      console.error("Delete post error:", error);
+    },
+  });
+};

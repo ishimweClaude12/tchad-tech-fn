@@ -44,6 +44,8 @@ import InstructorCourses from "./pages/learn/InstructorCourses";
 import InstructorCourseDetails from "./pages/learn/InstructorCourseDetails";
 import QuizAttempts from "./pages/learn/QuizAttempts";
 import { InstructorModuleDetails } from "./pages/learn/InstructorModuleDetails";
+import AttemptDetails from "./pages/learn/AttemptDetails";
+import ForumPage from "./pages/learn/ForumPage";
 
 export default function AppRouter() {
   return (
@@ -101,6 +103,7 @@ export default function AppRouter() {
         <Route path="notifications" element={<Notifications />} />
         <Route path="reviews" element={<Reviews />} />
         <Route path="settings" element={<div>Settings Page</div>} />
+        <Route path="forum" element={<ForumPage />} />
 
         {/* Instructor-specific routes */}
         <Route path="instructor/courses" element={<InstructorCourses />} />
@@ -109,8 +112,16 @@ export default function AppRouter() {
           element={<InstructorCourseDetails />}
         />
         <Route
+          path="instructor/course/:courseId/quiz/:quizId"
+          element={<QuizDetails />}
+        />
+        <Route
           path="instructor/course/:courseId/quiz-attempts/:quizId"
           element={<QuizAttempts />}
+        />
+        <Route
+          path="instructor/course/:courseId/quiz-attempts/:quizId/attempt/:attemptId"
+          element={<AttemptDetails />}
         />
         <Route
           path="instructor/course/:courseId/module/:moduleId"
@@ -119,6 +130,10 @@ export default function AppRouter() {
         <Route
           path="instructor/course/:courseId/module/:moduleId/quiz/:quizId"
           element={<QuizAttempts />}
+        />
+        <Route
+          path="instructor/course/:courseId/module/:moduleId/quiz/:quizId/attempt/:attemptId"
+          element={<AttemptDetails />}
         />
       </Route>
 

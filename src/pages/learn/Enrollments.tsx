@@ -34,12 +34,12 @@ import {
   InputLabel,
   Select,
   MenuItem as SelectMenuItem,
-  CircularProgress,
   Breadcrumbs,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
+  CircularProgress,
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import EditIcon from "@mui/icons-material/Edit";
@@ -189,12 +189,6 @@ const Enrollments = () => {
     });
   };
 
-  const getProgressColor = (progress: number) => {
-    if (progress >= 75) return "bg-green-500";
-    if (progress >= 50) return "bg-blue-500";
-    if (progress >= 25) return "bg-yellow-500";
-    return "bg-orange-500";
-  };
 
   const getEnrollmentTypeBadge = (type: EnrollmentType) => {
     switch (type) {
@@ -422,25 +416,6 @@ const Enrollments = () => {
                     </span>
                   </div>
 
-                  {/* Progress Bar */}
-                  <div className="mb-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-medium text-gray-700">
-                        Course Progress
-                      </span>
-                      <span className="text-sm font-bold text-blue-600">
-                        {34}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
-                      <div
-                        className={`h-full rounded-full ${getProgressColor(
-                          34
-                        )} transition-all duration-500 shadow-sm`}
-                        style={{ width: `34%` }}
-                      ></div>
-                    </div>
-                  </div>
 
                   {/* Dates */}
                   <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">

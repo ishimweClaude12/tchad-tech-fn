@@ -9,6 +9,8 @@ import type {
   QuizAttempt,
   QuizAttemptPayload,
   QuizPayload,
+  QuizAttemptDetails,
+  QuizAttemptUpdatePayload,
 } from "../../types/Quiz.types";
 
 export const quizApi = {
@@ -168,6 +170,25 @@ export const quizApi = {
         attempts: QuizAttempt[];
       }>
     >(`/quiz-attempts/quiz/${quizId}`);
+    return data;
+  },
+  getQuizAttemptDetails: async (attemptId: string) => {
+    const { data } = await axiosInstance.get<
+      ApiResponse<{
+        attempt: QuizAttemptDetails;
+      }>
+    >(`/quiz-attempts/${attemptId}/`);
+    return data;
+  },
+  updateQuizAttemptMarks: async (
+    attemptId: string,
+    payload: QuizAttemptUpdatePayload,
+  ) => {
+    const { data } = await axiosInstance.put<
+      ApiResponse<{
+        success: boolean;
+      }>
+    >(`/quiz-attempts/${attemptId}/`, payload);
     return data;
   },
 };

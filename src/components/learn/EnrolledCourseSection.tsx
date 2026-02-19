@@ -30,10 +30,7 @@ export const EnrolledCourseSection: React.FC = () => {
     alert(`Viewing certificate for course: ${courseId}`);
   };
 
-  const handleViewDetails = (courseId: string) => {
-    console.log("View details for course:", courseId);
-    alert(`Viewing details for course: ${courseId}`);
-  };
+
   if (!isSignedIn || !enrollments) {
     return null;
   }
@@ -55,7 +52,6 @@ export const EnrolledCourseSection: React.FC = () => {
               onContinueLearning={handleContinueLearning}
               onCompletePayment={() => handleCompletePayment(enrollment)}
               onViewCertificate={handleViewCertificate}
-              onViewDetails={handleViewDetails}
             />
           ))}
         </div>
