@@ -20,6 +20,7 @@ import type { Quiz } from "../../types/Quiz.types";
 interface QuizCardProps {
   quiz: Quiz;
   onClick?: () => void;
+  onViewAttempts?: (quiz: Quiz) => void;
   onEdit?: (quiz: Quiz) => void;
   onDelete?: (quiz: Quiz) => void;
   showMenu?: boolean;
@@ -30,6 +31,7 @@ const QuizCard: React.FC<QuizCardProps> = ({
   onClick,
   onEdit,
   onDelete,
+  onViewAttempts,
   showMenu = true,
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -121,10 +123,11 @@ const QuizCard: React.FC<QuizCardProps> = ({
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
         onClick={(e: React.MouseEvent) => e.stopPropagation()}
+        sx={{ zIndex: 1900 }}
         slotProps={{
           paper: {
             sx: {
-              zIndex: 1501,
+              zIndex: 1900,
             },
           },
         }}
@@ -135,6 +138,19 @@ const QuizCard: React.FC<QuizCardProps> = ({
           </ListItemIcon>
           <ListItemText>Edit</ListItemText>
         </MenuItem>
+        {onViewAttempts && (
+          <MenuItem
+            onClick={() => {
+              handleMenuClose();
+              onViewAttempts(quiz);
+            }}
+          >
+            <ListItemIcon>
+              <EventIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>View Attempts</ListItemText>
+          </MenuItem>
+        )}
         <MenuItem onClick={handleDelete} sx={{ color: "error.main" }}>
           <ListItemIcon>
             <DeleteOutlineIcon fontSize="small" color="error" />

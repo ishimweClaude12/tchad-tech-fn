@@ -12,6 +12,10 @@ import {
   ListItemText,
   Menu,
   Breadcrumbs,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  IconButton,
 } from "@mui/material";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
@@ -20,19 +24,45 @@ import {
   useCourseModules,
 } from "../../hooks/learn/useCourseApi";
 import { useState } from "react";
-import type { Module } from "src/types/Module.types";
+import type { Module, ModuleFormData } from "src/types/Module.types";
 
 import { EditIcon } from "lucide-react";
 import PublishIcon from "@mui/icons-material/PublishOutlined";
 import UnpublishIcon from "@mui/icons-material/UnpublishedOutlined";
-import { useCourseQuizzes } from "../../hooks/learn/useQuizApi";
+import {
+  useCourseQuizzes,
+  useCreateQuiz,
+  useDeleteQuiz,
+  useUpdateQuiz,
+} from "../../hooks/learn/useQuizApi";
 import UserCard from "src/components/learn/UserCard";
 import QuizCard from "src/components/learn/QuizCard";
+import { useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import ModuleFormModal from "src/components/learn/forms/ModuleForm";
+import { useUpdateModule } from "src/hooks/learn/useModulesApi";
+import {
+  useCreateModule,
+  useDeleteModule,
+  useToggleModulePublished,
+  queryKeys,
+} from "src/hooks/useApi";
+import type { Quiz } from "src/types/Quiz.types";
+import QuizCreateModal from "../../components/learn/forms/QuizForm";
+import MoreVertOutlinedIcon from "@mui/icons-material/MoreVertOutlined";
 
 export const InstructorCourseDetails = () => {
+  const queryClient = useQueryClient();
   const { courseId = "" } = useParams();
   const navigate = useNavigate();
+  const [openEdit, setOpenEdit] = useState<boolean>(false);
+  const [openCreate, setOpenCreate] = useState<boolean>(false);
+  const [openDelete, setOpenDelete] = useState<boolean>(false);
+  const [openPublishConfirm, setOpenPublishConfirm] = useState<boolean>(false);
+  const [openQuizForm, setOpenQuizForm] = useState<boolean>(false);
+  const [openQuizDelete, setOpenQuizDelete] = useState<boolean>(false);
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
+  const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const { data: modulesData, isLoading, error } = useCourseModules(courseId);
   const {
@@ -45,6 +75,13 @@ export const InstructorCourseDetails = () => {
     isLoading: isCourseLoading,
     error: courseError,
   } = useCourseById(courseId);
+  const createModuleMutation = useCreateModule();
+  const deleteModuleMutation = useDeleteModule();
+  const toggleModulePublishMutation = useToggleModulePublished();
+  const updateModuleMutation = useUpdateModule();
+  const createQuizMutation = useCreateQuiz();
+  const updateQuizMutation = useUpdateQuiz();
+  const deleteQuizMutation = useDeleteQuiz();
 
   const handleMenuClose = () => {
     setAnchorEl(null);
@@ -84,7 +121,7 @@ export const InstructorCourseDetails = () => {
   if (!course) return null;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+    <div className="mx-auto p-6 space-y-6">
       {/* Breadcrumbs - Fixed height container */}
       <div className="h-8 flex items-center">
         <Breadcrumbs aria-label="breadcrumb">
@@ -139,6 +176,16 @@ export const InstructorCourseDetails = () => {
               </div>
 
               <div className="flex flex-wrap gap-3 mt-auto">
+                <Button variant="outlined" onClick={() => setOpenCreate(true)}>
+                  Add Module
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  onClick={() => setOpenQuizForm(true)}
+                >
+                  Add Quiz
+                </Button>
                 <Button variant="contained" onClick={handleEnrollments}>
                   Enrollments
                 </Button>
@@ -302,6 +349,17 @@ export const InstructorCourseDetails = () => {
                         color={module.isPublished ? "success" : "default"}
                         size="small"
                       />
+                      <IconButton
+                        size="small"
+                        aria-label="module actions"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedModule(module);
+                          setAnchorEl(e.currentTarget);
+                        }}
+                      >
+                        <MoreVertOutlinedIcon />
+                      </IconButton>
                     </div>
                   </div>
                 </CardContent>
@@ -345,8 +403,18 @@ export const InstructorCourseDetails = () => {
                   <QuizCard
                     key={quiz.id}
                     quiz={quiz}
-                    showMenu={false}
                     onClick={() => {
+                      navigate(`quiz/${quiz.id}`);
+                    }}
+                    onEdit={(quiz) => {
+                      setSelectedQuiz(quiz);
+                      setOpenQuizForm(true);
+                    }}
+                    onDelete={(quiz) => {
+                      setSelectedQuiz(quiz);
+                      setOpenQuizDelete(true);
+                    }}
+                    onViewAttempts={(quiz) => {
                       navigate(`quiz-attempts/${quiz.id}`);
                     }}
                   />
@@ -370,6 +438,7 @@ export const InstructorCourseDetails = () => {
         <MenuItem
           onClick={(e: React.MouseEvent) => {
             e.stopPropagation();
+            setOpenEdit(true);
             handleMenuClose();
           }}
         >
@@ -383,6 +452,7 @@ export const InstructorCourseDetails = () => {
           sx={{ color: "error.main" }}
           onClick={(e: React.MouseEvent) => {
             e.stopPropagation();
+            setOpenDelete(true);
             handleMenuClose();
           }}
         >
@@ -396,6 +466,7 @@ export const InstructorCourseDetails = () => {
           onClick={(e: React.MouseEvent) => {
             e.stopPropagation();
             if (!selectedModule) return;
+            setOpenPublishConfirm(true);
             handleMenuClose();
           }}
         >
@@ -411,6 +482,279 @@ export const InstructorCourseDetails = () => {
           </ListItemText>
         </MenuItem>
       </Menu>
+
+      {/* Edit Dialog */}
+      {selectedModule && (
+        <ModuleFormModal
+          open={openEdit}
+          onClose={() => {
+            setOpenEdit(false);
+            setSelectedModule(null);
+          }}
+          onSubmit={(data: ModuleFormData) => {
+            if (!selectedModule) return;
+            updateModuleMutation.mutate(
+              { id: selectedModule.id, data },
+              {
+                onSuccess: () => {
+                  setOpenEdit(false);
+                  setSelectedModule(null);
+                  queryClient.invalidateQueries({
+                    queryKey: [queryKeys.courses.modules(courseId)],
+                  });
+                },
+              },
+            );
+          }}
+          initialData={selectedModule}
+          loading={updateModuleMutation.isPending}
+          error={updateModuleMutation.error?.message ?? ""}
+          courses={courseData.data ? [courseData.data.course] : []}
+          loadingCourses={isCourseLoading}
+          mode={"edit"}
+        />
+      )}
+
+      {/* Create Dialog */}
+      <ModuleFormModal
+        open={openCreate}
+        onClose={() => setOpenCreate(false)}
+        onSubmit={(data: ModuleFormData) => {
+          createModuleMutation.mutate(data, {
+            onSuccess: () => {
+              setOpenCreate(false);
+            },
+          });
+        }}
+        initialData={undefined}
+        loading={false}
+        error={undefined}
+        courses={courseData.data ? [courseData.data.course] : []}
+        loadingCourses={isCourseLoading}
+        mode={"create"}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={openDelete}
+        onClose={() => setOpenDelete(false)}
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <div className="space-y-4 py-2">
+            <Typography>
+              Are you sure you want to delete the module "
+              {selectedModule?.title}"?
+            </Typography>
+            <div className="flex justify-end gap-2">
+              <Button
+                onClick={() => setOpenDelete(false)}
+                variant="outlined"
+                disabled={deleteModuleMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  if (selectedModule) {
+                    deleteModuleMutation.mutate(selectedModule.id, {
+                      onSuccess: () => {
+                        setOpenDelete(false);
+                        setSelectedModule(null);
+                        queryClient.invalidateQueries({
+                          queryKey: [queryKeys.courses.modules(courseId)],
+                        });
+                      },
+                    });
+                  }
+                }}
+                variant="contained"
+                color="error"
+                disabled={deleteModuleMutation.isPending}
+              >
+                {deleteModuleMutation.isPending ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  "Delete"
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Publish Confirmation Dialog */}
+      {(() => {
+        const getButtonLabel = () => {
+          if (toggleModulePublishMutation.isPending) {
+            return null;
+          }
+          return selectedModule?.isPublished ? "Unpublish" : "Publish";
+        };
+
+        const buttonLabel = getButtonLabel();
+
+        return (
+          <Dialog
+            open={openPublishConfirm}
+            onClose={() => setOpenPublishConfirm(false)}
+            fullWidth
+            maxWidth="xs"
+          >
+            <DialogTitle>
+              {selectedModule?.isPublished
+                ? "Unpublish Module"
+                : "Publish Module"}
+            </DialogTitle>
+            <DialogContent>
+              <div className="space-y-4 py-2">
+                <Typography>
+                  Are you sure you want to{" "}
+                  <strong>
+                    {selectedModule?.isPublished ? "unpublish" : "publish"}
+                  </strong>{" "}
+                  the module "{selectedModule?.title}"?
+                </Typography>
+                {selectedModule?.isPublished && (
+                  <Typography variant="body2" className="text-orange-600">
+                    Unpublishing this module will make it unavailable to
+                    enrolled students.
+                  </Typography>
+                )}
+                <div className="flex justify-end gap-2">
+                  <Button
+                    onClick={() => setOpenPublishConfirm(false)}
+                    variant="outlined"
+                    disabled={toggleModulePublishMutation.isPending}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      if (selectedModule) {
+                        toggleModulePublishMutation.mutate(
+                          {
+                            id: selectedModule.id,
+                            isPublished: !selectedModule.isPublished,
+                          },
+                          {
+                            onSuccess: () => {
+                              setOpenPublishConfirm(false);
+                              queryClient.invalidateQueries({
+                                queryKey: [queryKeys.courses.modules(courseId)],
+                              });
+                              toast.success(
+                                `Module ${
+                                  selectedModule.isPublished
+                                    ? "unpublished"
+                                    : "published"
+                                } successfully`,
+                              );
+                            },
+                            onError: (error) => {
+                              toast.error("Failed to update module status");
+                              console.error(
+                                "Error toggling module publish:",
+                                error,
+                              );
+                              setOpenPublishConfirm(false);
+                            },
+                          },
+                        );
+                      }
+                    }}
+                    variant="contained"
+                    color={selectedModule?.isPublished ? "warning" : "success"}
+                    disabled={toggleModulePublishMutation.isPending}
+                  >
+                    {toggleModulePublishMutation.isPending ? (
+                      <CircularProgress size={24} color="inherit" />
+                    ) : (
+                      buttonLabel
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        );
+      })()}
+
+      {/* Quiz Delete Confirmation Dialog */}
+      <Dialog
+        open={openQuizDelete}
+        onClose={() => setOpenQuizDelete(false)}
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <div className="space-y-4 py-2">
+            <Typography>
+              Are you sure you want to delete the quiz "{selectedQuiz?.title}"?
+            </Typography>
+            <div className="flex justify-end gap-2">
+              <Button
+                onClick={() => setOpenQuizDelete(false)}
+                variant="outlined"
+                disabled={deleteQuizMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  if (selectedQuiz) {
+                    deleteQuizMutation.mutate(selectedQuiz.id, {
+                      onSuccess: () => {
+                        setOpenQuizDelete(false);
+                        setSelectedQuiz(null);
+                        queryClient.invalidateQueries({
+                          queryKey: ["courseQuizzes", courseId],
+                        });
+                        toast.success("Quiz deleted successfully");
+                      },
+                      onError: (error) => {
+                        toast.error("Failed to delete quiz");
+                        console.error("Error deleting quiz:", error);
+                      },
+                    });
+                  }
+                }}
+                variant="contained"
+                color="error"
+                disabled={deleteQuizMutation.isPending}
+              >
+                {deleteQuizMutation.isPending ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  "Delete"
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Quiz Form Modal */}
+      <QuizCreateModal
+        open={openQuizForm}
+        onClose={() => {
+          setOpenQuizForm(false);
+          setSelectedQuiz(null);
+        }}
+        courseId={courseId}
+        quiz={selectedQuiz}
+        createQuizMutation={createQuizMutation}
+        updateQuizMutation={updateQuizMutation}
+        queryClient={queryClient}
+        onSuccessCallback={() => {
+          queryClient.invalidateQueries({
+            queryKey: ["courseQuizzes", courseId],
+          });
+        }}
+      />
     </div>
   );
 };

@@ -259,7 +259,7 @@ const QuizDetails = () => {
   const questions = quizQuestionsData?.data.questions ?? [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       {/* Back Button */}
       <Button
         startIcon={<ArrowBackIcon />}

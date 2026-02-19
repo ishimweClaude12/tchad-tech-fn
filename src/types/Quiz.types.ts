@@ -84,7 +84,7 @@ export interface Question {
   quizId: string;
   questionText: string;
   questionType: QuestionType;
-  points: string;
+  points: number;
   explanation: string | null;
   mediaUrl: string | null;
   sortOrder: number;
@@ -137,7 +137,7 @@ export interface QuizAttempt {
     id: string;
     attemptId: string;
     questionId: string;
-    selectedOptionId: string;
+    selectedOptionId: string | null;
     textAnswer: null;
     matchingAnswer: null;
     isCorrect: true;
@@ -152,4 +152,59 @@ export interface QuizAttempt {
       points: number;
     };
   }[];
+}
+
+export interface AttemptUser {
+  userId: string;
+  role: string;
+}
+
+export interface AnswerQuestionSnapshot {
+  id: string;
+  questionText: string;
+  questionType: QuestionType;
+  points: number;
+  explanation: string;
+}
+
+export interface SelectedOption {
+  quizQuestionOptionId: string;
+  optionText: string;
+  isCorrect: boolean;
+}
+
+export interface AttemptAnswer {
+  id: string;
+  attemptId: string;
+  questionId: string;
+  selectedOptionId: string | null;
+  textAnswer: string | null;
+  matchingAnswer: string | null;
+
+  isCorrect: boolean;
+  earnedPoints: number;
+  requiresManualGrading: boolean;
+
+  gradedAt: string;
+  answeredAt: string;
+
+  question: AnswerQuestionSnapshot;
+  selectedOption: SelectedOption | null;
+}
+
+export interface QuizWithQuestions extends Quiz {
+  questions: Question[];
+}
+
+export interface QuizAttemptDetails extends Omit<QuizAttempt, "answers"> {
+  quiz: QuizWithQuestions;
+  user: AttemptUser;
+  answers: AttemptAnswer[];
+}
+
+export interface QuizAttemptUpdatePayload {
+  totalScore: number;
+  maxPossibleScore: number;
+  gradingStatus: "finalized" | "auto-graded";
+  isPassed: boolean;
 }
