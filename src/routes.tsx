@@ -46,6 +46,7 @@ import QuizAttempts from "./pages/learn/QuizAttempts";
 import { InstructorModuleDetails } from "./pages/learn/InstructorModuleDetails";
 import AttemptDetails from "./pages/learn/AttemptDetails";
 import ForumPage from "./pages/learn/ForumPage";
+import ForumDetails from "./pages/learn/ForumDetails";
 
 export default function AppRouter() {
   return (
@@ -104,6 +105,7 @@ export default function AppRouter() {
         <Route path="reviews" element={<Reviews />} />
         <Route path="settings" element={<div>Settings Page</div>} />
         <Route path="forum" element={<ForumPage />} />
+        <Route path="forum/:forumId" element={<ForumDetails />} />
 
         {/* Instructor-specific routes */}
         <Route path="instructor/courses" element={<InstructorCourses />} />

@@ -122,7 +122,7 @@ export const CourseDetails = () => {
   if (!course) return null;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+    <div className="mx-auto px-4 sm:px-6 py-6 space-y-6">
       {/* Breadcrumbs - Fixed height container */}
       <div className="h-8 flex items-center">
         <Breadcrumbs aria-label="breadcrumb">
