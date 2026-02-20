@@ -660,7 +660,15 @@ const CoursesAdmin: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3, direction: isRTL ? "rtl" : "ltr" }}>
+    // <Box sx={{ p: 2, direction: isRTL ? "rtl" : "ltr" }}>
+    <Box
+      sx={{
+        p: 2,
+        sm: { p: 6 },
+        lg: { p: 8 },
+        direction: isRTL ? "rtl" : "ltr",
+      }}
+    >
       {/* Header */}
       <Box
         sx={{

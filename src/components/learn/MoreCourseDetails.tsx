@@ -1,13 +1,8 @@
 import {
-  Card,
-  CardContent,
-  Typography,
-  Chip,
   Button,
   Rating,
   CircularProgress,
   Alert,
-  Box,
   IconButton,
   Tooltip,
 } from "@mui/material";
@@ -20,6 +15,8 @@ import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import PeopleIcon from "@mui/icons-material/People";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   useCourseBySlug,
@@ -45,22 +42,16 @@ const MoreCourseDetails = () => {
   const navigate = useNavigate();
   useScrollToTop({ smooth: true });
   const { data, isLoading, error } = useCourseBySlug(slug || "");
-
   const { userId, isSignedIn } = useAuth();
 
   const { data: enrollmentData, isLoading: isEnrollmentLoading } =
     useCheckEnrollment(data?.data.course.id || "", userId || "");
-
   const enrollmentMutation = useEnrolInCourse();
-  // Reviews
   const { data: courseReviewsData } = useGetCourseReviews(
     data?.data.course.id || "",
   );
-
-  // Wishlist hooks
   const { data: wishlistData, isLoading: isWishlistLoading } =
     useCheckCourseWishListed(userId || "", data?.data.course.id || "");
-
   const addToWishlistMutation = useAddCourseToWishList();
   const removeFromWishlistMutation = useRemoveCourseFromWishList();
 
@@ -68,17 +59,13 @@ const MoreCourseDetails = () => {
 
   const handleToggleWishlist = () => {
     if (!userId || !data?.data.course.id) return;
-
     if (isWishlisted) {
       removeFromWishlistMutation.mutate({
         userId,
         courseId: data.data.course.id,
       });
     } else {
-      addToWishlistMutation.mutate({
-        userId,
-        courseId: data.data.course.id,
-      });
+      addToWishlistMutation.mutate({ userId, courseId: data.data.course.id });
     }
   };
 
@@ -88,9 +75,8 @@ const MoreCourseDetails = () => {
     }
   };
 
-  const hanldeCompletePayment = () => {
+  const handleCompletePayment = () => {
     if (!enrollmentData?.data.enrollment.id || !data?.data.course) return;
-
     const courseEnrollment: CourseEnrollment = {
       ...enrollmentData.data.enrollment,
       id: enrollmentData.data.enrollment.id,
@@ -101,31 +87,25 @@ const MoreCourseDetails = () => {
         price: Number.parseFloat(data.data.course.price),
       },
     };
-
     navigate(
-      `/learn/${
-        enrollmentData.data.enrollment.id
-      }/checkout?data=${encodeURIComponent(JSON.stringify(courseEnrollment))}`,
+      `/learn/${enrollmentData.data.enrollment.id}/checkout?data=${encodeURIComponent(JSON.stringify(courseEnrollment))}`,
     );
   };
 
-  // Get enrollment status details
   const getEnrollmentStatusInfo = () => {
     if (!enrollmentData?.data.isEnrolled) return null;
-
     const status = enrollmentData.data.enrollment.status;
-
     switch (status) {
       case EnrollmentStatus.ACTIVE:
         return {
-          label: "Enrolled - Active",
+          label: "Enrolled – Active",
           color: "success" as const,
           icon: <CheckCircleIcon />,
           message: "You are currently enrolled in this course",
         };
       case EnrollmentStatus.PENDING_PAYMENT:
         return {
-          label: "Enrollment Pending",
+          label: "Pending Payment",
           color: "warning" as const,
           icon: <HourglassEmptyIcon />,
           message: "Complete payment to access course content",
@@ -139,7 +119,7 @@ const MoreCourseDetails = () => {
         };
       case EnrollmentStatus.CANCELLED:
         return {
-          label: "Enrollment Cancelled",
+          label: "Cancelled",
           color: "error" as const,
           icon: null,
           message: "Your enrollment has been cancelled",
@@ -151,7 +131,6 @@ const MoreCourseDetails = () => {
 
   const enrollmentStatusInfo = getEnrollmentStatusInfo();
 
-  // Render enrollment button based on status
   const renderEnrollmentButton = () => {
     if (!enrollmentData?.data.isEnrolled) {
       return (
@@ -163,11 +142,18 @@ const MoreCourseDetails = () => {
           disabled={enrollmentMutation.isPending || !isSignedIn}
           startIcon={
             enrollmentMutation.isPending ? (
-              <CircularProgress size={20} color="inherit" />
+              <CircularProgress size={18} color="inherit" />
             ) : null
           }
+          sx={{
+            borderRadius: "10px",
+            fontWeight: 600,
+            py: 1.25,
+            textTransform: "none",
+            fontSize: "0.95rem",
+          }}
         >
-          {enrollmentMutation.isPending ? "Enrolling..." : "Enroll Now"}
+          {enrollmentMutation.isPending ? "Enrolling…" : "Enroll Now"}
         </Button>
       );
     }
@@ -186,6 +172,13 @@ const MoreCourseDetails = () => {
           color="success"
           startIcon={<PlayCircleIcon />}
           href={`/learn/enrollment/${enrollmentData.data.enrollment.id}/course/${data?.data.course.id}`}
+          sx={{
+            borderRadius: "10px",
+            fontWeight: 600,
+            py: 1.25,
+            textTransform: "none",
+            fontSize: "0.95rem",
+          }}
         >
           Continue Learning
         </Button>
@@ -199,7 +192,14 @@ const MoreCourseDetails = () => {
           size="large"
           fullWidth
           color="warning"
-          onClick={() => hanldeCompletePayment()}
+          onClick={handleCompletePayment}
+          sx={{
+            borderRadius: "10px",
+            fontWeight: 600,
+            py: 1.25,
+            textTransform: "none",
+            fontSize: "0.95rem",
+          }}
         >
           Complete Payment
         </Button>
@@ -211,7 +211,7 @@ const MoreCourseDetails = () => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64 mx-auto min-w-screen">
+      <div className="flex justify-center items-center h-64">
         <CircularProgress />
       </div>
     );
@@ -219,325 +219,215 @@ const MoreCourseDetails = () => {
 
   if (error || !data) {
     return (
-      <div className="text-center text-red-500 min-w-screen">
+      <div className="text-center text-red-500 py-12">
         Failed to load course details
       </div>
     );
   }
 
   const course = data.data.course;
+  const reviewCount = courseReviewsData?.data?.reviews.length || 0;
 
   return (
-    <div className=" mx-auto p-4 sm:p-8 min-w-screen space-y-8 max-w-7xl">
-      {/* Hero Section */}
-      {/* Go Back Button */}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+      {/* Back Button */}
       <Button
-        variant="text"
         onClick={() => navigate(-1)}
-        className="mb-4 text-gray-600"
+        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors group"
       >
-        &larr; Back to Courses
+        <ArrowBackIcon
+          fontSize="small"
+          className="transition-transform group-hover:-translate-x-0.5"
+        />
+        Back to Courses
       </Button>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
-        {/* Left */}
-        <div className="lg:col-span-2 space-y-4">
-          <Typography variant="h4" fontWeight={700}>
-            {course.title}
-          </Typography>
 
-          <Typography className="text-gray-600">{course.subtitle}</Typography>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <Chip label={course.difficultyLevel} />
-            <Chip label={course.category?.name} />
-            {course.hasCertificate && (
-              <Chip
-                icon={<WorkspacePremiumIcon />}
-                label="Certificate"
-                color="success"
-              />
-            )}
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Rating
-              value={course.ratingAverage ?? 0}
-              precision={0.5}
-              readOnly
-            />
-            <Typography className="text-sm text-gray-600">
-              {course.ratingCount} ratings
-            </Typography>
-            <Typography className="text-sm text-gray-500">
-              {course.enrollmentCount} enrolled
-            </Typography>
-          </div>
-        </div>
-
-        {/* Right Enroll Card */}
-        <Card className="sticky top-24 h-fit w-full -mx-4 sm:mx-0 rounded-none sm:rounded-lg">
-          <CardContent className="space-y-4 w-full px-4 sm:px-4">
-            <div className="relative">
-              <img
-                src={course.thumbnailUrl || "/images/placeholder.jpg"}
-                alt={course.title}
-                className="rounded-md w-full h-44 object-cover"
-              />
-              {/* Wishlist Button/Icon */}
-              {isSignedIn && !enrollmentData?.data.isEnrolled && (
-                <>
-                  {wishlistData?.data.isInWishlist ? (
-                    <Tooltip title="Remove from wishlist">
-                      <IconButton
-                        onClick={handleToggleWishlist}
-                        disabled={
-                          isWishlistLoading ||
-                          removeFromWishlistMutation.isPending
-                        }
-                        className="absolute top-2 right-2 bg-red-50 hover:bg-red-100 border-2 border-red-300 shadow-lg transition-all duration-200"
-                        size="small"
-                        sx={{
-                          "&:hover": {
-                            transform: "scale(1.1)",
-                          },
-                        }}
-                      >
-                        <FavoriteIcon
-                          className="text-red-600"
-                          fontSize="medium"
-                        />
-                      </IconButton>
-                    </Tooltip>
-                  ) : (
-                    <Button
-                      onClick={handleToggleWishlist}
-                      disabled={
-                        isWishlistLoading || addToWishlistMutation.isPending
-                      }
-                      variant="outlined"
-                      size="small"
-                      startIcon={<FavoriteBorderIcon />}
-                      className="absolute top-2 right-2 bg-white hover:bg-gray-50 shadow-lg"
-                    >
-                      Add to Wishlist
-                    </Button>
-                  )}
-                </>
+      {/* ── Main Two-Column Grid ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column — Course Info */}
+        <div className="lg:col-span-2 space-y-5">
+          {/* Header Card */}
+          <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm space-y-3">
+            <div className="flex flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
+                {course.category?.name}
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">
+                {course.difficultyLevel}
+              </span>
+              {course.hasCertificate && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-green-50 text-green-700 text-xs font-medium">
+                  <WorkspacePremiumIcon sx={{ fontSize: 13 }} /> Certificate
+                </span>
               )}
             </div>
 
-            <div className="flex items-center gap-2">
-              {course.discountPrice ? (
-                <>
-                  <Typography
-                    variant="h5"
-                    fontWeight={700}
-                    className="text-green-600"
+            <h1 className="text-2xl font-bold text-gray-900 leading-snug">
+              {course.title}
+            </h1>
+
+            {course.subtitle && (
+              <p className="text-gray-500 text-sm leading-relaxed">
+                {course.subtitle}
+              </p>
+            )}
+
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <div className="flex items-center gap-1.5">
+                <Rating
+                  value={course.ratingAverage ?? 0}
+                  precision={0.5}
+                  readOnly
+                  size="small"
+                />
+                <span className="text-sm font-semibold text-amber-600">
+                  {course.ratingAverage}
+                </span>
+                <span className="text-xs text-gray-400">
+                  ({course.ratingCount} ratings)
+                </span>
+              </div>
+              <div className="flex items-center gap-1 text-xs text-gray-400">
+                <PeopleIcon sx={{ fontSize: 14 }} />
+                {course.enrollmentCount} enrolled
+              </div>
+            </div>
+          </div>
+
+          {/* Stats Row */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              {
+                icon: <AccessTimeIcon sx={{ fontSize: 18 }} />,
+                value: `${course.estimatedDurationHours}h`,
+                label: "Duration",
+              },
+              {
+                icon: <SchoolIcon sx={{ fontSize: 18 }} />,
+                value: course.totalLessons,
+                label: "Lessons",
+              },
+              {
+                icon: <QuizIcon sx={{ fontSize: 18 }} />,
+                value: course.totalQuizzes,
+                label: "Quizzes",
+              },
+              {
+                icon: <PeopleIcon sx={{ fontSize: 18 }} />,
+                value: course.targetAudience,
+                label: "For",
+              },
+            ].map(({ icon, value, label }) => (
+              <div
+                key={label}
+                className="bg-white border border-gray-100 rounded-xl p-3.5 shadow-sm flex items-center gap-2.5"
+              >
+                <span className="text-blue-500 shrink-0">{icon}</span>
+                <div className="min-w-0">
+                  <p className="font-semibold text-gray-800 text-sm truncate">
+                    {value}
+                  </p>
+                  <p className="text-xs text-gray-400">{label}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Description */}
+          <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm space-y-2">
+            <h2 className="font-semibold text-gray-900">About this course</h2>
+            <p className="text-gray-600 text-sm leading-relaxed">
+              {course.description}
+            </p>
+          </div>
+
+          {/* Learning Objectives */}
+          {course.learningObjectives.length > 0 && (
+            <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm space-y-3">
+              <h2 className="font-semibold text-gray-900">What you'll learn</h2>
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {course.learningObjectives.map((obj, i) => (
+                  <li
+                    key={i}
+                    className="flex items-start gap-2 text-sm text-gray-600"
                   >
-                    {course.currency} {course.discountPrice}
-                  </Typography>
-                  <Typography className="line-through text-gray-400">
-                    {course.currency} {course.price}
-                  </Typography>
-                </>
-              ) : (
-                <Typography variant="h5" fontWeight={700}>
-                  {course.currency} {course.price}
-                </Typography>
-              )}
+                    <CheckCircleIcon
+                      sx={{ fontSize: 16, mt: "2px" }}
+                      className="text-green-500 shrink-0"
+                    />
+                    <span>{obj}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
+          )}
 
-            {/* Enrollment Status Display */}
-            {isEnrollmentLoading && (
-              <Box className="flex justify-center py-2">
-                <CircularProgress size={24} />
-              </Box>
-            )}
-            {!isEnrollmentLoading && enrollmentStatusInfo && (
-              <Alert
-                severity={enrollmentStatusInfo.color}
-                icon={enrollmentStatusInfo.icon}
-                className="mb-2"
-              >
-                <Typography variant="body2" fontWeight={600}>
-                  {enrollmentStatusInfo.label}
-                </Typography>
-                <Typography variant="caption">
-                  {enrollmentStatusInfo.message}
-                </Typography>
-              </Alert>
-            )}
-
-            {/* Enroll Button */}
-            {renderEnrollmentButton()}
-
-            {!isSignedIn && (
-              <Typography
-                variant="caption"
-                className="text-center block text-gray-500"
-              >
-                Please sign in to enroll
-              </Typography>
-            )}
-
-            <Typography className="text-sm text-center text-gray-500">
-              Full lifetime access
-            </Typography>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Course Description */}
-      <Card>
-        <CardContent className="space-y-4">
-          <Typography variant="h6" fontWeight={600}>
-            Course Overview
-          </Typography>
-
-          <Typography className="text-gray-700">
-            {course.description}
-          </Typography>
-        </CardContent>
-      </Card>
-
-      {/* Learning Objectives */}
-      {course.learningObjectives.length > 0 && (
-        <Card>
-          <CardContent className="space-y-4">
-            <Typography variant="h6" fontWeight={600}>
-              What you will learn
-            </Typography>
-
-            <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {course.learningObjectives.map((objective, index) => (
-                <li
-                  key={objective + index}
-                  className="flex items-start gap-2 text-gray-700"
-                >
-                  <span className="text-green-600">✔</span>
-                  <span>{objective}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Course Meta */}
-      <Card>
-        <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div className="flex items-center gap-2">
-            <AccessTimeIcon />
-            <div>
-              <Typography fontWeight={600}>
-                {course.estimatedDurationHours} hrs
-              </Typography>
-              <Typography className="text-sm text-gray-600">
-                Duration
-              </Typography>
+          {/* Instructor */}
+          <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+            <h2 className="font-semibold text-gray-900 mb-3">Instructor</h2>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                J
+              </div>
+              <div>
+                <p className="font-medium text-gray-800 text-sm">
+                  Instructor Jeff
+                </p>
+                <p className="text-xs text-gray-400">
+                  Experienced educator & practitioner
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <SchoolIcon />
-            <div>
-              <Typography fontWeight={600}>{course.totalLessons}</Typography>
-              <Typography className="text-sm text-gray-600">Lessons</Typography>
+          {/* Reviews */}
+          <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold text-gray-900">Student Reviews</h2>
+              <span className="text-xs text-gray-400">
+                {reviewCount} review{reviewCount !== 1 ? "s" : ""}
+              </span>
             </div>
-          </div>
 
-          <div className="flex items-center gap-2">
-            <QuizIcon />
-            <div>
-              <Typography fontWeight={600}>{course.totalQuizzes}</Typography>
-              <Typography className="text-sm text-gray-600">Quizzes</Typography>
-            </div>
-          </div>
-
-          <div>
-            <Typography fontWeight={600}>{course.targetAudience}</Typography>
-            <Typography className="text-sm text-gray-600">
-              Target audience
-            </Typography>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Instructor */}
-      <Card>
-        <CardContent className="space-y-3">
-          <Typography variant="h6" fontWeight={600}>
-            Instructor
-          </Typography>
-
-          <Typography fontWeight={500}> Instructor Jeff</Typography>
-
-          <Typography className="text-gray-600">
-            Instructor Jeff is an experienced educator with a passion for
-            teaching.
-          </Typography>
-        </CardContent>
-      </Card>
-
-      {/* Reviews Section */}
-      <Card>
-        <CardContent className="space-y-6">
-          <div className="flex items-center justify-between">
-            <Typography variant="h6" fontWeight={600}>
-              Student Reviews
-            </Typography>
-            <Typography className="text-sm text-gray-600">
-              {courseReviewsData?.data?.reviews.length || 0} review
-              {courseReviewsData?.data?.reviews.length === 1 ? "" : "s"}
-            </Typography>
-          </div>
-
-          {/* Reviews Summary */}
-          {courseReviewsData?.data &&
-            courseReviewsData.data.reviews.length > 0 && (
-              <div className="flex flex-col sm:flex-row gap-6 pb-6 border-b border-gray-200">
-                <div className="flex flex-col items-center justify-center gap-2 sm:min-w-[150px]">
-                  <Typography variant="h3" fontWeight={700}>
-                    {course.ratingAverage ?? "0.0"}
-                  </Typography>
+            {/* Rating Summary */}
+            {reviewCount > 0 && (
+              <div className="flex gap-5 pb-4 border-b border-gray-100">
+                <div className="flex flex-col items-center justify-center min-w-20">
+                  <span className="text-4xl font-bold text-gray-900">
+                    {course.ratingAverage ?? "—"}
+                  </span>
                   <Rating
                     value={course.ratingAverage ?? 0}
                     precision={0.5}
                     readOnly
-                    size="large"
+                    size="small"
                   />
-                  <Typography className="text-sm text-gray-600">
+                  <span className="text-xs text-gray-400 mt-0.5">
                     Course Rating
-                  </Typography>
+                  </span>
                 </div>
-
-                {/* Rating Distribution */}
-                <div className="flex-1 space-y-2">
+                <div className="flex-1 space-y-1.5">
                   {[5, 4, 3, 2, 1].map((star) => {
                     const count =
-                      courseReviewsData.data?.reviews.filter(
-                        (review) => review.rating === star,
+                      courseReviewsData?.data?.reviews.filter(
+                        (r) => r.rating === star,
                       ).length || 0;
-                    const percentage =
-                      courseReviewsData.data &&
-                      courseReviewsData.data.reviews.length > 0
-                        ? (count / courseReviewsData.data.reviews.length) * 100
-                        : 0;
-
+                    const pct =
+                      reviewCount > 0 ? (count / reviewCount) * 100 : 0;
                     return (
-                      <div key={star} className="flex items-center gap-3">
-                        <Typography className="text-sm min-w-[60px]">
-                          {star} stars
-                        </Typography>
-                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div key={star} className="flex items-center gap-2">
+                        <span className="text-xs text-gray-500 w-10">
+                          {star} ★
+                        </span>
+                        <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-yellow-500 rounded-full transition-all duration-300"
-                            style={{ width: `${percentage}%` }}
+                            className="h-full bg-amber-400 rounded-full transition-all"
+                            style={{ width: `${pct}%` }}
                           />
                         </div>
-                        <Typography className="text-sm text-gray-600 min-w-10 text-right">
+                        <span className="text-xs text-gray-400 w-4 text-right">
                           {count}
-                        </Typography>
+                        </span>
                       </div>
                     );
                   })}
@@ -545,81 +435,205 @@ const MoreCourseDetails = () => {
               </div>
             )}
 
-          {/* Reviews List */}
-          {courseReviewsData?.data &&
-          courseReviewsData.data.reviews.length > 0 ? (
-            <div className="space-y-6">
-              {courseReviewsData.data.reviews.map((review) => (
-                <div
-                  key={review.id}
-                  className="border-b border-gray-100 last:border-0 pb-6 last:pb-0"
-                >
-                  <div className="flex flex-col gap-4">
-                    {/* User Card */}
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                      <div className="flex-1">
-                        <UserCard userId={review.user.userId} />
-                      </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <div className="flex items-center gap-2 flex-wrap">
+            {/* Review List */}
+            {reviewCount > 0 ? (
+              <div className="space-y-4">
+                {courseReviewsData!.data!.reviews.map((review) => (
+                  <div
+                    key={review.id}
+                    className="pb-4 border-b border-gray-50 last:border-0 last:pb-0"
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <UserCard userId={review.user.userId} />
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <div className="flex items-center gap-1.5">
                           <Rating value={review.rating} size="small" readOnly />
                           {review.isVerifiedPurchase && (
-                            <Chip
-                              label="Verified Purchase"
-                              size="small"
-                              color="success"
-                              variant="outlined"
-                              icon={<CheckCircleIcon />}
-                              className="h-6"
-                            />
+                            <span className="inline-flex items-center gap-0.5 text-[10px] text-green-700 bg-green-50 border border-green-200 rounded-full px-1.5 py-0.5">
+                              <CheckCircleIcon sx={{ fontSize: 10 }} /> Verified
+                            </span>
                           )}
                         </div>
-                        <Typography className="text-sm text-gray-500">
+                        <span className="text-[11px] text-gray-400">
                           {new Date(review.createdAt).toLocaleDateString(
                             "en-US",
-                            {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            },
+                            { year: "numeric", month: "short", day: "numeric" },
                           )}
-                        </Typography>
+                        </span>
                       </div>
                     </div>
-
-                    <div className="space-y-2">
-                      {/* Review Title */}
-                      {review.title && (
-                        <Typography fontWeight={600} className="text-gray-900">
-                          {review.title}
-                        </Typography>
-                      )}
-
-                      {/* Review Comment */}
-                      <Typography className="text-gray-700">
-                        {review.comment}
-                      </Typography>
-
-                      {/* Review Footer */}
-                      {review.helpfulCount > 0 && (
-                        <Typography className="text-sm text-gray-500">
-                          {review.helpfulCount} people found this helpful
-                        </Typography>
-                      )}
-                    </div>
+                    {review.title && (
+                      <p className="text-sm font-semibold text-gray-800 mb-0.5">
+                        {review.title}
+                      </p>
+                    )}
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      {review.comment}
+                    </p>
+                    {review.helpfulCount > 0 && (
+                      <p className="text-xs text-gray-400 mt-1.5">
+                        {review.helpfulCount} found this helpful
+                      </p>
+                    )}
                   </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-400 text-center py-6">
+                No reviews yet. Be the first!
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* ── Right Column — Sticky Enroll Card ── */}
+        <div className="lg:col-span-1">
+          <div className="sticky top-6 bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+            {/* Thumbnail */}
+            <div className="relative">
+              <img
+                src={course.thumbnailUrl || "/images/placeholder.jpg"}
+                alt={course.title}
+                className="w-full h-40 object-cover"
+              />
+              {/* Wishlist */}
+              {isSignedIn && !enrollmentData?.data.isEnrolled && (
+                <div className="absolute top-2.5 right-2.5">
+                  {isWishlisted ? (
+                    <Tooltip title="Remove from wishlist">
+                      <IconButton
+                        onClick={handleToggleWishlist}
+                        disabled={
+                          isWishlistLoading ||
+                          removeFromWishlistMutation.isPending
+                        }
+                        size="small"
+                        sx={{
+                          bgcolor: "rgba(255,255,255,0.9)",
+                          "&:hover": {
+                            bgcolor: "white",
+                            transform: "scale(1.05)",
+                          },
+                          transition: "all .2s",
+                          backdropFilter: "blur(4px)",
+                        }}
+                      >
+                        <FavoriteIcon sx={{ fontSize: 18, color: "#ef4444" }} />
+                      </IconButton>
+                    </Tooltip>
+                  ) : (
+                    <Tooltip title="Add to wishlist">
+                      <IconButton
+                        onClick={handleToggleWishlist}
+                        disabled={
+                          isWishlistLoading || addToWishlistMutation.isPending
+                        }
+                        size="small"
+                        sx={{
+                          bgcolor: "rgba(255,255,255,0.9)",
+                          "&:hover": {
+                            bgcolor: "white",
+                            transform: "scale(1.05)",
+                          },
+                          transition: "all .2s",
+                          backdropFilter: "blur(4px)",
+                        }}
+                      >
+                        <FavoriteBorderIcon
+                          sx={{ fontSize: 18, color: "#6b7280" }}
+                        />
+                      </IconButton>
+                    </Tooltip>
+                  )}
                 </div>
-              ))}
+              )}
             </div>
-          ) : (
-            <div className="text-center py-12">
-              <Typography className="text-gray-500">
-                No reviews yet. Be the first to review this course!
-              </Typography>
+
+            <div className="p-4 space-y-4">
+              {/* Price */}
+              <div className="flex items-baseline gap-2">
+                {course.discountPrice ? (
+                  <>
+                    <span className="text-2xl font-bold text-gray-900">
+                      {course.currency} {course.discountPrice}
+                    </span>
+                    <span className="text-sm text-gray-400 line-through">
+                      {course.currency} {course.price}
+                    </span>
+                    <span className="ml-auto text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                      Save{" "}
+                      {Math.round(
+                        (1 -
+                          Number(course.discountPrice) / Number(course.price)) *
+                          100,
+                      )}
+                      %
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-2xl font-bold text-gray-900">
+                    {course.currency} {course.price}
+                  </span>
+                )}
+              </div>
+
+              {/* Enrollment Status */}
+              {isEnrollmentLoading ? (
+                <div className="flex justify-center py-1">
+                  <CircularProgress size={20} />
+                </div>
+              ) : enrollmentStatusInfo ? (
+                <Alert
+                  severity={enrollmentStatusInfo.color}
+                  icon={enrollmentStatusInfo.icon}
+                  sx={{
+                    borderRadius: "10px",
+                    py: 0.5,
+                    "& .MuiAlert-message": { py: 0.5 },
+                  }}
+                >
+                  <p className="text-xs font-semibold leading-tight">
+                    {enrollmentStatusInfo.label}
+                  </p>
+                  <p className="text-xs text-gray-600 leading-tight">
+                    {enrollmentStatusInfo.message}
+                  </p>
+                </Alert>
+              ) : null}
+
+              {/* CTA */}
+              {renderEnrollmentButton()}
+
+              {!isSignedIn && (
+                <p className="text-xs text-center text-gray-400">
+                  Sign in to enroll
+                </p>
+              )}
+
+              {/* Quick Info */}
+              <div className="pt-2 border-t border-gray-50 space-y-2">
+                {[
+                  {
+                    label: "Duration",
+                    value: `${course.estimatedDurationHours} hours`,
+                  },
+                  { label: "Lessons", value: `${course.totalLessons} lessons` },
+                  { label: "Quizzes", value: `${course.totalQuizzes} quizzes` },
+                  { label: "Access", value: "Full lifetime access" },
+                  ...(course.hasCertificate
+                    ? [{ label: "Certificate", value: "Included" }]
+                    : []),
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex justify-between text-xs">
+                    <span className="text-gray-400">{label}</span>
+                    <span className="text-gray-700 font-medium">{value}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

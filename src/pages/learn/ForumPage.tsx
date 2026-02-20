@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   useGetPosts,
   useAddPost,
@@ -103,6 +104,7 @@ interface PostCardProps {
   post: Post;
   index: number;
   currentUserId: string | null | undefined;
+  onClick?: (post: Post) => void;
   onEdit: (post: Post) => void;
   onDelete: (post: Post) => void;
 }
@@ -113,6 +115,7 @@ const PostCard = ({
   currentUserId,
   onEdit,
   onDelete,
+  onClick,
 }: PostCardProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const isAuthor = currentUserId && post.user_id === currentUserId;
@@ -132,6 +135,10 @@ const PostCard = ({
     onEdit(post);
   };
 
+  const handleOnClick = () => {
+    onClick?.(post);
+  };
+
   const handleDelete = () => {
     handleMenuClose();
     onDelete(post);
@@ -142,6 +149,7 @@ const PostCard = ({
       component="article"
       tabIndex={0}
       aria-label={`Post: ${post.title}`}
+      onClick={handleOnClick}
       className="
         p-5 rounded-2xl cursor-pointer
         border border-gray-200 bg-white
@@ -458,6 +466,7 @@ const ComposeDrawer = ({
 const ForumPage = () => {
   const { data: forumData, isLoading, error } = useGetPosts();
   const { userId } = useAuth();
+  const navigate = useNavigate();
   const addPostMutation = useAddPost();
   const updatePostMutation = useUpdatePost();
   const deletePostMutation = useDeletePost();
@@ -588,7 +597,7 @@ const ForumPage = () => {
         WebkitFontSmoothing: "antialiased",
       }}
     >
-      <Box className="max-w-[860px] mx-auto px-5 pt-10 pb-20 sm:px-4 sm:pt-6">
+      <Box className="mx-auto px-4 sm:px-6 pt-10 pb-20  sm:pt-6">
         {/* ── Header ── */}
         <Box component="header" className="mb-9">
           <Box className="flex items-center gap-2 mb-2.5">
@@ -673,16 +682,20 @@ const ForumPage = () => {
             placeholder="Search posts…"
             type="search"
             size="small"
-            inputProps={{ "aria-label": "Search forum posts" }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon
-                    className="text-gray-500"
-                    style={{ fontSize: 18 }}
-                  />
-                </InputAdornment>
-              ),
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon
+                      className="text-gray-500"
+                      style={{ fontSize: 18 }}
+                    />
+                  </InputAdornment>
+                ),
+              },
+              htmlInput: {
+                "aria-label": "Search forum posts",
+              },
             }}
             className="flex-1 min-w-[200px]"
             sx={{
@@ -791,8 +804,8 @@ const ForumPage = () => {
             aria-label="Loading posts"
             className="flex flex-col gap-3"
           >
-            {Array.from({ length: 5 }).map((_, i) => (
-              <SkeletonCard key={i} />
+            {Array.from({ length: 5 }).map((num, index) => (
+              <SkeletonCard key={`skeleton-${index}-${num}`} />
             ))}
           </Box>
         )}
@@ -842,6 +855,9 @@ const ForumPage = () => {
                       post={post}
                       index={i}
                       currentUserId={userId}
+                      onClick={(post) =>
+                        navigate(`/learn/dashboard/forum/${post.post_id}`)
+                      }
                       onEdit={handleEditPost}
                       onDelete={handleDeletePost}
                     />

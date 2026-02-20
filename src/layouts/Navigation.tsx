@@ -4,12 +4,14 @@ import { createPortal } from "react-dom";
 import { useELearningUser } from "src/hooks/useApi";
 import { useUser } from "@clerk/clerk-react";
 import { UserRole } from "src/types/Users.types";
-import { Button } from "@mui/material";
+import { Button, Badge, IconButton } from "@mui/material";
 import type { NavigationItem, NavigationProps } from "src/types/App.types";
 import {
   languages,
   NavigationTranslations,
 } from "src/utils/constants/app/navigation.translations";
+import { useUserNotifications } from "src/hooks/learn/useNotificationsApi";
+import NotificationsDialog from "src/components/learn/NotificationsBanner";
 
 // Translation object for all UI text
 
@@ -26,14 +28,23 @@ const Navigation: React.FC<NavigationProps> = ({
   });
   const location = useLocation();
   const languageDropdownRef = useRef<HTMLDivElement>(null);
+  const languageDropdownMenuRef = useRef<HTMLDivElement>(null);
   const languageButtonRef = useRef<HTMLButtonElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const [notifOpen, setNotifOpen] = React.useState(false);
+  const toggleNotifications = () => setNotifOpen((prev) => !prev);
 
   // Get current logged in user from Clerk
   const { user } = useUser();
 
   // Fetch user data from backend using Clerk user ID
   const { data: ELearningUser } = useELearningUser(user?.id || "");
+
+  // Fetch user notifications
+  const { data: notifications = [] } = useUserNotifications(user?.id || "");
+
+  // Calculate unread notifications count
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   // Get current translations
   const t =
@@ -54,7 +65,8 @@ const Navigation: React.FC<NavigationProps> = ({
   // Check if user is admin or super admin
   const isAdminUser =
     ELearningUser?.role === UserRole.ADMIN ||
-    ELearningUser?.role === UserRole.SUPPER_ADMIN || ELearningUser?.role === UserRole.INSTRUCTOR;
+    ELearningUser?.role === UserRole.SUPPER_ADMIN ||
+    ELearningUser?.role === UserRole.INSTRUCTOR;
 
   // Default navigation with translations
   const defaultNavigation: NavigationItem[] = [
@@ -98,9 +110,11 @@ const Navigation: React.FC<NavigationProps> = ({
       const rect = languageButtonRef.current.getBoundingClientRect();
       setDropdownPosition({
         top: rect.bottom + window.scrollY + 4,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         left: isRTL ? rect.left + window.scrollX : ("auto" as any),
         right: isRTL
-          ? ("auto" as any)
+          ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ("auto" as any)
           : window.innerWidth - rect.right - window.scrollX,
       });
     }
@@ -109,10 +123,15 @@ const Navigation: React.FC<NavigationProps> = ({
   // Close language dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
+      const target = event.target as Node;
+      const isOutsideButton =
         languageDropdownRef.current &&
-        !languageDropdownRef.current.contains(event.target as Node)
-      ) {
+        !languageDropdownRef.current.contains(target);
+      const isOutsideMenu =
+        languageDropdownMenuRef.current &&
+        !languageDropdownMenuRef.current.contains(target);
+
+      if (isOutsideButton && isOutsideMenu) {
         setLanguageDropdownOpen(false);
       }
     };
@@ -126,7 +145,7 @@ const Navigation: React.FC<NavigationProps> = ({
   // Close mobile menu on window resize and prevent body scroll when open
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 768 && mobileMenuOpen) {
+      if (window.innerWidth >= 1024 && mobileMenuOpen) {
         setMobileMenuOpen(false);
       }
     };
@@ -164,7 +183,7 @@ const Navigation: React.FC<NavigationProps> = ({
     <>
       {/* Desktop Navigation */}
       <div
-        className={`hidden md:flex items-center gap-1 max-w-screen lg:gap-2 ${
+        className={`hidden lg:flex items-center gap-1 max-w-screen lg:gap-2 ${
           isRTL ? "flex-row-reverse" : ""
         }`}
       >
@@ -198,6 +217,76 @@ const Navigation: React.FC<NavigationProps> = ({
             </Link>
           ))}
         </nav>
+
+        {/* Notifications Button - Only show on /learn when user is logged in */}
+        {user && location.pathname.startsWith("/learn") && (
+          <Button
+            className="ml-0.5 flex items-center outline-none"
+            disableRipple
+            onClick={toggleNotifications}
+          >
+            <IconButton
+              size="small"
+              disableRipple
+              sx={{
+                width: { xs: "32px", lg: "36px" },
+                height: { xs: "32px", lg: "36px" },
+                border: "1px solid",
+                borderRadius: "0.375rem",
+                transition: "all 0.15s",
+                backgroundColor: isActivePath("/learn/dashboard/notifications")
+                  ? "#EFF6FF"
+                  : "#FFFFFF",
+                borderColor: isActivePath("/learn/dashboard/notifications")
+                  ? "#BFDBFE"
+                  : "#E5E7EB",
+                color: isActivePath("/learn/dashboard/notifications")
+                  ? "#2563EB"
+                  : "#4B5563",
+                "&:hover": {
+                  transform: "scale(1.02)",
+                  backgroundColor: "#F9FAFB",
+                  borderColor: "#D1D5DB",
+                },
+                "&:active": {
+                  transform: "scale(0.95)",
+                },
+                "&:focus": {
+                  outline: "none",
+                  boxShadow: "none",
+                },
+              }}
+              aria-label="Notifications"
+            >
+              <Badge
+                badgeContent={unreadCount}
+                color="error"
+                sx={{
+                  "& .MuiBadge-badge": {
+                    fontSize: "0.625rem",
+                    minWidth: "16px",
+                    height: "16px",
+                    padding: "0 4px",
+                  },
+                }}
+              >
+                <svg
+                  className="w-4 h-4 lg:w-5 lg:h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                  />
+                </svg>
+              </Badge>
+            </IconButton>
+          </Button>
+        )}
 
         {/* Wishlist Button - Only show on /learn when user is logged in */}
         {user && location.pathname.startsWith("/learn") && (
@@ -311,6 +400,7 @@ const Navigation: React.FC<NavigationProps> = ({
           {languageDropdownOpen &&
             createPortal(
               <div
+                ref={languageDropdownMenuRef}
                 className="w-40 rounded-lg shadow-xl border border-gray-200 bg-white overflow-hidden animate-fadeIn"
                 style={{
                   position: "fixed",
@@ -397,7 +487,7 @@ const Navigation: React.FC<NavigationProps> = ({
       <Button
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         sx={{
-          display: { xs: "inline-flex", md: "none" },
+          display: { xs: "inline-flex", lg: "none" },
           alignItems: "center",
           justifyContent: "center",
           p: "0.5rem",
@@ -454,7 +544,7 @@ const Navigation: React.FC<NavigationProps> = ({
         <>
           {/* Backdrop overlay */}
           <div
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden animate-fadeIn"
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden animate-fadeIn"
             onClick={() => setMobileMenuOpen(false)}
             aria-hidden="true"
           />
@@ -466,7 +556,7 @@ const Navigation: React.FC<NavigationProps> = ({
             className={`
               fixed top-14 bottom-0
               ${isRTL ? "right-0 left-auto" : "left-0 right-auto"}
-              w-full max-w-xs md:hidden
+              w-full max-w-xs lg:hidden
               bg-white
               shadow-xl
               z-50
@@ -545,6 +635,64 @@ const Navigation: React.FC<NavigationProps> = ({
                     </svg>
                     <span>{t.wishlist}</span>
                   </Link>
+                )}
+
+                {/* Mobile Notifications Link */}
+                {user && location.pathname.startsWith("/learn") && (
+                  <Button
+                    className={`
+                      flex items-center gap-2
+                      px-3 py-2.5
+                      text-sm font-medium
+                      rounded-md
+                      transition-all duration-150
+                      active:scale-98
+                      focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-inset
+                      ${
+                        isActivePath("/learn/dashboard/notifications")
+                          ? "bg-blue-50 text-blue-600 font-semibold"
+                          : "text-gray-600 hover:bg-blue-50 hover:text-blue-600"
+                      }
+                      ${isRTL ? "flex-row-reverse" : ""}
+                    `}
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      toggleNotifications();
+                    }}
+                  >
+                    <Badge
+                      badgeContent={unreadCount}
+                      color="error"
+                      sx={{
+                        "& .MuiBadge-badge": {
+                          fontSize: "0.625rem",
+                          minWidth: "16px",
+                          height: "16px",
+                          padding: "0 4px",
+                        },
+                      }}
+                    >
+                      <svg
+                        className="w-4 h-4 shrink-0"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                        />
+                      </svg>
+                    </Badge>
+                    <span>Notifications</span>
+                    {unreadCount > 0 && (
+                      <span className="text-xs text-gray-500">
+                        ({unreadCount})
+                      </span>
+                    )}
+                  </Button>
                 )}
               </nav>
 
@@ -644,7 +792,7 @@ const Navigation: React.FC<NavigationProps> = ({
                       ${isRTL ? "flex-row-reverse" : ""}
                     `}
                   >
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 bg-linear-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center shrink-0">
                       <span className="text-white text-sm">👤</span>
                     </div>
                     <div
@@ -668,6 +816,11 @@ const Navigation: React.FC<NavigationProps> = ({
           </div>
         </>
       )}
+
+      <NotificationsDialog
+        open={notifOpen}
+        onClose={() => setNotifOpen(false)}
+      />
 
       {/* Optimized CSS animations */}
       <style>{`

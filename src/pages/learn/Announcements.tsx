@@ -412,7 +412,7 @@ const Announcements = () => {
 
   return (
     <Box className="min-h-screen bg-gray-50/70">
-      <Box className="mx-auto px-6 py-8 sm:py-12">
+      <Box className="mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {/* ── Page Header ─────────────────────────────────── */}
         <Box component="header" mb={{ xs: 4, sm: 5 }}>
           <Box className="flex items-center gap-3 mb-1">

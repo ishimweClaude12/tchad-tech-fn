@@ -27,7 +27,7 @@ interface LanguageProviderProps {
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({
   children,
 }) => {
-  const [language, setLanguage] = useState<Language>("en");
+  const [language, setLanguageState] = useState<Language>("en");
 
   const isRTL = language === "ar";
 
@@ -42,12 +42,12 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
               type: "LANGUAGE_CHANGE",
               language: language,
             },
-            { targetOrigin: event.origin }
+            { targetOrigin: event.origin },
           );
         }
       } else if (event.data.type === "LANGUAGE_CHANGE") {
         // Update language when micro-frontend requests change
-        setLanguage(event.data.language);
+        setLanguageState(event.data.language);
       }
     };
 
@@ -56,7 +56,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
   }, [language]);
 
   const handleSetLanguage = useCallback((newLanguage: Language) => {
-    setLanguage(newLanguage);
+    setLanguageState(newLanguage);
 
     // Expose language context to window for Module Federation micro-frontends
     (window as any).__SHELL_LANGUAGE_CONTEXT__ = {
@@ -73,7 +73,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
             type: "LANGUAGE_CHANGE",
             language: newLanguage,
           },
-          { targetOrigin: "*" }
+          { targetOrigin: "*" },
         );
       }
     });
