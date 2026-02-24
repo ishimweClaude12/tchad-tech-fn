@@ -17,6 +17,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import MenuIcon from "@mui/icons-material/Menu";
 import { IconButton } from "@mui/material";
 import { ModuleProgressStatus } from "src/types/Enrollment.types";
+import ForumIcon from "@mui/icons-material/Forum";
 
 // Component to render module with lessons
 const ModuleWithLessons = ({
@@ -304,6 +305,24 @@ const CourseLayout = () => {
             >
               <HomeIcon fontSize="small" />
               <span className="font-medium">Course Overview</span>
+            </NavLink>
+          </div>
+          {/* Forum Link */}
+          <div className="mb-4">
+            <NavLink
+              to={`/learn/enrollment/${isUserEnrolledData?.data.enrollment?.id}/course/${courseId}/forum`}
+              end
+              onClick={closeSidebar}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                  isActive
+                    ? "bg-blue-50 text-blue-700"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`
+              }
+            >
+              <ForumIcon fontSize="small" />
+              <span className="font-medium">Forum</span>
             </NavLink>
           </div>
 

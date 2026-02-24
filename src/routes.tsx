@@ -153,6 +153,9 @@ export default function AppRouter() {
           path="module/:moduleId/lesson/:lessonId/quiz/:quizId"
           element={<QuizAttempt />}
         />
+
+        <Route path="forum" element={<ForumPage />} />
+        <Route path="forum/:forumId" element={<ForumDetails />} />
       </Route>
 
       {/* E-Commerce Dashboard - /shop/dashboard */}

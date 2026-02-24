@@ -36,7 +36,7 @@ const QuizCardWithAttempts: React.FC<{
   const { data: quizAttemptsData } = useQuizAttempts(quiz.id, userId);
   const attempts = quizAttemptsData?.data?.attempts || [];
   const hasAttempts = attempts.length > 0;
-  const latestAttempt = hasAttempts ? attempts[attempts.length - 1] : undefined;
+  const latestAttempt = hasAttempts ? attempts.at(-1) : undefined;
 
   const handleQuizClick = () => {
     // Navigate to quiz page

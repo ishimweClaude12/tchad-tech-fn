@@ -4,6 +4,7 @@ import { useLessonById } from "src/hooks/learn/useLessonApi";
 import {
   useCompleteLesson,
   useLessonProgress,
+  useModuleProgress,
 } from "src/hooks/learn/useEnrollmentApi";
 import {
   Alert,
@@ -17,6 +18,9 @@ import { useLessonQuizzes, useQuizAttempts } from "src/hooks/learn/useQuizApi";
 import { useAuth } from "@clerk/clerk-react";
 import type { Quiz } from "src/types/Quiz.types";
 import QuizAttemptCard from "src/components/learn/QuizAttemptCard";
+import { useCourseModules } from "src/hooks/learn/useCourseApi";
+import { useModuleById } from "src/hooks/learn/useModulesApi";
+import { ArrowBack } from "@mui/icons-material";
 
 // Component to handle individual quiz card with attempts check
 export const QuizCardWithAttempts: React.FC<{
@@ -82,6 +86,12 @@ const Lesson = () => {
     useCompleteLesson();
 
   const { data: lessonProgressData } = useLessonProgress(enrollmentId);
+  const { data: moduleLessonsData } = useModuleById(moduleId);
+  const { data: moduleProgressData } = useModuleProgress(
+    enrollmentId,
+    moduleId,
+  );
+  const { data: courseModulesData } = useCourseModules(courseId);
 
   // Track mandatory quiz completion status
   const [quizStatuses, setQuizStatuses] = React.useState<
@@ -97,6 +107,49 @@ const Lesson = () => {
     },
     [],
   );
+
+  // Check if current lesson is the last in the module
+  const isLastLessonInModule = React.useMemo(() => {
+    if (!moduleLessonsData) return false;
+    const lessons = moduleLessonsData.lessons;
+    const currentIndex = lessons.findIndex((l) => l.id === lessonId);
+    return currentIndex === lessons.length - 1;
+  }, [moduleLessonsData, lessonId]);
+
+  // Check if current module is the last in the course
+  const isLastModule = React.useMemo(() => {
+    if (!courseModulesData || !moduleId) return false;
+    const modules = courseModulesData.data.modules;
+    const sortedModules = [...modules].sort(
+      (a, b) => a.sortOrder - b.sortOrder,
+    );
+    const lastModule = sortedModules.at(-1);
+    return lastModule?.id === moduleId;
+  }, [courseModulesData, moduleId]);
+
+  // Check if the course will be completed after this lesson
+  const willCompleteCourse = isLastLessonInModule && isLastModule;
+
+  // Function to open the next lesson in the module
+  const openNextLesson = (currentLessonId: string) => {
+    if (!moduleLessonsData) return;
+    const lessons = moduleLessonsData.lessons;
+    const currentIndex = lessons.findIndex((l) => l.id === currentLessonId);
+    console.log(
+      "Current lesson index:",
+      currentIndex,
+      "Total lessons:",
+      lessons,
+    );
+    if (currentIndex === -1 || currentIndex === lessons.length) {
+      console.warn("Current lesson not found or it's the last lesson");
+      return;
+    }
+    const nextLesson = lessons[currentIndex + 1];
+    navigate(
+      `/learn/enrollment/${enrollmentId}/course/${courseId}/module/${moduleId}/lesson/${nextLesson.id}`,
+    );
+  };
 
   // Check if all mandatory quizzes are passed
   const mandatoryQuizzes = Object.entries(quizStatuses).filter(
@@ -128,6 +181,14 @@ const Lesson = () => {
     );
   };
 
+  // Determine the button text based on completion state
+  const getCompleteLessonButtonText = () => {
+    if (isCompletingLesson) return "Completing...";
+    return willCompleteCourse ? "Complete Course" : "Complete Lesson";
+  };
+
+  const completeLessonButtonText = getCompleteLessonButtonText();
+
   if (isLoading) {
     return <div className="p-6">Loading lesson...</div>;
   }
@@ -140,13 +201,12 @@ const Lesson = () => {
   const lessonStatus = getLessonProgressStatus(lessonId);
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
+    <div className="mx-auto px-6 py-6 space-y-6">
       {/* Navigation */}
       <Button variant="outlined" onClick={() => navigate(-1)}>
-        Back to module
+        <ArrowBack />
+        Back
       </Button>
-
-      <span>UserId: {userId}</span>
 
       {/* Lesson Header */}
       <Card className="shadow-sm">
@@ -238,6 +298,17 @@ const Lesson = () => {
               You must pass all mandatory quizzes before completing this lesson.
             </Alert>
           )}
+          {willCompleteCourse && (
+            <Alert severity="success">
+              🎉 Completing this lesson will mark the entire course as complete!
+            </Alert>
+          )}
+          {isLastLessonInModule && !isLastModule && (
+            <Alert severity="info">
+              This is the last lesson in this module. You can proceed to the
+              next module after completion.
+            </Alert>
+          )}
           <div className="flex justify-end">
             <Button
               variant="contained"
@@ -250,9 +321,52 @@ const Lesson = () => {
                 }
               }}
             >
-              {isCompletingLesson ? "Completing..." : "Complete Lesson"}
+              {completeLessonButtonText}
             </Button>
           </div>
+        </div>
+      )}
+
+      {/* Open next lesson Button*/}
+
+      {lessonStatus === "completed" && (
+        <div className="space-y-3">
+          {hasMandatoryQuizzes && !allMandatoryQuizzesPassed && (
+            <Alert severity="warning">
+              You must pass all mandatory quizzes before going to the next
+              lesson.
+            </Alert>
+          )}
+          {moduleProgressData?.data?.moduleProgress?.status === "completed" && (
+            <Alert severity="success">
+              🎉 Congratulations! You have completed this module!
+            </Alert>
+          )}
+          {isLastLessonInModule && (
+            <Alert severity="info">
+              This is the last lesson in this module.{" "}
+              {isLastModule
+                ? "You have completed the entire course!"
+                : "Please use the sidebar to continue with the next module."}
+            </Alert>
+          )}
+          {!isLastLessonInModule && (
+            <div className="flex justify-end">
+              <Button
+                variant="outlined"
+                color="primary"
+                size="large"
+                disabled={isCompletingLesson || !canCompleteLesson}
+                onClick={() => {
+                  if (enrollmentId && lessonId) {
+                    openNextLesson(lessonId);
+                  }
+                }}
+              >
+                {isCompletingLesson ? "Navigating..." : "Go to Next Lesson"}
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>

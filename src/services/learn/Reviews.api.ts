@@ -1,7 +1,9 @@
 import axiosInstance from "src/lib/axios";
 import type { ApiResponse } from "src/types/Api.types";
 import type {
+  CommentPayload,
   Post,
+  PostComment,
   Review,
   ReviewModerationStatus,
   ReviewPayload,
@@ -109,6 +111,39 @@ export const ReviewsApi = {
         message: string;
       }>
     >(`/forum/${postId}`);
+    return data;
+  },
+  getPostById: async (postId: string) => {
+    const { data } = await axiosInstance.get<
+      ApiResponse<{
+        post: Post;
+        userComments: PostComment[];
+      }>
+    >(`/forum/${postId}`);
+    return data;
+  },
+  createComment: async (payload: CommentPayload) => {
+    const { data } = await axiosInstance.post<
+      ApiResponse<{
+        comment: PostComment;
+      }>
+    >(`/comments`, payload);
+    return data;
+  },
+  deleteComment: async (commentId: string) => {
+    const { data } = await axiosInstance.delete<
+      ApiResponse<{
+        message: string;
+      }>
+    >(`/comments/${commentId}`);
+    return data;
+  },
+  updateComment: async (commentId: string, content: string) => {
+    const { data } = await axiosInstance.patch<
+      ApiResponse<{
+        comment: PostComment;
+      }>
+    >(`/comments/${commentId}`, { content });
     return data;
   },
 };

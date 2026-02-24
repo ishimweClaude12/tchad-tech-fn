@@ -22,6 +22,11 @@ import {
   Paper,
   IconButton,
   TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Badge,
 } from "@mui/material";
 import {
   PlayCircleOutline,
@@ -56,7 +61,6 @@ import {
   useGetCourseReviews,
   useUpdateReview,
 } from "src/hooks/learn/useReviewsApi";
- 
 
 // Component to handle individual quiz card with attempts check
 const QuizCardWithAttempts: React.FC<{
@@ -94,7 +98,7 @@ const CourseLandingPage = () => {
   }>();
   const navigate = useNavigate();
   const [currentAnnouncementIndex, setCurrentAnnouncementIndex] = useState(0);
-  const [showAnnouncement, setShowAnnouncement] = useState(true);
+  const [announcementModalOpen, setAnnouncementModalOpen] = useState(false);
   const [reviewFormOpen, setReviewFormOpen] = useState(false);
   const [reviewTitle, setReviewTitle] = useState("");
   const [reviewComment, setReviewComment] = useState("");
@@ -195,8 +199,13 @@ const CourseLandingPage = () => {
     announcementsData?.data?.announcements?.filter((a) => a.isPublished) || [];
   const currentAnnouncement = publishedAnnouncements[currentAnnouncementIndex];
 
+  const handleAnnouncementOpen = () => {
+    setAnnouncementModalOpen(true);
+    setCurrentAnnouncementIndex(0); // Reset to first announcement when opening
+  };
+
   const handleAnnouncementClose = () => {
-    setShowAnnouncement(false);
+    setAnnouncementModalOpen(false);
   };
 
   const handleNextAnnouncement = () => {
@@ -298,192 +307,186 @@ const CourseLandingPage = () => {
       {/* Back Navigation */}
       <Box className="bg-white shadow-sm border-b border-gray-200">
         <Container maxWidth="xl" className="py-4">
-          <Button
-            startIcon={<ArrowBack />}
-            onClick={() => navigate("/learn")}
-            className="text-gray-700 hover:text-blue-600 transition-colors"
-          >
-            Back to Courses
-          </Button>
+          <Box className="flex items-center justify-between">
+            <Button
+              startIcon={<ArrowBack />}
+              onClick={() => navigate("/learn")}
+              className="text-gray-700 hover:text-blue-600 transition-colors"
+            >
+              Back to Courses
+            </Button>
+
+            {/* Announcements Button */}
+            {publishedAnnouncements.length > 0 && (
+              <Button
+                startIcon={<Campaign />}
+                onClick={handleAnnouncementOpen}
+                variant="outlined"
+                color="primary"
+                sx={{
+                  textTransform: "none",
+                  fontWeight: 600,
+                }}
+              >
+                <Badge
+                  badgeContent={publishedAnnouncements.length}
+                  color="error"
+                  sx={{ mr: 1 }}
+                >
+                  <span>Announcements</span>
+                </Badge>
+              </Button>
+            )}
+          </Box>
         </Container>
       </Box>
 
-      {/* Announcement Banner */}
-      {publishedAnnouncements.length > 0 &&
-        showAnnouncement &&
-        currentAnnouncement && (
-          <Container maxWidth="xl" className="pt-4">
-            <Box
+      {/* Announcement Modal */}
+      <Dialog
+        open={announcementModalOpen}
+        onClose={handleAnnouncementClose}
+        maxWidth="md"
+        fullWidth
+        slotProps={{
+          paper: {
+            sx: {
+              borderRadius: 2,
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
+            },
+          },
+        }}
+      >
+        {currentAnnouncement && (
+          <>
+            <DialogTitle
               sx={{
-                background: "#ffffff",
-                borderRadius: 2,
-                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
-                overflow: "hidden",
-                position: "relative",
-                animation: "slideDown 0.4s ease-out",
-                border: "1px solid #e5e7eb",
-                "@keyframes slideDown": {
-                  from: { opacity: 0, transform: "translateY(-10px)" },
-                  to: { opacity: 1, transform: "translateY(0)" },
-                },
+                background: "linear-gradient(90deg, #3b82f6 0%, #2563eb 100%)",
+                color: "white",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                pb: 2,
               }}
             >
-              {/* Blue accent border */}
-              <Box
+              <Box className="flex items-center gap-2">
+                <Campaign />
+                <Typography variant="h6" component="span" fontWeight={600}>
+                  Announcement
+                </Typography>
+                {currentAnnouncement.isGlobal && (
+                  <Chip
+                    label="Global"
+                    size="small"
+                    sx={{
+                      background: "rgba(255, 255, 255, 0.2)",
+                      color: "white",
+                      fontWeight: 600,
+                      border: "1px solid rgba(255, 255, 255, 0.3)",
+                    }}
+                  />
+                )}
+              </Box>
+              <IconButton
+                onClick={handleAnnouncementClose}
+                size="small"
                 sx={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: "3px",
-                  background:
-                    "linear-gradient(90deg, #3b82f6 0%, #2563eb 100%)",
+                  color: "white",
+                  "&:hover": {
+                    background: "rgba(255, 255, 255, 0.1)",
+                  },
                 }}
-              />
+              >
+                <Close />
+              </IconButton>
+            </DialogTitle>
 
-              <div className="px-4 py-3">
-                <div className="flex items-start gap-3">
-                  {/* Icon */}
-                  <div className="shrink-0 mt-0.5">
-                    <Campaign
-                      sx={{
-                        color: "#3b82f6",
-                        fontSize: 20,
-                      }}
-                    />
-                  </div>
+            <DialogContent sx={{ pt: 3, pb: 2 }}>
+              <Box className="mb-4">
+                <Typography
+                  variant="h5"
+                  fontWeight={600}
+                  color="text.primary"
+                  gutterBottom
+                >
+                  {currentAnnouncement.title}
+                </Typography>
 
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-3 mb-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
-                          Announcement
-                        </span>
-                        {currentAnnouncement.isGlobal && (
-                          <Chip
-                            label="Global"
-                            size="small"
-                            sx={{
-                              height: "18px",
-                              fontSize: "0.7rem",
-                              background: "#eff6ff",
-                              color: "#3b82f6",
-                              fontWeight: 600,
-                              border: "1px solid #dbeafe",
-                            }}
-                          />
-                        )}
-                        {publishedAnnouncements.length > 1 && (
-                          <span className="text-xs text-gray-500">
-                            {currentAnnouncementIndex + 1} of{" "}
-                            {publishedAnnouncements.length}
-                          </span>
-                        )}
-                      </div>
-                      <IconButton
-                        onClick={handleAnnouncementClose}
-                        size="small"
-                        sx={{
-                          color: "#6b7280",
-                          padding: "4px",
-                          "&:hover": {
-                            background: "#f3f4f6",
-                            color: "#374151",
-                          },
-                          transition: "all 0.2s ease",
-                        }}
-                      >
-                        <Close sx={{ fontSize: 16 }} />
-                      </IconButton>
-                    </div>
+                {currentAnnouncement.publishedAt && (
+                  <Box className="flex items-center gap-1 text-gray-500 text-sm mb-3">
+                    <CalendarToday sx={{ fontSize: 16 }} />
+                    <Typography variant="body2">
+                      {formatAnnouncementDate(currentAnnouncement.publishedAt)}
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
 
-                    <h4
-                      style={{
-                        fontSize: "0.95rem",
-                        fontWeight: 600,
-                        color: "#111827",
-                        marginBottom: "0.375rem",
-                        lineHeight: 1.4,
-                      }}
-                    >
-                      {currentAnnouncement.title}
-                    </h4>
+              <Typography
+                variant="body1"
+                color="text.secondary"
+                sx={{
+                  whiteSpace: "pre-wrap",
+                  lineHeight: 1.7,
+                  mb: 2,
+                }}
+              >
+                {currentAnnouncement.content}
+              </Typography>
 
-                    <p
-                      style={{
-                        color: "#4b5563",
-                        lineHeight: 1.5,
-                        fontSize: "0.875rem",
-                        margin: 0,
-                        marginBottom: "0.5rem",
-                        whiteSpace: "pre-wrap",
-                      }}
-                    >
-                      {currentAnnouncement.content}
-                    </p>
+              {publishedAnnouncements.length > 1 && (
+                <Box className="mt-4 pt-3 border-t border-gray-200">
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    className="block text-center mb-2"
+                  >
+                    Announcement {currentAnnouncementIndex + 1} of{" "}
+                    {publishedAnnouncements.length}
+                  </Typography>
+                </Box>
+              )}
+            </DialogContent>
 
-                    <div className="flex items-center justify-between gap-3 flex-wrap">
-                      {currentAnnouncement.publishedAt && (
-                        <div className="flex items-center gap-1 text-gray-500 text-xs">
-                          <CalendarToday sx={{ fontSize: 13 }} />
-                          <span>
-                            {formatAnnouncementDate(
-                              currentAnnouncement.publishedAt,
-                            )}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Navigation for multiple announcements */}
-                      {publishedAnnouncements.length > 1 && (
-                        <div className="flex gap-1">
-                          <IconButton
-                            onClick={handlePreviousAnnouncement}
-                            disabled={currentAnnouncementIndex === 0}
-                            size="small"
-                            sx={{
-                              padding: "4px",
-                              color: "#3b82f6",
-                              "&:hover": {
-                                background: "#eff6ff",
-                              },
-                              "&:disabled": {
-                                color: "#d1d5db",
-                              },
-                            }}
-                          >
-                            <NavigateBefore sx={{ fontSize: 18 }} />
-                          </IconButton>
-                          <IconButton
-                            onClick={handleNextAnnouncement}
-                            disabled={
-                              currentAnnouncementIndex ===
-                              publishedAnnouncements.length - 1
-                            }
-                            size="small"
-                            sx={{
-                              padding: "4px",
-                              color: "#3b82f6",
-                              "&:hover": {
-                                background: "#eff6ff",
-                              },
-                              "&:disabled": {
-                                color: "#d1d5db",
-                              },
-                            }}
-                          >
-                            <NavigateNext sx={{ fontSize: 18 }} />
-                          </IconButton>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Box>
-          </Container>
+            <DialogActions
+              sx={{
+                px: 3,
+                pb: 2,
+                justifyContent:
+                  publishedAnnouncements.length > 1
+                    ? "space-between"
+                    : "flex-end",
+              }}
+            >
+              {publishedAnnouncements.length > 1 && (
+                <Box className="flex gap-2">
+                  <Button
+                    onClick={handlePreviousAnnouncement}
+                    disabled={currentAnnouncementIndex === 0}
+                    startIcon={<NavigateBefore />}
+                    size="small"
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    onClick={handleNextAnnouncement}
+                    disabled={
+                      currentAnnouncementIndex ===
+                      publishedAnnouncements.length - 1
+                    }
+                    endIcon={<NavigateNext />}
+                    size="small"
+                  >
+                    Next
+                  </Button>
+                </Box>
+              )}
+              <Button onClick={handleAnnouncementClose} variant="contained">
+                Close
+              </Button>
+            </DialogActions>
+          </>
         )}
+      </Dialog>
 
       <Container maxWidth="xl" className="py-8">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4">

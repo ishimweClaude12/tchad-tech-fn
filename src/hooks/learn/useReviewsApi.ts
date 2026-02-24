@@ -215,3 +215,70 @@ export const useDeletePost = () => {
     },
   });
 };
+
+export const useGetPostById = (postId: string) => {
+  return useQuery({
+    queryKey: ["forumPost", postId],
+    queryFn: async () => {
+      const data = await ReviewsApi.getPostById(postId);
+      return data;
+    },
+  });
+};
+
+export const useCreateComment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: Parameters<typeof ReviewsApi.createComment>[0]) =>
+      ReviewsApi.createComment(payload),
+    onSuccess: (_, variables) => {
+      toast.success("Comment added successfully!");
+      queryClient.invalidateQueries({ queryKey: ["forumPosts"] });
+      queryClient.invalidateQueries({
+        queryKey: ["forumPost", variables.post_id],
+      });
+    },
+    onError: (error) => {
+      toast.error("Failed to add comment. Please try again.");
+      console.error("Add comment error:", error);
+    },
+  });
+};
+
+export const useDeleteComment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (commentId: string) => ReviewsApi.deleteComment(commentId),
+    onSuccess: () => {
+      toast.success("Comment deleted successfully!");
+      queryClient.invalidateQueries({ queryKey: ["forumPosts"] });
+      queryClient.invalidateQueries({ queryKey: ["forumPost"] });
+    },
+    onError: (error) => {
+      toast.error("Failed to delete comment. Please try again.");
+      console.error("Delete comment error:", error);
+    },
+  });
+};
+
+export const useUpdateComment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      commentId,
+      content,
+    }: {
+      commentId: string;
+      content: string;
+    }) => ReviewsApi.updateComment(commentId, content),
+    onSuccess: () => {
+      toast.success("Comment updated successfully!");
+      queryClient.invalidateQueries({ queryKey: ["forumPosts"] });
+      queryClient.invalidateQueries({ queryKey: ["forumPost"] });
+    },
+    onError: (error) => {
+      toast.error("Failed to update comment. Please try again.");
+      console.error("Update comment error:", error);
+    },
+  });
+};
