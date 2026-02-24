@@ -35,13 +35,13 @@ import { useAuth } from "@clerk/clerk-react";
 // accent:   #f59e0b (gold)
 // success:  #059669 (green)
 
-// ─── Slide-up transition ──────────────────────────────────────────────────────
+// ─── Slide-down transition ──────────────────────────────────────────────────────
 
-const SlideUp = React.forwardRef(function Transition(
+const SlideDown = React.forwardRef(function Transition(
   props: TransitionProps & { children: React.ReactElement },
   ref: React.Ref<unknown>,
 ) {
-  return <Slide direction="up" ref={ref} {...props} />;
+  return <Slide direction="down" ref={ref} {...props} />;
 });
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -260,8 +260,7 @@ export const NotificationsDialog: React.FC<NotificationsDialogProps> = ({
     <Dialog
       open={open}
       onClose={onClose}
-      fullScreen
-      slots={{ transition: SlideUp }}
+      slots={{ transition: SlideDown }}
       slotProps={{
         paper: {
           sx: {

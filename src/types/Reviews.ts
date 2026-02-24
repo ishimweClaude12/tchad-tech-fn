@@ -52,3 +52,22 @@ export interface Post {
   comment_count: number;
   isDeleted: boolean;
 }
+
+export interface PostComment {
+  id: string;
+  user_id: string;
+  parent_reply_id: string;
+  content: string;
+  created_at: string;
+  user: {
+    userId: string;
+    role: UserRole;
+  };
+  replies: PostComment[];
+}
+
+export interface CommentPayload {
+  post_id: string;
+  content: string;
+  parent_id: string | null;
+}

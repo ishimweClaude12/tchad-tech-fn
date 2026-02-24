@@ -38,8 +38,6 @@ import AddIcon from "@mui/icons-material/Add";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
-import ReplyIcon from "@mui/icons-material/Reply";
-import ShareOutlinedIcon from "@mui/icons-material/ShareOutlined";
 import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import EditIcon from "@mui/icons-material/Edit";
@@ -104,7 +102,6 @@ interface PostCardProps {
   post: Post;
   index: number;
   currentUserId: string | null | undefined;
-  onClick?: (post: Post) => void;
   onEdit: (post: Post) => void;
   onDelete: (post: Post) => void;
 }
@@ -115,32 +112,30 @@ const PostCard = ({
   currentUserId,
   onEdit,
   onDelete,
-  onClick,
 }: PostCardProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const isAuthor = currentUserId && post.user_id === currentUserId;
   const menuOpen = Boolean(anchorEl);
+  const navigate = useNavigate();
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
     setAnchorEl(event.currentTarget);
   };
 
-  const handleMenuClose = () => {
+  const handleEdit = (event: React.MouseEvent) => {
+    event.stopPropagation();
     setAnchorEl(null);
-  };
-
-  const handleEdit = () => {
-    handleMenuClose();
     onEdit(post);
   };
 
   const handleOnClick = () => {
-    onClick?.(post);
+    navigate(`${post.post_id}`);
   };
 
-  const handleDelete = () => {
-    handleMenuClose();
+  const handleDelete = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    setAnchorEl(null);
     onDelete(post);
   };
   return (
@@ -264,40 +259,6 @@ const PostCard = ({
           >
             {post.comment_count.toLocaleString()}
           </Button>
-
-          {/* Reply */}
-          <Button
-            size="small"
-            startIcon={<ReplyIcon style={{ fontSize: 14 }} />}
-            variant="outlined"
-            sx={{
-              marginLeft: "auto",
-              textTransform: "none",
-              fontSize: "12.5px",
-              color: "#1e40af",
-              borderColor: "rgba(30,64,175,0.3)",
-              "&:hover": {
-                backgroundColor: "#1e40af",
-                borderColor: "#1e40af",
-                color: "#fff",
-              },
-            }}
-          >
-            Reply
-          </Button>
-
-          {/* Share */}
-          <IconButton
-            size="small"
-            aria-label="Share post"
-            className="hidden sm:flex"
-            sx={{
-              color: "#6b7280",
-              "&:hover": { color: "#1e40af", backgroundColor: "#f3f4f6" },
-            }}
-          >
-            <ShareOutlinedIcon style={{ fontSize: 16 }} />
-          </IconButton>
         </Box>
       </Box>
 
@@ -305,7 +266,7 @@ const PostCard = ({
       <Menu
         anchorEl={anchorEl}
         open={menuOpen}
-        onClose={handleMenuClose}
+        onClose={() => setAnchorEl(null)}
         anchorOrigin={{
           vertical: "bottom",
           horizontal: "right",
@@ -466,7 +427,6 @@ const ComposeDrawer = ({
 const ForumPage = () => {
   const { data: forumData, isLoading, error } = useGetPosts();
   const { userId } = useAuth();
-  const navigate = useNavigate();
   const addPostMutation = useAddPost();
   const updatePostMutation = useUpdatePost();
   const deletePostMutation = useDeletePost();
@@ -855,9 +815,6 @@ const ForumPage = () => {
                       post={post}
                       index={i}
                       currentUserId={userId}
-                      onClick={(post) =>
-                        navigate(`/learn/dashboard/forum/${post.post_id}`)
-                      }
                       onEdit={handleEditPost}
                       onDelete={handleDeletePost}
                     />
