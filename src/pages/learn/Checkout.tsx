@@ -28,7 +28,12 @@ import {
   CheckCircle,
 } from "lucide-react";
 import type { CourseEnrollment } from "src/types/Enrollment.types";
-import { usePayCourse } from "src/hooks/learn/useEnrollmentApi";
+
+import {
+  useGetAllPayments,
+  usePayCourse,
+} from "src/hooks/learn/useEnrollmentApi";
+import { PaymentHistorySection } from "src/components/learn/PaymentHistory";
 
 interface FormErrors {
   cardNumber?: string;
@@ -37,6 +42,12 @@ interface FormErrors {
   cvv?: string;
   phoneNumber?: string;
 }
+
+// ─── Payment Status Badge ────────────────────────────────────────────────────
+
+// ─── Payment History Section ─────────────────────────────────────────────────
+
+// ─── Main CheckoutPage ────────────────────────────────────────────────────────
 
 const CheckoutPage = () => {
   const [searchParams] = useSearchParams();
@@ -58,10 +69,13 @@ const CheckoutPage = () => {
     return null;
   }, [searchParams]);
 
-  // Payment method state
-  const [paymentMethod, setPaymentMethod] = useState<"card" | "mobile">("card");
+  const {
+    data: paymentData,
+    isLoading: isLoadingPayments,
+    error: errorLoadingPayments,
+  } = useGetAllPayments(enrollment?.id ?? "");
 
-  // Form states
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "mobile">("card");
   const [cardNumber, setCardNumber] = useState("");
   const [cardName, setCardName] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
@@ -71,17 +85,14 @@ const CheckoutPage = () => {
   const [errors, setErrors] = useState<FormErrors>({});
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Calculate pricing
   const coursePrice = enrollment?.course.price || 0;
 
-  // Format card number with spaces
   const formatCardNumber = (value: string) => {
     const cleaned = value.replaceAll(/\s/g, "");
     const formatted = cleaned.match(/.{1,4}/g)?.join(" ") || cleaned;
     return formatted.substring(0, 19);
   };
 
-  // Format expiry date as MM/YY
   const formatExpiryDate = (value: string) => {
     const cleaned = value.replaceAll(/\D/g, "");
     if (cleaned.length >= 2) {
@@ -90,65 +101,51 @@ const CheckoutPage = () => {
     return cleaned;
   };
 
-  // Format phone number
   const formatPhoneNumber = (value: string) => {
     return value.replaceAll(/\D/g, "").substring(0, 15);
   };
 
-  // Validation
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
-
     if (paymentMethod === "card") {
-      if (!cardNumber || cardNumber.replaceAll(/\s/g, "").length < 13) {
+      if (!cardNumber || cardNumber.replaceAll(/\s/g, "").length < 13)
         newErrors.cardNumber = "Enter a valid card number";
-      }
-      if (!cardName || cardName.trim().length < 3) {
+      if (!cardName || cardName.trim().length < 3)
         newErrors.cardName = "Enter the cardholder name";
-      }
-      if (!expiryDate || expiryDate.length < 5) {
+      if (!expiryDate || expiryDate.length < 5)
         newErrors.expiryDate = "Enter expiry date (MM/YY)";
-      }
-      if (!cvv || cvv.length < 3) {
-        newErrors.cvv = "Enter CVV";
-      }
+      if (!cvv || cvv.length < 3) newErrors.cvv = "Enter CVV";
     } else if (!phoneNumber || phoneNumber.length < 8) {
       newErrors.phoneNumber = "Enter a valid phone number";
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!validateForm()) return;
 
-    // Only process mobile money payment through API
     if (paymentMethod === "mobile") {
       if (!enrollment) return;
-
+      const formattedPhoneNumber = countryCode.replace("+", "") + phoneNumber;
       payCourse(
         {
           enrollmentId: enrollment.id,
           amount: coursePrice,
-          phoneNumber: phoneNumber,
+          phoneNumber: formattedPhoneNumber,
         },
         {
           onSuccess: (response) => {
-            // If API returns payment URL, redirect to it
             if (response.data?.paymentUrl) {
               globalThis.location.href = response.data.paymentUrl;
             } else {
-              // Otherwise, navigate to courses page
-              navigate("/learn/courses");
+              navigate(`/learn/course/${enrollment.course.slug}`);
             }
           },
         },
       );
     } else {
-      // Card payment - to be integrated later
       setIsProcessing(true);
       setTimeout(() => {
         setIsProcessing(false);
@@ -260,7 +257,6 @@ const CheckoutPage = () => {
                       <Typography variant="h6" className="mb-4 font-semibold">
                         Card Details
                       </Typography>
-
                       <TextField
                         fullWidth
                         label="Card Number"
@@ -272,7 +268,6 @@ const CheckoutPage = () => {
                         error={!!errors.cardNumber}
                         helperText={errors.cardNumber}
                       />
-
                       <TextField
                         fullWidth
                         label="Cardholder Name"
@@ -282,7 +277,6 @@ const CheckoutPage = () => {
                         error={!!errors.cardName}
                         helperText={errors.cardName}
                       />
-
                       <div className="grid grid-cols-2 gap-4">
                         <TextField
                           fullWidth
@@ -295,7 +289,6 @@ const CheckoutPage = () => {
                           error={!!errors.expiryDate}
                           helperText={errors.expiryDate}
                         />
-
                         <TextField
                           fullWidth
                           label="CVV"
@@ -319,12 +312,10 @@ const CheckoutPage = () => {
                       <Typography variant="h6" className="mb-4 font-semibold">
                         Mobile Money Details
                       </Typography>
-
                       <Alert severity="info" icon={<Smartphone />}>
                         A payment request will be sent to your phone. Please
                         confirm the transaction on your device.
                       </Alert>
-
                       <Box className="flex gap-2">
                         <FormControl className="w-32">
                           <InputLabel>Code</InputLabel>
@@ -338,7 +329,6 @@ const CheckoutPage = () => {
                             <MenuItem value="+250">+250</MenuItem>
                           </Select>
                         </FormControl>
-
                         <TextField
                           fullWidth
                           label="Phone Number"
@@ -351,7 +341,6 @@ const CheckoutPage = () => {
                           helperText={errors.phoneNumber}
                         />
                       </Box>
-
                       <Paper className="bg-gray-50 p-4">
                         <Typography
                           variant="body2"
@@ -413,6 +402,13 @@ const CheckoutPage = () => {
                 </form>
               </CardContent>
             </Card>
+
+            {/* ── Payment History ── */}
+            <PaymentHistorySection
+              payments={paymentData?.data.payments}
+              isLoading={isLoadingPayments}
+              error={errorLoadingPayments}
+            />
           </div>
 
           {/* Order Summary Section */}
@@ -433,21 +429,18 @@ const CheckoutPage = () => {
                     alt={enrollment.course.title}
                     className="w-full h-40 object-cover rounded-lg mb-4"
                   />
-
                   <Typography
                     variant="h6"
                     className="font-bold text-gray-900 mb-2"
                   >
                     {enrollment.course.title}
                   </Typography>
-
                   <Typography
                     variant="body2"
                     className="text-gray-600 mb-3 line-clamp-3"
                   >
                     {enrollment.course.description}
                   </Typography>
-
                   <Chip
                     label={enrollment.enrollmentType}
                     color="primary"
@@ -468,9 +461,7 @@ const CheckoutPage = () => {
                       {coursePrice.toLocaleString()} CFA
                     </Typography>
                   </Box>
-
                   <Divider />
-
                   <Box className="flex justify-between items-center">
                     <Typography variant="h6" className="font-bold">
                       Total

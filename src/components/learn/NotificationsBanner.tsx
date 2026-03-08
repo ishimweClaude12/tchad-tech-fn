@@ -66,28 +66,8 @@ const formatDate = (dateString: string): string => {
   }).format(date);
 };
 
-// ─── Animated top border ──────────────────────────────────────────────────────
-
-const AnimatedTopBorder: React.FC = () => (
-  <Box
-    sx={{
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      height: "4px",
-      background:
-        "linear-gradient(90deg, #1e40af 0%, #2563eb 50%, #f59e0b 100%)",
-      animation: "shimmer 3s infinite",
-      backgroundSize: "200% 100%",
-      "@keyframes shimmer": {
-        "0%": { backgroundPosition: "-200% 0" },
-        "100%": { backgroundPosition: "200% 0" },
-      },
-    }}
-  />
-);
-
+ 
+ 
 // ─── Notification Item ────────────────────────────────────────────────────────
 
 interface NotificationItemProps {
@@ -264,16 +244,13 @@ export const NotificationsDialog: React.FC<NotificationsDialogProps> = ({
       slotProps={{
         paper: {
           sx: {
-            background:
-              "linear-gradient(160deg, #eff6ff 0%, #dbeafe 40%, #e0e7ff 100%)",
+            background: " #eff6ff ",
             position: "relative",
             overflow: "hidden",
           },
         },
       }}
     >
-      <AnimatedTopBorder />
-
       {/* ── Header ── */}
       <DialogTitle
         component="div"

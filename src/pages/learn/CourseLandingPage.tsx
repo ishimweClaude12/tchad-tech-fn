@@ -329,7 +329,7 @@ const CourseLandingPage = () => {
                 }}
               >
                 <Badge
-                  badgeContent={publishedAnnouncements.length}
+                  variant={publishedAnnouncements.length ? "dot" : "standard"}
                   color="error"
                   sx={{ mr: 1 }}
                 >

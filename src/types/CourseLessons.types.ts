@@ -14,7 +14,7 @@ export interface BaseLesson {
   title: string;
   description: string;
   contentType: LessonContentType;
-  contentUrl: string;
+  contentUrl: string | null;
   muxVideoId: string | null;
   textContent: string | null;
   durationMinutes: number;
@@ -28,7 +28,7 @@ export interface Lesson extends BaseLesson {
   course: BaseCourse;
   module: LessonModule | null;
 }
-export type LessonContentType = "VIDEO" | "TEXT";
+export type LessonContentType = "VIDEO" | "TEXT" | "DOCUMENT";
 
 export interface LessonModule {
   id: string;

@@ -63,10 +63,10 @@ const LearnDashboardLayout: React.FC = () => {
       current: currentPath === "/learn/dashboard/courses",
     },
     {
-      name: "My Learning",
-      href: "/learn/dashboard/my-learning",
+      name: "Payments",
+      href: "/learn/dashboard/payments",
       icon: GraduationCap,
-      current: currentPath === "/learn/dashboard/my-learning",
+      current: currentPath === "/learn/dashboard/payments",
     },
     {
       name: "Categories",
@@ -153,6 +153,14 @@ const LearnDashboardLayout: React.FC = () => {
       // forum <mat-icon class="mat-18">ligature</mat-icon>
       icon: Users,
       current: currentPath === "/learn/dashboard/forum",
+    },
+    // Payments
+    {
+      name: "Payments",
+      href: "/learn/dashboard/instructor/course/:courseId/payments",
+      icon: GraduationCap,
+      current:
+        currentPath === "/learn/dashboard/instructor/course/:courseId/payments",
     },
   ];
 

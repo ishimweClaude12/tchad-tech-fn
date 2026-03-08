@@ -1,19 +1,26 @@
 import { useELearningUser } from "src/hooks/useApi";
 
-const UserCard = ({ userId }: { userId: string }) => {
+interface UserCardProps {
+  userId: string;
+  variant?: "default" | "compact";
+}
+
+const UserCard = ({ userId, variant = "default" }: UserCardProps) => {
   const { data: user, isLoading, error } = useELearningUser(userId);
 
   if (isLoading) {
     return (
       <div className="w-full bg-white rounded-lg overflow-hidden">
-        <div className="flex items-center gap-4 p-4">
+        <div className={`flex items-center gap-${variant === "compact" ? "2" : "4"} p-${variant === "compact" ? "2" : "4"}`}>
           {/* Avatar Skeleton */}
-          <div className="w-16 h-16 rounded-full bg-gray-300 animate-pulse flex-0" />
+          <div className={`${variant === "compact" ? "w-10 h-10" : "w-16 h-16"} rounded-full bg-gray-300 animate-pulse flex-0`} />
 
           {/* Content Skeleton */}
           <div className="flex-1 space-y-2">
-            <div className="h-5 bg-gray-200 rounded w-2/5 animate-pulse" />
-            <div className="h-4 bg-gray-200 rounded w-3/5 animate-pulse" />
+            <div className={`${variant === "compact" ? "h-4" : "h-5"} bg-gray-200 rounded w-2/5 animate-pulse`} />
+            {variant === "default" && (
+              <div className="h-4 bg-gray-200 rounded w-3/5 animate-pulse" />
+            )}
           </div>
         </div>
       </div>

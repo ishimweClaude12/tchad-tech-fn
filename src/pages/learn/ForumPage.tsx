@@ -35,7 +35,7 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
-import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+// import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
@@ -231,7 +231,7 @@ const PostCard = ({
         {/* Footer stats */}
         <Box className="flex items-center gap-2 flex-wrap">
           {/* Views */}
-          <Button
+          {/* <Button
             size="small"
             startIcon={<VisibilityOutlinedIcon style={{ fontSize: 14 }} />}
             aria-label={`${post.view_count} views`}
@@ -243,7 +243,7 @@ const PostCard = ({
             }}
           >
             {post.view_count.toLocaleString()}
-          </Button>
+          </Button> */}
 
           {/* Comments */}
           <Button

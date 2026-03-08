@@ -17,7 +17,7 @@ export const AnnouncementsApi = {
     return data;
   },
 
-  // Fetch announcement by coursesApi
+  // Fetch announcement by course
   getCourseAnnouncements: async (courseId: string) => {
     const { data } = await axiosInstance.get<
       ApiResponse<{ announcements: Announcement[] }>

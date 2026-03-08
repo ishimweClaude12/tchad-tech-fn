@@ -79,7 +79,7 @@ const CommentItem = ({
 }: CommentItemProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [showReplyForm, setShowReplyForm] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   const isAuthor = currentUserId && comment.user_id === currentUserId;
   const menuOpen = Boolean(anchorEl);
   const hasReplies = comment.replies && comment.replies.length > 0;

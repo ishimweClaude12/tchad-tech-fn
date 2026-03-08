@@ -266,6 +266,8 @@ export const useSubmitQuizAttempt = () => {
     }: {
       attemptId: string;
       answers: { questionId: string; selectedOptionId: string }[];
+      quizId: string;
+      userId: string;
     }) => quizApi.answerQuizQuestion({ attemptId, answers }),
     onError: (error) => {
       toast.error("Failed to submit quiz attempt.");
@@ -273,8 +275,19 @@ export const useSubmitQuizAttempt = () => {
     },
     onSuccess: (_, vars) => {
       toast.success("Quiz attempt submitted successfully.");
+      // invalidate queries related to quizzes in course, module and lesson to reflect updated attempt status,
       queryClient.invalidateQueries({
-        queryKey: ["quizAttempts", vars.attemptId],
+        queryKey: ["quizAttempts", vars.quizId, vars.userId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["lessonQuizzes"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["moduleQuizzes"],
+      });
+      // invalidate course QuizScope
+      queryClient.invalidateQueries({
+        queryKey: ["courseQuizzes"],
       });
     },
   });

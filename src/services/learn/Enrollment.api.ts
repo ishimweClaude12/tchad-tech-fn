@@ -6,6 +6,7 @@ import type {
   EnrollmentType,
   ModuleProgress,
   PayCoursePayload,
+  Payment,
   UserEnrollment,
 } from "src/types/Enrollment.types";
 import axiosInstance from "../../lib/axios";
@@ -37,6 +38,49 @@ export const enrollmentApi = {
       ...payload,
       currency: "FIS",
       provider: "MOMO",
+    });
+    return data;
+  },
+  getAllPayments: async (enrollmentId: string) => {
+    const { data } = await axiosInstance.get<
+      ApiResponse<{ payments: Payment[] }>
+    >(`/payment-transactions/enrollment/${enrollmentId}`);
+    return data;
+  },
+  getAllPaymentsMade: async () => {
+    const { data } = await axiosInstance.get<
+      ApiResponse<{ payments: Payment[] }>
+    >(`/payment-transactions`);
+    return data;
+  },
+  updatePayment: async (
+    paymentId: string,
+    partialPayment: Partial<Payment>,
+  ) => {
+    const { data } = await axiosInstance.put<ApiResponse<{ payment: Payment }>>(
+      `/payment-transactions/${paymentId}`,
+      partialPayment,
+    );
+    return data;
+  },
+  deletePayment: async (paymentId: string) => {
+    const { data } = await axiosInstance.delete<
+      ApiResponse<{ success: boolean }>
+    >(`/payment-transactions/${paymentId}`);
+    return data;
+  },
+  updatePaymentStatus: async (paymentId: string, status: string) => {
+    const { data } = await axiosInstance.put<ApiResponse<{ payment: Payment }>>(
+      `/payment-transactions/${paymentId}/status`,
+      { status },
+    );
+    return data;
+  },
+  refundPayment: async (paymentId: string) => {
+    const { data } = await axiosInstance.patch<
+      ApiResponse<{ payment: Payment }>
+    >(`/payment-transactions/${paymentId}/refund`, {
+      reason: "Admin wants to refund the payment",
     });
     return data;
   },

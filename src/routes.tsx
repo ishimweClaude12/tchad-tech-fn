@@ -47,6 +47,7 @@ import { InstructorModuleDetails } from "./pages/learn/InstructorModuleDetails";
 import AttemptDetails from "./pages/learn/AttemptDetails";
 import ForumPage from "./pages/learn/ForumPage";
 import ForumDetails from "./pages/learn/ForumDetails";
+import { AdminPayments } from "./pages/learn/AdminPayments";
 
 export default function AppRouter() {
   return (
@@ -92,7 +93,7 @@ export default function AppRouter() {
           element={<CourseAnnouncements />}
         />
         <Route path="users" element={<ELearningUsersAdmin />} />
-        <Route path="my-learning" element={<div>My Learning Page</div>} />
+        <Route path="payments" element={<AdminPayments />} />
         <Route path="categories" element={<CourseCategoriesAdmin />} />
         <Route path="sub-categories" element={<CourseSubCategoriesAdmin />} />
         <Route path="modules" element={<Modules />} />
@@ -136,6 +137,10 @@ export default function AppRouter() {
         <Route
           path="instructor/course/:courseId/module/:moduleId/quiz/:quizId/attempt/:attemptId"
           element={<AttemptDetails />}
+        />
+        <Route
+          path="instructor/course/:courseId/payments"
+          element={<AdminPayments />}
         />
       </Route>
 

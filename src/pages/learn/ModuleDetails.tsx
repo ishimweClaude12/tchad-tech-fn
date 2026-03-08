@@ -726,17 +726,17 @@ export const ModuleDetails = () => {
                 {selectedLesson.contentType === "VIDEO" && (
                   <div className="space-y-3">
                     <Typography variant="h6" fontWeight={600}>
-                      Video Lesson
+                      Video Lesson{" "}
                     </Typography>
 
                     <video
                       controls
                       className="w-full rounded-lg border"
-                      src={selectedLesson.contentUrl}
+                      src={selectedLesson.contentUrl ?? ""}
                     >
                       <track
                         kind="captions"
-                        src={selectedLesson.contentUrl}
+                        src={selectedLesson.contentUrl ?? ""}
                         label="English"
                       />
                     </video>

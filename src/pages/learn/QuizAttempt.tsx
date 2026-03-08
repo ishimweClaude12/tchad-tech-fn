@@ -139,6 +139,11 @@ const QuizAttempt = () => {
     }
     const attemptId = latestAttempt.id;
 
+    if (!quizId || !userId) {
+      alert("Missing quiz or user information. Please try again.");
+      return;
+    }
+
     // Format answers for submission
     const formattedAnswers = answers.map((answer) => ({
       questionId: answer.questionId,
@@ -147,7 +152,7 @@ const QuizAttempt = () => {
 
     // Submit the quiz
     submitQuizAttempt(
-      { attemptId, answers: formattedAnswers },
+      { attemptId, answers: formattedAnswers, quizId, userId },
       {
         onSuccess: () => {
           // Navigate back to the lesson page after successful submission
