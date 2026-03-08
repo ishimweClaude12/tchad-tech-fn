@@ -1,6 +1,6 @@
 import { useForm, Controller } from "react-hook-form";
 import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   TextField,
   Button,
@@ -18,11 +18,14 @@ import {
   useUpdateLesson,
 } from "../../../hooks/learn/useLessonApi";
 import type { Lesson } from "src/types/CourseLessons.types";
-import { useVideoUpload } from "../../../hooks/learn/useVideoApi";
+import {
+  useVideoUpload,
+  useImageUpload,
+} from "../../../hooks/learn/useVideoApi";
 import { CloudUpload } from "@mui/icons-material";
 import toast from "react-hot-toast";
 
-const CONTENT_TYPES = ["TEXT", "VIDEO", "AUDIO", "DOCUMENT"] as const;
+const CONTENT_TYPES = ["TEXT", "VIDEO", "DOCUMENT"] as const;
 const MAX_VIDEO_SIZE_MB = 1;
 const MAX_VIDEO_SIZE_BYTES = MAX_VIDEO_SIZE_MB * 1024 * 1024;
 
@@ -54,6 +57,9 @@ const LessonForm: React.FC<LessonFormProps> = ({ initialLesson, onClose }) => {
   }>();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [videoError, setVideoError] = useState<string | null>(null);
+  const [selectedDocument, setSelectedDocument] = useState<File | null>(null);
+  const [documentError, setDocumentError] = useState<string | null>(null);
+  const isInitialMount = useRef(true);
 
   const { control, register, handleSubmit, watch, setValue } =
     useForm<LessonPayload>({
@@ -77,6 +83,7 @@ const LessonForm: React.FC<LessonFormProps> = ({ initialLesson, onClose }) => {
   const createLessonMutation = useCreateLesson();
   const updateLessonMutation = useUpdateLesson(initialLesson?.id ?? "");
   const uploadVideoMutation = useVideoUpload();
+  const uploadDocumentMutation = useImageUpload();
 
   const contentType = watch("contentType");
 
@@ -97,16 +104,70 @@ const LessonForm: React.FC<LessonFormProps> = ({ initialLesson, onClose }) => {
     }
   }, [courseId, moduleId, setValue, initialLesson]);
 
+  // Clear irrelevant fields when contentType changes (skip on initial mount)
+  useEffect(() => {
+    // Skip cleanup on initial mount to preserve initialLesson data
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    if (contentType === "TEXT") {
+      // Clear video and document fields
+      setValue("muxId", null);
+      setValue("contentUrl", null);
+      setSelectedFile(null);
+      setSelectedDocument(null);
+      setVideoError(null);
+      setDocumentError(null);
+    } else if (contentType === "VIDEO") {
+      // Clear document and text fields
+      setValue("contentUrl", null);
+      setValue("textContent", "");
+      setSelectedDocument(null);
+      setDocumentError(null);
+    } else if (contentType === "DOCUMENT") {
+      // Clear video and text fields
+      setValue("muxId", null);
+      setValue("textContent", "");
+      setSelectedFile(null);
+      setVideoError(null);
+    }
+  }, [contentType, setValue]);
+
   const onSubmit = (data: LessonPayload) => {
+    // Validate content based on contentType
+    // When editing, check if content already exists OR if new content is provided
+    if (contentType === "VIDEO" && !data.muxId) {
+      toast.error("Please upload a video before submitting");
+      return;
+    }
+    if (contentType === "DOCUMENT" && !data.contentUrl) {
+      toast.error("Please upload a document before submitting");
+      return;
+    }
+    if (contentType === "TEXT" && !data.textContent?.trim()) {
+      toast.error("Please add lesson content before submitting");
+      return;
+    }
+
+    // Set content fields based on contentType
     const textContent = contentType === "TEXT" ? data.textContent : null;
+    const muxId = contentType === "VIDEO" ? data.muxId : null;
+    const contentUrl = contentType === "DOCUMENT" ? data.contentUrl : null;
+
+    console.log("Form submission - contentType:", contentType);
+    console.log("Form submission - data.contentUrl:", data.contentUrl);
+    console.log("Form submission - data.muxId:", data.muxId);
+    console.log("Form submission - final contentUrl:", contentUrl);
 
     if (initialLesson) {
       const payload = {
         title: data.title,
         description: data.description,
         contentType: data.contentType,
-        muxId: data.muxId ?? null,
-        contentUrl: data.contentUrl ?? null,
+        muxId,
+        contentUrl,
         textContent,
         durationMinutes: data.durationMinutes,
         sortOrder: data.sortOrder,
@@ -130,8 +191,8 @@ const LessonForm: React.FC<LessonFormProps> = ({ initialLesson, onClose }) => {
         title: data.title,
         description: data.description,
         contentType: data.contentType,
-        muxId: data.muxId ?? null,
-        contentUrl: data.contentUrl ?? null,
+        muxId,
+        contentUrl,
         textContent,
         durationMinutes: data.durationMinutes,
         sortOrder: data.sortOrder,
@@ -180,6 +241,29 @@ const LessonForm: React.FC<LessonFormProps> = ({ initialLesson, onClose }) => {
     });
   };
 
+  const handleDocumentUpload = (file: File) => {
+    setDocumentError(null);
+    setSelectedDocument(file);
+
+    uploadDocumentMutation.mutate(file, {
+      onSuccess: (response) => {
+        setValue("contentUrl", response.data.url, { shouldDirty: true });
+        setDocumentError(null);
+        toast.success("Document uploaded successfully");
+      },
+      onError: (error) => {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Failed to upload document. Please try again.";
+        setDocumentError(errorMessage);
+        setSelectedDocument(null);
+        toast.error(errorMessage);
+        console.error("Document upload error:", error);
+      },
+    });
+  };
+
   return (
     <Card className="max-w-4xl mx-auto">
       <CardContent className="space-y-6">
@@ -210,6 +294,7 @@ const LessonForm: React.FC<LessonFormProps> = ({ initialLesson, onClose }) => {
 
           {/* Hidden muxId field to ensure it's registered with the form */}
           <input type="hidden" {...register("muxId")} />
+          <input type="hidden" {...register("contentUrl")} />
 
           {/* Content Type */}
           <div>
@@ -246,10 +331,23 @@ const LessonForm: React.FC<LessonFormProps> = ({ initialLesson, onClose }) => {
             />
           )}
 
-          {/* Media Fields */}
-          {contentType !== "TEXT" && (
+          {/* Video Upload */}
+          {contentType === "VIDEO" && (
             <div className="space-y-3">
               <Typography fontWeight={500}>Upload Video</Typography>
+
+              {/* Show existing video if editing */}
+              {initialLesson?.muxVideoId && !selectedFile && (
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <Typography variant="body2" className="text-blue-800">
+                    ✓ Video already uploaded (ID:{" "}
+                    {initialLesson.muxVideoId.substring(0, 20)}...)
+                  </Typography>
+                  <Typography variant="caption" className="text-blue-600">
+                    Upload a new video to replace it
+                  </Typography>
+                </div>
+              )}
 
               <label
                 htmlFor="video-upload"
@@ -282,8 +380,8 @@ const LessonForm: React.FC<LessonFormProps> = ({ initialLesson, onClose }) => {
               </label>
 
               {selectedFile && (
-                <Typography variant="body2" className="text-gray-700">
-                  Selected file: {selectedFile.name}
+                <Typography variant="body2" className="text-green-700">
+                  ✓ New file selected: {selectedFile.name}
                 </Typography>
               )}
 
@@ -292,6 +390,87 @@ const LessonForm: React.FC<LessonFormProps> = ({ initialLesson, onClose }) => {
               {videoError && (
                 <Typography variant="body2" color="error">
                   {videoError}
+                </Typography>
+              )}
+            </div>
+          )}
+
+          {/* Document Upload */}
+          {contentType === "DOCUMENT" && (
+            <div className="space-y-3">
+              <Typography fontWeight={500}>Upload Document</Typography>
+
+              {/* Show existing document if editing */}
+              {initialLesson?.contentUrl && !selectedDocument && (
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <Typography variant="body2" className="text-blue-800">
+                    ✓ Document already uploaded
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    className="text-blue-600"
+                    sx={{ display: "block", mt: 0.5 }}
+                  >
+                    <a
+                      href={initialLesson.contentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline"
+                    >
+                      View current document
+                    </a>
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    className="text-blue-600"
+                    sx={{ display: "block", mt: 0.5 }}
+                  >
+                    Upload a new document to replace it
+                  </Typography>
+                </div>
+              )}
+
+              <label
+                htmlFor="document-upload"
+                className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 cursor-pointer
+                 hover:border-blue-500 transition bg-gray-50"
+              >
+                <CloudUpload className="text-gray-500 mb-2" fontSize="large" />
+
+                <Typography variant="body2" className="text-gray-600">
+                  Click to upload or drag and drop
+                </Typography>
+
+                <Typography variant="caption" className="text-gray-400">
+                  PDF supported
+                </Typography>
+
+                <input
+                  id="document-upload"
+                  type="file"
+                  accept="application/pdf"
+                  disabled={uploadDocumentMutation.isPending}
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      handleDocumentUpload(file);
+                    }
+                  }}
+                />
+              </label>
+
+              {selectedDocument && (
+                <Typography variant="body2" className="text-green-700">
+                  ✓ New file selected: {selectedDocument.name}
+                </Typography>
+              )}
+
+              {uploadDocumentMutation.isPending && <LinearProgress />}
+
+              {documentError && (
+                <Typography variant="body2" color="error">
+                  {documentError}
                 </Typography>
               )}
             </div>

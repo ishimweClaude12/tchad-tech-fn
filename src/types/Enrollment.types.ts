@@ -107,3 +107,19 @@ export interface ProgressLesson {
   moduleId: string;
   module: LessonModule;
 }
+
+export interface Payment {
+  id: string;
+  enrollmentId: string;
+  amount: string;
+  currency: string;
+  status: "pending" | "completed" | "failed" | "refunded";
+  provider: string;
+  providerTransactionId: string;
+  failureReason: string | null;
+  paidAt: string;
+  refundedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  enrollment: Enrollment;
+}

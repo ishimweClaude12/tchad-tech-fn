@@ -55,6 +55,21 @@ export const usePayCourse = () => {
   });
 };
 
+export const useGetAllPayments = (enrollmentId: string) => {
+  return useQuery({
+    queryKey: ["enrollment-payments", enrollmentId],
+    queryFn: () => enrollmentApi.getAllPayments(enrollmentId),
+    enabled: !!enrollmentId,
+  });
+};
+
+export const useGetAllPaymentsMade = () => {
+  return useQuery({
+    queryKey: ["all-payments"],
+    queryFn: () => enrollmentApi.getAllPaymentsMade(),
+  });
+};
+
 export const useEnrolledUsers = (courseId: string) => {
   return useQuery({
     queryKey: ["enrolled-users", courseId],
@@ -205,5 +220,97 @@ export const useLessonProgress = (enrollmentId: string) => {
     queryKey: ["lesson-progress", enrollmentId],
     queryFn: () => enrollmentApi.getLessonProgress(enrollmentId),
     enabled: !!enrollmentId,
+  });
+};
+
+export const useUpdatePayment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      paymentId,
+      partialPayment,
+    }: {
+      paymentId: string;
+      partialPayment: Partial<import("src/types/Enrollment.types").Payment>;
+    }) => enrollmentApi.updatePayment(paymentId, partialPayment),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["all-payments"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["enrollment-payments"],
+      });
+      toast.success("Payment updated successfully.");
+    },
+    onError: (error) => {
+      toast.error("Failed to update payment.");
+      console.error("Update Payment Error:", error);
+    },
+  });
+};
+
+export const useDeletePayment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (paymentId: string) => enrollmentApi.deletePayment(paymentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["all-payments"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["enrollment-payments"],
+      });
+      toast.success("Payment deleted successfully.");
+    },
+    onError: (error) => {
+      toast.error("Failed to delete payment.");
+      console.error("Delete Payment Error:", error);
+    },
+  });
+};
+
+export const useUpdatePaymentStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      paymentId,
+      status,
+    }: {
+      paymentId: string;
+      status: string;
+    }) => enrollmentApi.updatePaymentStatus(paymentId, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["all-payments"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["enrollment-payments"],
+      });
+      toast.success("Payment status updated successfully.");
+    },
+    onError: (error) => {
+      toast.error("Failed to update payment status.");
+      console.error("Update Payment Status Error:", error);
+    },
+  });
+};
+
+export const useRefundPayment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (paymentId: string) => enrollmentApi.refundPayment(paymentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["all-payments"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["enrollment-payments"],
+      });
+      toast.success("Payment refunded successfully.");
+    },
+    onError: (error) => {
+      toast.error("Failed to refund payment.");
+      console.error("Refund Payment Error:", error);
+    },
   });
 };
