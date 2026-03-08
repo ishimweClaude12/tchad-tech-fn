@@ -95,6 +95,8 @@ export const PaymentHistorySection = ({
   isLoading: boolean;
   error: unknown;
 }) => {
+  const hasError = error !== null && error !== undefined;
+
   return (
     <Card elevation={1} sx={{ mt: 4 }}>
       <CardContent sx={{ p: 3 }}>
@@ -123,8 +125,6 @@ export const PaymentHistorySection = ({
           </Box>
         </Box>
 
-        {/* Loading */}
-
         {isLoading && (
           <Box
             sx={{
@@ -142,13 +142,15 @@ export const PaymentHistorySection = ({
         )}
 
         {/* Error */}
-        {!isLoading && error && (
+        {!isLoading && hasError && (
           <Alert
             severity="error"
             icon={<AlertCircle className="w-5 h-5" />}
             sx={{ borderRadius: 2 }}
           >
-            Unable to load payment history. Please refresh the page.
+            {typeof error === "string"
+              ? error
+              : "Unable to load payment history. Please refresh the page."}
           </Alert>
         )}
 

@@ -259,7 +259,7 @@ const EditDialog: React.FC<EditDialogProps> = ({
             onChange={(e) =>
               setForm((p) => ({
                 ...p,
-                status: e.target.value as Payment["status"],
+                status: e.target.value,
               }))
             }
           >
@@ -305,7 +305,7 @@ const EditDialog: React.FC<EditDialogProps> = ({
 const SkeletonRow = () => (
   <TableRow>
     {[200, 140, 100, 120, 120, 90, 100].map((w, i) => (
-      <TableCell key={i}>
+      <TableCell key={i + w}>
         <Skeleton width={w} height={20} />
       </TableCell>
     ))}
