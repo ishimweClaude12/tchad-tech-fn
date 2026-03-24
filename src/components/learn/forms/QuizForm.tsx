@@ -74,6 +74,7 @@ const QuizFormModal: React.FC<QuizFormModalProps> = ({
     showResultsImmediately: false,
     isMandatory: false,
     requireWebCam: false,
+    isAutoGraded: true,
   });
 
   const resetForm = () => {
@@ -82,7 +83,7 @@ const QuizFormModal: React.FC<QuizFormModalProps> = ({
       description: "",
       kind: QuizKind.QUIZ,
       scope: QuizScope.COURSE,
-      deliveryMode:  QuizDeliveryMode.INDIVIDUAL,
+      deliveryMode: QuizDeliveryMode.INDIVIDUAL,
       openAt: "",
       closeAt: "",
       passingScore: 70,
@@ -94,6 +95,7 @@ const QuizFormModal: React.FC<QuizFormModalProps> = ({
       showResultsImmediately: false,
       isMandatory: false,
       requireWebCam: false,
+      isAutoGraded: true,
     });
   };
 
@@ -119,6 +121,7 @@ const QuizFormModal: React.FC<QuizFormModalProps> = ({
         showResultsImmediately: quiz.showResultsImmediately,
         isMandatory: quiz.isMandatory,
         requireWebCam: quiz.requireWebCam,
+        isAutoGraded: true,
       };
 
       timer = setTimeout(() => setFormData(newData), 0);
@@ -161,7 +164,7 @@ const QuizFormModal: React.FC<QuizFormModalProps> = ({
       const payload: QuizPayload = {
         ...formData,
         passingScore: Number(formData.passingScore),
-        kind: formData.kind  ,
+        kind: formData.kind,
         scope: formData.scope,
         deliveryMode: formData.deliveryMode,
         lessonId: lessonId || "",
@@ -181,10 +184,10 @@ const QuizFormModal: React.FC<QuizFormModalProps> = ({
           },
           onError: (error) => {
             toast.error(
-              error instanceof Error ? error.message : "Failed to update quiz"
+              error instanceof Error ? error.message : "Failed to update quiz",
             );
           },
-        }
+        },
       );
     } else if (!isEditMode && createQuizMutation) {
       const payload: QuizPayload = {
@@ -195,8 +198,8 @@ const QuizFormModal: React.FC<QuizFormModalProps> = ({
         passingScore: Number(formData.passingScore),
         sortOrder: 0,
         kind: formData.kind,
-        scope: formData.scope ,
-        deliveryMode: formData.deliveryMode ,
+        scope: formData.scope,
+        deliveryMode: formData.deliveryMode,
       };
 
       createQuizMutation.mutate(payload, {
@@ -459,6 +462,19 @@ const QuizFormModal: React.FC<QuizFormModalProps> = ({
                 />
               }
               label="Require Webcam"
+            />
+
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={formData.isAutoGraded}
+                  onChange={(e) =>
+                    handleChange("isAutoGraded", e.target.checked)
+                  }
+                  disabled={isLoading}
+                />
+              }
+              label="Auto Graded"
             />
           </section>
 

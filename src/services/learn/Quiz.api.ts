@@ -11,6 +11,7 @@ import type {
   QuizPayload,
   QuizAttemptDetails,
   QuizAttemptUpdatePayload,
+  GradeQuizAttemptPayload,
 } from "../../types/Quiz.types";
 
 export const quizApi = {
@@ -189,6 +190,14 @@ export const quizApi = {
         success: boolean;
       }>
     >(`/quiz-attempts/${attemptId}/`, payload);
+    return data;
+  },
+  gradeQuizAttempt: async (payload: GradeQuizAttemptPayload) => {
+    const { data } = await axiosInstance.post<
+      ApiResponse<{
+        success: boolean;
+      }>
+    >(`/quiz-attempts/grade`, payload);
     return data;
   },
 };

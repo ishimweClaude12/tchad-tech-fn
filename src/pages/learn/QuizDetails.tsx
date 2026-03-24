@@ -351,7 +351,9 @@ const QuizDetails = () => {
                     <div className="flex items-center gap-2">
                       <Chip
                         size="small"
-                        label={question.questionType}
+                        label={question.questionType
+                          .replace("_", " ")
+                          .toUpperCase()}
                         variant="outlined"
                       />
                       <IconButton
@@ -374,7 +376,18 @@ const QuizDetails = () => {
                       />
                     )}
                   </div>
-
+                  {/* Pdf rendering for DOCUMENT type */}
+                  {question.questionType === "document" &&
+                    question.mediaUrl && (
+                      <a
+                        href={question.mediaUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2"
+                      >
+                        {question.mediaUrl}
+                      </a>
+                    )}
                   {question.options.length > 0 && (
                     <div className="space-y-2">
                       {question.options.map((option) => (
@@ -426,12 +439,14 @@ const QuizDetails = () => {
           <ListItemText>Edit</ListItemText>
         </MenuItem>
 
+{ quiz.isAutoGraded && (
         <MenuItem onClick={handleAddOptionClick}>
           <ListItemIcon>
             <AddCircleOutlineIcon fontSize="small" color="primary" />
           </ListItemIcon>
           <ListItemText>Add Option</ListItemText>
         </MenuItem>
+        )}
 
         <MenuItem
           sx={{ color: "error.main" }}
@@ -525,6 +540,7 @@ const QuizDetails = () => {
           createQuestionMutation.isPending || updateQuestionMutation.isPending
         }
         initialData={editingQuestion}
+        isAutoGraded={quiz?.isAutoGraded}
       />
 
       <QuestionOptionFormModal

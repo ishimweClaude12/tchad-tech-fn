@@ -44,6 +44,7 @@ export interface Quiz {
   course: BaseCourse | null;
   module: LessonModule | null;
   lesson: LessonModule | null;
+  isAutoGraded: boolean;
 }
 
 export interface QuizPayload {
@@ -67,6 +68,7 @@ export interface QuizPayload {
   isMandatory: boolean;
   requireWebCam: boolean;
   sortOrder: number;
+  isAutoGraded: boolean;
 }
 
 export interface QuestionOption {
@@ -116,7 +118,9 @@ export interface QuizAttemptPayload {
   attemptId: string;
   answers: {
     questionId: string;
-    selectedOptionId: string;
+    selectedOptionId?: string;
+    textAnswer?: string;
+    mediaUrl?: string;
   }[];
 }
 
@@ -187,7 +191,7 @@ export interface AttemptAnswer {
 
   gradedAt: string;
   answeredAt: string;
-
+  mediaUrl: string | null;
   question: AnswerQuestionSnapshot;
   selectedOption: SelectedOption | null;
 }
@@ -207,4 +211,13 @@ export interface QuizAttemptUpdatePayload {
   maxPossibleScore: number;
   gradingStatus: "finalized" | "auto-graded";
   isPassed: boolean;
+}
+
+export interface GradeQuizAttemptPayload {
+  attemptId:string;
+  answers:   {
+      answerId: string;
+      earnedPoints: number;
+      isCorrect: boolean;
+    }[];
 }

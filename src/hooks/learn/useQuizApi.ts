@@ -3,6 +3,7 @@ import type {
   QuestionPayload,
   QuizPayload,
   QuizAttemptUpdatePayload,
+  GradeQuizAttemptPayload,
 } from "../../types/Quiz.types";
 import { quizApi } from "../../services/learn/Quiz.api";
 
@@ -265,7 +266,12 @@ export const useSubmitQuizAttempt = () => {
       answers,
     }: {
       attemptId: string;
-      answers: { questionId: string; selectedOptionId: string }[];
+      answers: {
+        questionId: string;
+        selectedOptionId?: string;
+        textAnswer?: string;
+        mediaUrl?: string;
+      }[];
       quizId: string;
       userId: string;
     }) => quizApi.answerQuizQuestion({ attemptId, answers }),
@@ -319,7 +325,10 @@ export const useQuizAttemptDetails = (attemptId: string) => {
 export const useUpdateQuizAttemptMarks = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ attemptId, ...payload }: QuizAttemptUpdatePayload & { attemptId: string }) =>
+    mutationFn: ({
+      attemptId,
+      ...payload
+    }: QuizAttemptUpdatePayload & { attemptId: string }) =>
       quizApi.updateQuizAttemptMarks(attemptId, payload),
     onError: (error) => {
       toast.error("Failed to update quiz attempt marks.");
@@ -327,6 +336,27 @@ export const useUpdateQuizAttemptMarks = () => {
     },
     onSuccess: (_, vars) => {
       toast.success("Quiz attempt marks updated successfully.");
+      queryClient.invalidateQueries({
+        queryKey: ["quizAttemptDetails", vars.attemptId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["instructorQuizAttempts"],
+      });
+    },
+  });
+};
+
+export const useGradeQuizAttempt = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: GradeQuizAttemptPayload) =>
+      quizApi.gradeQuizAttempt(payload),
+    onError: (error) => {
+      toast.error("Failed to grade quiz attempt.");
+      console.error("Grade Quiz Attempt Error:", error);
+    },
+    onSuccess: (_, vars) => {
+      toast.success("Quiz attempt graded successfully.");
       queryClient.invalidateQueries({
         queryKey: ["quizAttemptDetails", vars.attemptId],
       });
