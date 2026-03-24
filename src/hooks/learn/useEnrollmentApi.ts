@@ -130,7 +130,6 @@ export const useStartModuleProgress = () => {
     mutationFn: (payload: { enrollmentId: string; moduleId: string }) =>
       enrollmentApi.startModuleProgress(payload.enrollmentId, payload.moduleId),
     onSuccess: (_, variables) => {
-      toast.success("Module progress started successfully.");
       // Invalidate module progress query to refetch updated status
       queryClient.invalidateQueries({
         queryKey: [
@@ -145,7 +144,6 @@ export const useStartModuleProgress = () => {
       });
     },
     onError: (error) => {
-      toast.error("Failed to start module progress.");
       console.error("Start Module Progress Error:", error);
     },
   });

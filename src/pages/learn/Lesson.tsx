@@ -339,7 +339,7 @@ const Lesson = () => {
           )}
           {moduleProgressData?.data?.moduleProgress?.status === "completed" && (
             <Alert severity="success">
-              🎉 Congratulations! You have completed this module!
+              🎉 Congratulations! You have completed this Lesson!
             </Alert>
           )}
           {isLastLessonInModule && (

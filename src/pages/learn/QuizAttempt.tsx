@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   useQuizDetails,
@@ -28,6 +28,7 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { QuestionType } from "src/utils/enums/Quiz.enums";
+import { useImageUpload } from "src/hooks/learn/useVideoApi";
 
 interface Answer {
   questionId: string;
@@ -54,6 +55,10 @@ const QuizAttempt = () => {
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [quizStarted, setQuizStarted] = useState(false);
+  const [uploadFileName, setUploadFileName] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
+  const imageUploadMutation = useImageUpload();
 
   const quiz = quizData?.data?.quiz;
   const questions = quizQuestionsData?.data?.questions || [];
@@ -99,13 +104,43 @@ const QuizAttempt = () => {
   const handleNext = () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
+      setUploadFileName(null);
+      setUploadError(null);
     }
   };
 
   const handlePrevious = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex((prev) => prev - 1);
+      setUploadFileName(null);
+      setUploadError(null);
     }
+  };
+
+  const handlePdfAnswer = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    questionId: string,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      setUploadError("Please select a PDF file.");
+      return;
+    }
+
+    setUploadError(null);
+    setUploadFileName(file.name);
+
+    imageUploadMutation.mutate(file, {
+      onSuccess: (response) => {
+        handleAnswerChange(questionId, response.data.url);
+      },
+      onError: () => {
+        setUploadError("Failed to upload PDF. Please try again.");
+        setUploadFileName(null);
+      },
+    });
   };
 
   const handleStartQuiz = () => {
@@ -144,11 +179,17 @@ const QuizAttempt = () => {
       return;
     }
 
-    // Format answers for submission
-    const formattedAnswers = answers.map((answer) => ({
-      questionId: answer.questionId,
-      selectedOptionId: answer.answer,
-    }));
+    // Format answers using the correct field per question type
+    const formattedAnswers = answers.map((answer) => {
+      const question = questions.find((q) => q.id === answer.questionId);
+      if (question?.questionType === QuestionType.SHORT_ANSWER) {
+        return { questionId: answer.questionId, textAnswer: answer.answer };
+      }
+      if (question?.questionType === QuestionType.DOCUMENT) {
+        return { questionId: answer.questionId, mediaUrl: answer.answer };
+      }
+      return { questionId: answer.questionId, selectedOptionId: answer.answer };
+    });
 
     // Submit the quiz
     submitQuizAttempt(
@@ -368,13 +409,30 @@ const QuizAttempt = () => {
               />
             </div>
 
-            {currentQuestion.mediaUrl && (
-              <img
-                src={currentQuestion.mediaUrl}
-                alt="Question media"
-                className="rounded-lg max-w-full h-auto"
-              />
-            )}
+            {/* Question reference document */}
+            {currentQuestion.questionType === QuestionType.DOCUMENT &&
+              currentQuestion.mediaUrl && (
+                <Box className="border rounded p-3 bg-gray-50 space-y-2">
+                  <Typography variant="body2" color="text.secondary">
+                    Reference document:
+                  </Typography>
+                  <iframe
+                    src={currentQuestion.mediaUrl}
+                    title="Question document"
+                    width="100%"
+                    height="300px"
+                    style={{ border: "1px solid #e0e0e0", borderRadius: 4 }}
+                  />
+                  <a
+                    href={currentQuestion.mediaUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ fontSize: 12 }}
+                  >
+                    Open in new tab
+                  </a>
+                </Box>
+              )}
 
             <FormControl component="fieldset" className="w-full">
               {currentQuestion.questionType ===
@@ -397,28 +455,6 @@ const QuizAttempt = () => {
                 </RadioGroup>
               )}
 
-              {currentQuestion.questionType === QuestionType.TRUE_FALSE && (
-                <RadioGroup
-                  value={getCurrentAnswer(currentQuestion.id)}
-                  onChange={(e) =>
-                    handleAnswerChange(currentQuestion.id, e.target.value)
-                  }
-                >
-                  <FormControlLabel
-                    value="true"
-                    control={<Radio />}
-                    label="True"
-                    className="border rounded-lg px-4 py-2 mb-2 hover:bg-gray-50"
-                  />
-                  <FormControlLabel
-                    value="false"
-                    control={<Radio />}
-                    label="False"
-                    className="border rounded-lg px-4 py-2 hover:bg-gray-50"
-                  />
-                </RadioGroup>
-              )}
-
               {currentQuestion.questionType === QuestionType.SHORT_ANSWER && (
                 <TextField
                   multiline
@@ -430,6 +466,43 @@ const QuizAttempt = () => {
                     handleAnswerChange(currentQuestion.id, e.target.value)
                   }
                 />
+              )}
+
+              {currentQuestion.questionType === QuestionType.DOCUMENT && (
+                <Box className="flex flex-col gap-2">
+                  <Typography variant="body2" color="text.secondary">
+                    Upload your answer (PDF)
+                  </Typography>
+                  <input
+                    ref={pdfInputRef}
+                    type="file"
+                    accept="application/pdf"
+                    style={{ display: "none" }}
+                    onChange={(e) => handlePdfAnswer(e, currentQuestion.id)}
+                  />
+                  <Button
+                    variant="outlined"
+                    disabled={imageUploadMutation.isPending}
+                    onClick={() => pdfInputRef.current?.click()}
+                  >
+                    {imageUploadMutation.isPending
+                      ? "Uploading..."
+                      : "Select PDF"}
+                  </Button>
+                  {imageUploadMutation.isPending && <LinearProgress />}
+                  {uploadFileName && !uploadError && (
+                    <Typography variant="caption" color="text.secondary">
+                      {getCurrentAnswer(currentQuestion.id)
+                        ? `Uploaded: ${uploadFileName}`
+                        : `Selected: ${uploadFileName}`}
+                    </Typography>
+                  )}
+                  {uploadError && (
+                    <Typography variant="caption" color="error">
+                      {uploadError}
+                    </Typography>
+                  )}
+                </Box>
               )}
             </FormControl>
           </CardContent>
@@ -456,6 +529,7 @@ const QuizAttempt = () => {
             variant="contained"
             endIcon={<ArrowForwardIcon />}
             onClick={handleNext}
+            disabled={imageUploadMutation.isPending}
           >
             Next
           </Button>
@@ -464,7 +538,7 @@ const QuizAttempt = () => {
             variant="contained"
             color="success"
             onClick={handleSubmitQuiz}
-            disabled={isSubmitting}
+            disabled={isSubmitting || imageUploadMutation.isPending}
           >
             {isSubmitting ? "Submitting..." : "Submit Quiz"}
           </Button>

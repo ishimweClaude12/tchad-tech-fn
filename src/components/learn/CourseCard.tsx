@@ -4,11 +4,8 @@ import {
   CardMedia,
   Typography,
   Chip,
-  Rating,
   Button,
 } from "@mui/material";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import SchoolIcon from "@mui/icons-material/School";
 import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
 import type { Course } from "src/types/Course.types";
 import { useNavigate } from "react-router-dom";
@@ -58,38 +55,6 @@ const CourseCard = ({ course }: Props) => {
         {/* Subtitle */}
         <Typography variant="body2" className="text-gray-600 line-clamp-2">
           {course.shortDescription}
-        </Typography>
-
-        {/* Rating */}
-        <div className="flex items-center gap-2">
-          <Rating
-            value={course.ratingAverage ?? 0}
-            precision={0.5}
-            size="small"
-            readOnly
-          />
-          <Typography className="text-sm text-gray-500">
-            ({course.ratingCount})
-          </Typography>
-        </div>
-
-        {/* Meta */}
-        <div className="flex items-center gap-4 text-sm text-gray-600">
-          <div className="flex items-center gap-1">
-            <AccessTimeIcon fontSize="small" />
-            <span>{course.estimatedDurationHours} hrs</span>
-          </div>
-
-          <div className="flex items-center gap-1">
-            <SchoolIcon fontSize="small" />
-            <span>{course.totalLessons} lessons</span>
-          </div>
-        </div>
-
-        {/* Instructor */}
-        <Typography className="text-sm text-gray-700">
-          {/* TODO: Replace with instructor name  */}
-          By <span className="font-medium"> John Doe</span>
         </Typography>
 
         {/* Price */}

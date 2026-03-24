@@ -316,20 +316,6 @@ const HomePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Call to action */}
-          {/* TODO: Remove these commented codes if no feedback about them */}
-          {/* <div className="text-center bg-gradient-to-r from-blue-600 to-purple-600 p-8 rounded-xl shadow-lg text-white">
-            <h3 className="text-2xl font-bold mb-4">{t.cta.title}</h3>
-            <p className="mb-6 opacity-90">{t.cta.description}</p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="px-8 py-3 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition-colors font-semibold">
-                {t.cta.primary}
-              </button>
-              <button className="px-8 py-3 border-2 border-white text-white rounded-lg hover:bg-white/10 transition-colors font-semibold">
-                {t.cta.secondary}
-              </button>
-            </div>
-          </div> */}
         </div>
       </div>
       {/* Our services Section */}

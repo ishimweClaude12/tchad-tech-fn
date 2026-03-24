@@ -93,13 +93,6 @@ const ModuleWithLessons = ({
             <div className="flex flex-col gap-1">
               <span>{module.title}</span>
 
-              {/* Show "No lessons yet" when totalLessons is 0 or undefined */}
-              {(!totalLessons || totalLessons === 0) && (
-                <span className="text-xs text-gray-500 italic">
-                  No lessons added yet
-                </span>
-              )}
-
               {/* Only show progress when there are lessons */}
               {totalLessons &&
                 totalLessons > 0 &&

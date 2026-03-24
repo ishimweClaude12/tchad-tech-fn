@@ -1,5 +1,9 @@
+import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuizAttemptDetails } from "../../hooks/learn/useQuizApi";
+import {
+  useQuizAttemptDetails,
+  useGradeQuizAttempt,
+} from "../../hooks/learn/useQuizApi";
 import {
   CheckCircle,
   XCircle,
@@ -11,6 +15,7 @@ import {
 import type { AttemptAnswer } from "../../types/Quiz.types";
 import { QuestionType } from "../../utils/enums/Quiz.enums";
 import { Button } from "@/components/tiptap-ui-primitive/button/button";
+import MuiButton from "@mui/material/Button";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import UserCard from "src/components/learn/UserCard";
 
@@ -22,6 +27,36 @@ const AttemptDetails = () => {
     isLoading,
     error,
   } = useQuizAttemptDetails(attemptId!);
+
+  const gradeQuizAttempt = useGradeQuizAttempt();
+
+  const rawAnswers: AttemptAnswer[] = attemptData?.data.attempt?.answers ?? [];
+
+  const initialGrades = useMemo(
+    () =>
+      rawAnswers
+        .filter((a) => a.requiresManualGrading)
+        .reduce(
+          (
+            acc: Record<string, { earnedPoints: number; isCorrect: boolean }>,
+            a,
+          ) => {
+            acc[a.id] = {
+              earnedPoints: a.earnedPoints ?? 0,
+              isCorrect: a.isCorrect ?? false,
+            };
+            return acc;
+          },
+          {},
+        ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [attemptData],
+  );
+
+  const [grades, setGrades] =
+    useState<Record<string, { earnedPoints: number; isCorrect: boolean }>>(
+      initialGrades,
+    );
 
   if (isLoading) {
     return (
@@ -63,6 +98,34 @@ const AttemptDetails = () => {
   const attempt = attemptData.data.attempt;
   const { quiz, user, answers } = attempt;
 
+  const manualAnswers = answers.filter(
+    (a: AttemptAnswer) => a.requiresManualGrading,
+  );
+
+  const handleGradeChange = (
+    answerId: string,
+    field: "earnedPoints" | "isCorrect",
+    value: number | boolean,
+  ) => {
+    setGrades(
+      (prev: Record<string, { earnedPoints: number; isCorrect: boolean }>) => ({
+        ...prev,
+        [answerId]: { ...prev[answerId], [field]: value },
+      }),
+    );
+  };
+
+  const handleSubmitGrades = () => {
+    gradeQuizAttempt.mutate({
+      attemptId: attempt.id,
+      answers: manualAnswers.map((a: AttemptAnswer) => ({
+        answerId: a.id,
+        earnedPoints: grades[a.id]?.earnedPoints ?? 0,
+        isCorrect: grades[a.id]?.isCorrect ?? false,
+      })),
+    });
+  };
+
   const scorePercentage = (
     (Number.parseFloat(attempt.totalScore) /
       Number.parseFloat(attempt.maxPossibleScore)) *
@@ -95,10 +158,8 @@ const AttemptDetails = () => {
   const getQuestionTypeLabel = (type: QuestionType): string => {
     const typeMap: Record<QuestionType, string> = {
       multiple_choice: "Multiple Choice",
-      true_false: "True/False",
       short_answer: "Short Answer",
-      //   essay: "Essay",
-      //   matching: "Matching",
+      document: "Document",
     };
     return typeMap[type] || type;
   };
@@ -294,11 +355,35 @@ const AttemptDetails = () => {
                 {/* Question Image if exists */}
                 {question?.mediaUrl && (
                   <div className="mb-4">
-                    <img
-                      src={question.mediaUrl}
-                      alt="Question media"
-                      className="max-w-md rounded-lg border border-gray-200"
-                    />
+                    {answer.question.questionType === QuestionType.DOCUMENT ? (
+                      <div>
+                        <p className="text-sm font-semibold text-gray-700 mb-2">
+                          Question Attachment:
+                        </p>
+                        <iframe
+                          src={question.mediaUrl}
+                          className="w-full h-64 rounded-lg border border-gray-200"
+                          title="Question Document"
+                        />
+                        <a
+                          href={question.mediaUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-blue-600 hover:underline mt-1 inline-block"
+                        >
+                          Open in new tab
+                        </a>
+                      </div>
+                    ) : (
+                      <a
+                        href={question.mediaUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
+                      >
+                        Question Attachment
+                      </a>
+                    )}
                   </div>
                 )}
 
@@ -361,6 +446,28 @@ const AttemptDetails = () => {
                   </div>
                 )}
 
+                {/* Document Answers */}
+                {answer.mediaUrl && (
+                  <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm font-semibold text-blue-900 mb-2">
+                      Student's Document:
+                    </p>
+                    <iframe
+                      src={answer.mediaUrl}
+                      className="w-full h-64 rounded-lg border border-gray-300"
+                      title="Student's Document"
+                    />
+                    <a
+                      href={answer.mediaUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-600 hover:underline mt-1 inline-block"
+                    >
+                      Open in new tab
+                    </a>
+                  </div>
+                )}
+
                 {/* Manual Grading Notice */}
                 {answer.requiresManualGrading && (
                   <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center gap-2">
@@ -404,6 +511,158 @@ const AttemptDetails = () => {
             );
           })}
         </div>
+
+        {/* Manual Grading Panel */}
+        {!quiz.isAutoGraded && manualAnswers.length > 0 && (
+          <div className="mt-6 bg-white rounded-lg shadow-sm border border-orange-200 p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
+              Manual Grading
+            </h2>
+            <p className="text-sm text-gray-600 mb-6">
+              Review each answer below and assign earned points and correctness.
+            </p>
+            <div className="space-y-6">
+              {manualAnswers.map((answer: AttemptAnswer, index: number) => (
+                <div
+                  key={answer.id}
+                  className="border border-gray-200 rounded-lg p-4"
+                >
+                  <p className="text-sm font-semibold text-gray-700 mb-1">
+                    Question {index + 1} — {answer.question.questionText}
+                  </p>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Max points: {answer.question.points}
+                  </p>
+
+                  {/* Student's Text Answer */}
+                  {answer.textAnswer && (
+                    <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-sm font-semibold text-blue-900 mb-1">
+                        Student's Answer:
+                      </p>
+                      <p className="text-gray-900 text-sm">
+                        {answer.textAnswer}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Student's Document Answer */}
+                  {answer.mediaUrl && (
+                    <div className="mb-3">
+                      <p className="text-sm font-semibold text-gray-700 mb-2">
+                        Student's Document:
+                      </p>
+                      <iframe
+                        src={answer.mediaUrl}
+                        className="w-full h-64 rounded-lg border border-gray-300"
+                        title="Student Document"
+                      />
+                      <a
+                        href={answer.mediaUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-600 hover:underline mt-1 inline-block"
+                      >
+                        Open in new tab
+                      </a>
+                    </div>
+                  )}
+
+                  {/* Grading Controls */}
+                  <div className="flex flex-wrap items-center gap-4 mt-3">
+                    <div className="flex items-center gap-2">
+                      <label
+                        htmlFor={`pts-${answer.id}`}
+                        className="text-sm font-medium text-gray-700"
+                      >
+                        Earned Points:
+                      </label>
+                      <input
+                        id={`pts-${answer.id}`}
+                        type="number"
+                        min={0}
+                        max={answer.question.points}
+                        value={grades[answer.id]?.earnedPoints ?? 0}
+                        onChange={(e) =>
+                          handleGradeChange(
+                            answer.id,
+                            "earnedPoints",
+                            Math.min(
+                              Number(e.target.value),
+                              answer.question.points,
+                            ),
+                          )
+                        }
+                        className="w-20 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-500">
+                        / {answer.question.points}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-700">
+                        Mark as:
+                      </span>
+                      <MuiButton
+                        type="button"
+                        variant={
+                          grades[answer.id]?.isCorrect === true
+                            ? "contained"
+                            : "outlined"
+                        }
+                        color="success"
+                        size="small"
+                        startIcon={<CheckCircle size={16} />}
+                        onClick={() =>
+                          handleGradeChange(answer.id, "isCorrect", true)
+                        }
+                        sx={{
+                          borderRadius: "999px",
+                          textTransform: "none",
+                          fontWeight: 600,
+                        }}
+                      >
+                        Correct
+                      </MuiButton>
+                      <MuiButton
+                        type="button"
+                        variant={
+                          grades[answer.id]?.isCorrect === false
+                            ? "contained"
+                            : "outlined"
+                        }
+                        color="error"
+                        size="small"
+                        startIcon={<XCircle size={16} />}
+                        onClick={() =>
+                          handleGradeChange(answer.id, "isCorrect", false)
+                        }
+                        sx={{
+                          borderRadius: "999px",
+                          textTransform: "none",
+                          fontWeight: 600,
+                        }}
+                      >
+                        Incorrect
+                      </MuiButton>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-6 flex justify-end">
+              <MuiButton
+                variant="contained"
+                color="primary"
+                onClick={handleSubmitGrades}
+                disabled={gradeQuizAttempt.isPending}
+                sx={{ textTransform: "none", fontWeight: 600, px: 4 }}
+              >
+                {gradeQuizAttempt.isPending ? "Submitting..." : "Submit Grades"}
+              </MuiButton>
+            </div>
+          </div>
+        )}
 
         {/* Quiz Settings Reference */}
         <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
