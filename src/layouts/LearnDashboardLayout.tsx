@@ -3,8 +3,6 @@ import {
   BookOpen,
   Users,
   GraduationCap,
-  BarChart3,
-  Settings,
   Home,
   Megaphone,
   Folder,
@@ -92,12 +90,7 @@ const LearnDashboardLayout: React.FC = () => {
       icon: FileText,
       current: currentPath === "/learn/dashboard/lessons",
     },
-    {
-      name: "Analytics",
-      href: "/learn/dashboard/analytics",
-      icon: BarChart3,
-      current: currentPath === "/learn/dashboard/analytics",
-    },
+
     {
       name: "Announcements",
       href: "/learn/dashboard/announcements",
@@ -123,12 +116,6 @@ const LearnDashboardLayout: React.FC = () => {
       // forum <mat-icon class="mat-18">ligature</mat-icon>
       icon: Users,
       current: currentPath === "/learn/dashboard/forum",
-    },
-    {
-      name: "Settings",
-      href: "/learn/dashboard/settings",
-      icon: Settings,
-      current: currentPath === "/learn/dashboard/settings",
     },
   ];
 

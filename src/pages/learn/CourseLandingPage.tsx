@@ -9,7 +9,6 @@ import {
   CardContent,
   Chip,
   Button,
-  Avatar,
   Rating,
   Divider,
   List,
@@ -32,8 +31,6 @@ import {
   PlayCircleOutline,
   CheckCircle,
   Schedule,
-  Person,
-  Language,
   TrendingUp,
   MenuBook,
   Quiz as QuizIcon,
@@ -562,23 +559,7 @@ const CourseLandingPage = () => {
                 </Box>
               </Box>
 
-              {/* Instructor */}
-              <Box className="flex items-center gap-3 bg-white rounded-lg p-4 shadow-sm">
-                <Avatar className="w-12 h-12 bg-linear-to-br from-blue-500 to-indigo-600">
-                  <Person />
-                </Avatar>
-                <Box>
-                  <Typography variant="body2" className="text-gray-500">
-                    Created by
-                  </Typography>
-                  <Typography
-                    variant="body1"
-                    className="font-semibold text-gray-900"
-                  >
-                    Instructor ID: {course.instructor.id}
-                  </Typography>
-                </Box>
-              </Box>
+
             </Box>
 
             {/* Video Preview */}
@@ -1223,18 +1204,7 @@ const CourseLandingPage = () => {
                         primary={`${course.totalAssignments} assignments`}
                       />
                     </ListItem>
-                    <ListItem className="px-0 py-2">
-                      <ListItemIcon className="min-w-10">
-                        <Language className="text-green-600" />
-                      </ListItemIcon>
-                      <ListItemText primary="Lifetime access" />
-                    </ListItem>
-                    <ListItem className="px-0 py-2">
-                      <ListItemIcon className="min-w-10">
-                        <Star className="text-yellow-600" />
-                      </ListItemIcon>
-                      <ListItemText primary="Access on mobile and desktop" />
-                    </ListItem>
+
                     {course.hasCertificate && (
                       <ListItem className="px-0 py-2">
                         <ListItemIcon className="min-w-10">
