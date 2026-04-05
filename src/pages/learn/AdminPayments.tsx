@@ -304,11 +304,27 @@ const EditDialog: React.FC<EditDialogProps> = ({
 
 const SkeletonRow = () => (
   <TableRow>
-    {[200, 140, 100, 120, 120, 90, 100].map((w, i) => (
-      <TableCell key={i + w}>
-        <Skeleton width={w} height={20} />
-      </TableCell>
-    ))}
+    <TableCell>
+      <Skeleton width={200} height={20} />
+    </TableCell>
+    <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
+      <Skeleton width={140} height={20} />
+    </TableCell>
+    <TableCell>
+      <Skeleton width={100} height={20} />
+    </TableCell>
+    <TableCell>
+      <Skeleton width={120} height={20} />
+    </TableCell>
+    <TableCell sx={{ display: { xs: "none", lg: "table-cell" } }}>
+      <Skeleton width={120} height={20} />
+    </TableCell>
+    <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
+      <Skeleton width={90} height={20} />
+    </TableCell>
+    <TableCell>
+      <Skeleton width={100} height={20} />
+    </TableCell>
   </TableRow>
 );
 
@@ -456,7 +472,10 @@ export const AdminPayments: React.FC = () => {
               <TableCell className="font-semibold! text-xs! uppercase! tracking-wider! text-blue-700! bg-blue-50!">
                 Learner
               </TableCell>
-              <TableCell className="font-semibold! text-xs! uppercase! tracking-wider! text-blue-700! bg-blue-50!">
+              <TableCell
+                className="font-semibold! text-xs! uppercase! tracking-wider! text-blue-700! bg-blue-50!"
+                sx={{ display: { xs: "none", md: "table-cell" } }}
+              >
                 Course
               </TableCell>
               <TableCell className="font-semibold! text-xs! uppercase! tracking-wider! text-blue-700! bg-blue-50!">
@@ -465,10 +484,16 @@ export const AdminPayments: React.FC = () => {
               <TableCell className="font-semibold! text-xs! uppercase! tracking-wider! text-blue-700! bg-blue-50!">
                 Status
               </TableCell>
-              <TableCell className="font-semibold! text-xs! uppercase! tracking-wider! text-blue-700! bg-blue-50!">
+              <TableCell
+                className="font-semibold! text-xs! uppercase! tracking-wider! text-blue-700! bg-blue-50!"
+                sx={{ display: { xs: "none", lg: "table-cell" } }}
+              >
                 Method
               </TableCell>
-              <TableCell className="font-semibold! text-xs! uppercase! tracking-wider! text-blue-700! bg-blue-50!">
+              <TableCell
+                className="font-semibold! text-xs! uppercase! tracking-wider! text-blue-700! bg-blue-50!"
+                sx={{ display: { xs: "none", md: "table-cell" } }}
+              >
                 Date
               </TableCell>
               <TableCell className="font-semibold! text-xs! uppercase! tracking-wider! text-blue-700! bg-blue-50! text-center">
@@ -513,7 +538,7 @@ export const AdminPayments: React.FC = () => {
                     />
                   )}
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
                   <Typography className="text-xs! text-gray-700 max-w-40 truncate">
                     Course Title
                   </Typography>
@@ -526,12 +551,12 @@ export const AdminPayments: React.FC = () => {
                 <TableCell>
                   <StatusChip status={payment.status} />
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ display: { xs: "none", lg: "table-cell" } }}>
                   <Typography className="text-xs! text-gray-500 capitalize">
                     {payment.provider ?? "—"}
                   </Typography>
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
                   <Typography className="text-xs! text-gray-500">
                     {formatDate(payment.createdAt)}
                   </Typography>
