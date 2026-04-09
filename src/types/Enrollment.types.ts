@@ -121,5 +121,5 @@ export interface Payment {
   refundedAt: string | null;
   createdAt: string;
   updatedAt: string;
-  enrollment: Enrollment;
+  enrollment: CourseEnrollment;
 }

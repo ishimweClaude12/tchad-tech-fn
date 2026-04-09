@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import type React from "react";
 import {
-  ChevronDown,
   Cpu,
   Code,
   Shield,
@@ -16,7 +16,16 @@ import {
   Printer,
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
-import { Button } from "@mui/material";
+import {
+  Tabs,
+  Tab,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Typography,
+  Avatar,
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 interface ServiceCategory {
   icon: React.ElementType;
@@ -24,9 +33,9 @@ interface ServiceCategory {
   items: { en: string; fr: string; ar: string }[];
 }
 
-const ServicesSection: React.FC = () => {
+export default function ServicesSection() {
   const { language } = useLanguage();
-  const [expandedCategory, setExpandedCategory] = useState<number | null>(0);
+  const [expandedCategory, setExpandedCategory] = useState<number | false>(0);
 
   const translations = {
     mainTitle: {
@@ -805,147 +814,122 @@ const ServicesSection: React.FC = () => {
     },
   ];
 
-  const [activeTab, setActiveTab] = useState<
-    "services" | "products" | "courses"
-  >("services");
-  let currentData: ServiceCategory[];
-  if (activeTab === "services") {
-    currentData = services;
-  } else if (activeTab === "products") {
-    currentData = products;
-  } else {
-    currentData = courses;
-  }
+  const [activeTab, setActiveTab] = useState<number>(0);
 
-  const toggleCategory = (index: number) => {
-    setExpandedCategory(expandedCategory === index ? null : index);
-  };
+  const tabData = [
+    { label: translations.servicesTab[language], data: services },
+    { label: translations.productsTab[language], data: products },
+    { label: translations.coursesTab[language], data: courses },
+  ];
+
+  const currentData = tabData[activeTab].data;
+
+  const handleAccordionChange =
+    (index: number) => (_: React.SyntheticEvent, isExpanded: boolean) => {
+      setExpandedCategory(isExpanded ? index : false);
+    };
 
   return (
-    <section className="relative min-h-screen bg-linear-to-br from-slate-900 via-blue-900 to-slate-900 py-20 px-4">
-      {/* Animated background elements */}
+    <section
+      className="relative min-h-screen bg-linear-to-br from-slate-900 via-blue-900 to-slate-900 py-20 px-4"
+      dir={language === "ar" ? "rtl" : "ltr"}
+    >
+      {/* Decorative blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute w-96 h-96 bg-blue-500/20 rounded-full blur-3xl top-20 left-10 animate-pulse"></div>
-        <div className="absolute w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl bottom-20 right-10 animate-pulse delay-1000"></div>
+        <div className="absolute w-96 h-96 bg-blue-500/20 rounded-full blur-3xl top-20 left-10 animate-pulse" />
+        <div className="absolute w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl bottom-20 right-10 animate-pulse" />
       </div>
 
-      <div className="relative max-w-7xl lg:px-8 mx-auto">
+      <div className="relative max-w-7xl mx-auto lg:px-8">
         {/* Header */}
-        <div
-          className="text-center mb-16"
-          dir={language === "ar" ? "rtl" : "ltr"}
-        >
-          <h2 className="text-5xl md:text-6xl font-bold text-white mb-4 bg-clip-text   bg-linear-to-r from-purple-400 to-pink-600">
+        <div className="text-center mb-12">
+          <Typography
+            variant="h3"
+            component="h2"
+            className="font-bold mb-4"
+            sx={{ color: "white" }}
+          >
             {translations.mainTitle[language]}
-          </h2>
-          <p className="text-xl text-purple-200 max-w-3xl mx-auto">
+          </Typography>
+          <Typography variant="subtitle1" sx={{ color: "#e9d5ff" }} className="max-w-3xl mx-auto">
             {translations.subtitle[language]}
-          </p>
+          </Typography>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex flex-wrap justify-center mb-12 gap-2 sm:gap-4">
-          <Button
-            onClick={() => {
-              setActiveTab("services");
-              setExpandedCategory(0);
-            }}
-            className={`w-full sm:w-auto px-4 py-2 lg:px-8 lg:py-4 rounded-2xl font-semibold text-base sm:text-lg transition-all transform hover:scale-105 ${
-              activeTab === "services"
-                ? "bg-linear-to-r from-blue-600 to-indigo-600 text-white shadow-2xl shadow-blue-500/50"
-                : "bg-white/10 text-white/70 hover:bg-white/20"
-            }`}
-          >
-            {translations.servicesTab[language]}
-          </Button>
-          <Button
-            onClick={() => {
-              setActiveTab("products");
-              setExpandedCategory(0);
-            }}
-            className={`w-full sm:w-auto px-4 py-2 lg:px-8 lg:py-4 rounded-2xl font-semibold text-base sm:text-lg transition-all transform hover:scale-105 ${
-              activeTab === "products"
-                ? "bg-linear-to-r from-blue-600 to-indigo-600 text-white shadow-2xl shadow-blue-500/50"
-                : "bg-white/10 text-white/70 hover:bg-white/20"
-            }`}
-          >
-            {translations.productsTab[language]}
-          </Button>
-          <Button
-            onClick={() => {
-              setActiveTab("courses");
-              setExpandedCategory(0);
-            }}
-            className={`w-full sm:w-auto px-4 py-2 lg:px-8 lg:py-4 rounded-2xl font-semibold text-base sm:text-lg transition-all transform hover:scale-105 ${
-              activeTab === "courses"
-                ? "bg-linear-to-r from-blue-600 to-indigo-600 text-white shadow-2xl shadow-blue-500/50"
-                : "bg-white/10 text-white/70 hover:bg-white/20"
-            }`}
-          >
-            {translations.coursesTab[language]}
-          </Button>
-        </div>
+        <Tabs
+          value={activeTab}
+          onChange={(_, v) => { setActiveTab(v); setExpandedCategory(0); }}
+          centered
+          className="mb-12"
+          slotProps={{ indicator: { style: { background: "white" } } }}
+          sx={{
+            "& .MuiTab-root": { color: "rgba(255,255,255,0.6)", fontWeight: 600, fontSize: "1rem" },
+            "& .Mui-selected": { color: "white" },
+          }}
+        >
+          {tabData.map((tab) => (
+            <Tab key={tab.label} label={tab.label} />
+          ))}
+        </Tabs>
 
-        {/* Service/Product Categories */}
-        <div className="grid gap-4" dir={language === "ar" ? "rtl" : "ltr"}>
+        {/* Category Accordions */}
+        <div className="flex flex-col gap-3">
           {currentData.map((category, index) => {
             const Icon = category.icon;
-            const isExpanded = expandedCategory === index;
-
             return (
-              <div
+              <Accordion
                 key={index}
-                className="bg-white/10 backdrop-blur-lg rounded-2xl overflow-hidden border border-white/20 hover:border-blue-400/50 transition-all duration-300"
+                expanded={expandedCategory === index}
+                onChange={handleAccordionChange(index)}
+                sx={{
+                  bgcolor: "rgba(255,255,255,0.08)",
+                  backdropFilter: "blur(12px)",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  borderRadius: "12px !important",
+                  "&:before": { display: "none" },
+                  "&.Mui-expanded": { border: "1px solid rgba(96,165,250,0.5)" },
+                }}
               >
-                <Button
-                  onClick={() => toggleCategory(index)}
-                  className="w-full px-6 py-5 flex items-center justify-between text-left hover:bg-white/5 transition-colors"
+                <AccordionSummary
+                  expandIcon={<ExpandMoreIcon sx={{ color: "#93c5fd" }} />}
+                  sx={{ "& .MuiAccordionSummary-content": { alignItems: "center", gap: 2 } }}
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-linear-to-br from-blue-500 to-indigo-500 flex items-center justify-center">
-                      <Icon className="w-6 h-6 text-white" />
-                    </div>
-                    <h3 className="text-xl font-bold text-white">
-                      {category.title[language]}
-                    </h3>
+                  <Avatar
+                    sx={{
+                      bgcolor: "linear-gradient(135deg, #3b82f6, #6366f1)",
+                      background: "linear-gradient(135deg, #3b82f6, #6366f1)",
+                      width: 44,
+                      height: 44,
+                      borderRadius: 2,
+                    }}
+                  >
+                    <Icon size={22} />
+                  </Avatar>
+                  <Typography variant="subtitle1" className="font-bold" sx={{ color: "white" }}>
+                    {category.title[language]}
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails sx={{ pt: 0, pb: 2, px: 3 }}>
+                  <div className="grid md:grid-cols-2 gap-3">
+                    {category.items.map((item, itemIndex) => (
+                      <div
+                        key={itemIndex}
+                        className="flex items-start gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
+                      >
+                        <div className="w-2 h-2 rounded-full bg-blue-400 mt-2 shrink-0" />
+                        <Typography variant="body2" sx={{ color: "#bfdbfe" }}>
+                          {item[language]}
+                        </Typography>
+                      </div>
+                    ))}
                   </div>
-                  <ChevronDown
-                    className={`w-6 h-6 text-blue-300 transition-transform duration-300 ${
-                      isExpanded ? "rotate-180" : ""
-                    }`}
-                  />
-                </Button>
-
-                <div
-                  className={`transition-all duration-300 ease-in-out ${
-                    isExpanded
-                      ? "max-h-[2000px] opacity-100"
-                      : "max-h-0 opacity-0"
-                  } overflow-hidden`}
-                >
-                  <div className="px-6 pb-6 pt-2">
-                    <div className="grid md:grid-cols-2 gap-3">
-                      {category.items.map((item, itemIndex) => (
-                        <div
-                          key={itemIndex}
-                          className="flex items-start gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors group"
-                        >
-                          <div className="w-2 h-2 rounded-full bg-blue-400 mt-2 group-hover:scale-150 transition-transform"></div>
-                          <p className="text-blue-100 leading-relaxed flex-1">
-                            {item[language]}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
+                </AccordionDetails>
+              </Accordion>
             );
           })}
         </div>
       </div>
     </section>
   );
-};
-
-export default ServicesSection;
+}

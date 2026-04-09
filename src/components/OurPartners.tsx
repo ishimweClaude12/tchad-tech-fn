@@ -1,7 +1,7 @@
-import { Button } from "@mui/material";
+import { Button, Typography, Paper } from "@mui/material";
+import { Link } from "react-router-dom";
 import { useLanguage } from "../contexts/LanguageContext";
 
-// Translation definitions
 const translations = {
   en: {
     trustedPartners: "Our Trusted Partners",
@@ -47,79 +47,67 @@ const translations = {
   },
 };
 
-const TrustedByBanner = () => {
+const logos = [
+  "UNICEF",
+  "World Bank",
+  "UNESCO",
+  "Microsoft",
+  "Google",
+  "aws",
+  "African Development Bank",
+];
+const duplicatedLogos = [...logos, ...logos];
+
+function TrustedByBanner() {
   const { language } = useLanguage();
   const t = translations[language];
 
-  const logos = [
-    "UNICEF",
-    "World Bank",
-    "UNESCO",
-    "Microsoft",
-    "Google",
-    "aws",
-    "African Development Bank",
-  ];
-
-  const duplicatedLogos = [...logos, ...logos];
-
   return (
-    <div className="pb-4 sm:pb-6 md:pb-8 overflow-x-hidden overflow-y-visible w-full box-border max-w-full">
-      <style>
-        {`
-          @keyframes scrollRight {
-            0% {
-              transform: translateX(0);
-            }
-            100% {
-              transform: translateX(-50%);
-            }
-          }
-          
-          .scroll-container {
-            animation: scrollRight 30s linear infinite;
-            width: max-content;
-            will-change: transform;
-          }
-          
-          .scroll-container:hover {
-            animation-play-state: paused;
-          }
-
-          /* Responsive animation speed */
-          @media (max-width: 640px) {
-            .scroll-container {
-              animation: scrollRight 20s linear infinite;
-            }
-          }
-        `}
-      </style>
-
-      <h1 className="text-center text-xs sm:text-sm md:text-base lg:text-lg font-bold text-gray-600 uppercase tracking-wider mb-3 sm:mb-4 md:mb-6 px-2 sm:px-4 wrap-break-words max-w-full">
+    <div className="pb-6 overflow-hidden w-full">
+      <Typography
+        variant="overline"
+        component="h2"
+        className="block text-center font-bold tracking-widest mb-4"
+        sx={{ color: "text.secondary" }}
+      >
         {t.trustedPartners}
-      </h1>
+      </Typography>
 
-      <div className="relative w-full max-w-[360px] overflow-x-hidden py-2 sm:py-3 md:py-4">
-        <div className="flex scroll-container">
+      <div className="relative w-full overflow-hidden py-3 group">
+        {/* Gradient masks */}
+        <div className="absolute left-0 top-0 h-full w-16 lg:w-24 bg-linear-to-r from-gray-50 to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 h-full w-16 lg:w-24 bg-linear-to-l from-gray-50 to-transparent z-10 pointer-events-none" />
+
+        <div
+          className="flex group-hover:[animation-play-state:paused]"
+          style={{
+            animation: "scrollRight 30s linear infinite",
+            width: "max-content",
+            willChange: "transform",
+          }}
+        >
           {duplicatedLogos.map((logo, index) => (
             <div
               key={index}
-              className="shrink-0 mx-2 sm:mx-4 md:mx-6 lg:mx-8 text-gray-400 hover:text-gray-700 transition-colors duration-300 cursor-pointer"
+              className="shrink-0 mx-6 lg:mx-12 flex items-center"
             >
               <img
-                src={`/icons/${logo.toLowerCase()}-logo.svg`}
+                src={`/icons/${logo.toLowerCase().replaceAll(" ", "-")}-logo.svg`}
                 alt={logo}
-                className="h-6 sm:h-8 md:h-10 lg:h-12 w-auto object-contain"
+                className="h-8 md:h-10 lg:h-14 w-auto object-contain opacity-50 hover:opacity-80 transition-opacity"
               />
             </div>
           ))}
         </div>
       </div>
+
+      {/* Keyframe defined via a style tag once — minimal footprint */}
+      <style>{`@keyframes scrollRight { from { transform: translateX(0) } to { transform: translateX(-50%) } }`}</style>
     </div>
   );
-};
+}
 
-const PartnersSection = () => {
+export default function PartnersSection() {
   const { language } = useLanguage();
   const t = translations[language];
   const isRTL = language === "ar";
@@ -132,101 +120,94 @@ const PartnersSection = () => {
   ];
 
   return (
-    <div
-      className="w-full max-w-full min-h-screen bg-linear-to-br from-gray-50 via-white to-blue-50 py-6 sm:py-8 md:py-12 lg:py-16 px-3 sm:px-4 md:px-6 lg:px-8 overflow-x-hidden box-border"
+    <section
+      className="w-full py-12 lg:py-24 px-4 sm:px-6 lg:px-16 xl:px-24 bg-linear-to-br from-gray-50 via-white to-blue-50 overflow-hidden"
       dir={isRTL ? "rtl" : "ltr"}
     >
-      <style>
-        {`
-          @keyframes fadeInScale {
-            from {
-              opacity: 0;
-              transform: scale(0.9);
-            }
-            to {
-              opacity: 1;
-              transform: scale(1);
-            }
-          }
-          
-          @keyframes fadeIn {
-            from {
-              opacity: 0;
-            }
-            to {
-              opacity: 1;
-            }
-          }
-          
-          @keyframes slideDown {
-            from {
-              opacity: 0;
-              transform: translateY(-20px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-        `}
-      </style>
-
-      <div className="max-w-7xl mx-auto w-full ">
+      <div className="max-w-7xl mx-auto">
         <TrustedByBanner />
 
-        <div
-          style={{ animation: "fadeIn 1s ease-out 0.8s both" }}
-          className="w-full"
+        {/* Partnership CTA */}
+        <Paper
+          elevation={0}
+          className="rounded-3xl p-8 lg:p-16 xl:p-20 text-center mb-12 lg:mb-16"
+          sx={{ background: "linear-gradient(135deg, #1d4ed8, #7c3aed)" }}
         >
-          <div className="bg-linear-to-r from-blue-600 to-purple-600 rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-6 md:p-8 lg:p-10 text-center shadow-2xl box-border">
-            <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2 sm:mb-3 md:mb-4 lg:mb-6 px-2 wrap-break-words max-w-full">
-              {t.becomePartner}
-            </h3>
-            <p className="text-blue-100 text-xs sm:text-sm md:text-base lg:text-lg mb-4 sm:mb-6 md:mb-8 max-w-3xl mx-auto leading-relaxed px-2 wrap-break-words">
-              {t.partnershipDescription}
-            </p>
-            <div
-              className={`flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center ${
-                isRTL ? "sm:flex-row-reverse" : ""
-              }`}
+          <Typography
+            variant="h3"
+            component="h2"
+            className="font-bold mb-4 lg:mb-6"
+            sx={{ color: "white" }}
+          >
+            {t.becomePartner}
+          </Typography>
+          <Typography
+            variant="body1"
+            className="max-w-3xl mx-auto mb-8 lg:text-lg"
+            sx={{ color: "#ddd6fe" }}
+          >
+            {t.partnershipDescription}
+          </Typography>
+          <div
+            className={`flex flex-col sm:flex-row gap-4 justify-center ${isRTL ? "sm:flex-row-reverse" : ""}`}
+          >
+            <Button
+              component={Link}
+              to="/about-us"
+              variant="contained"
+              size="large"
+              sx={{
+                bgcolor: "white",
+                color: "primary.main",
+                "&:hover": { bgcolor: "grey.100" },
+                fontWeight: 600,
+              }}
             >
-              <Button
-                onClick={() => (window.location.href = "/about-us")}
-                className="bg-white text-blue-600 font-semibold px-3 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 rounded-lg sm:rounded-xl hover:shadow-xl transform hover:scale-105 transition-all duration-300 hover:bg-gray-50 text-[11px] sm:text-sm md:text-base w-full sm:w-auto wrap-break-words"
-              >
-                {t.readMore}
-              </Button>
-              <Button
-                onClick={() => (window.location.href = "/contact-us")}
-                className="bg-transparent border-2 border-white text-white font-semibold px-3 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 rounded-lg sm:rounded-xl hover:bg-white hover:text-blue-600 transform hover:scale-105 transition-all duration-300 text-[11px] sm:text-sm md:text-base w-full sm:w-auto wrap-break-words"
-              >
-                {t.contactUs}
-              </Button>
-            </div>
+              {t.readMore}
+            </Button>
+            <Button
+              component={Link}
+              to="/contact-us"
+              variant="outlined"
+              size="large"
+              sx={{
+                borderColor: "rgba(255,255,255,0.7)",
+                color: "white",
+                "&:hover": {
+                  bgcolor: "rgba(255,255,255,0.15)",
+                  borderColor: "white",
+                },
+                fontWeight: 600,
+              }}
+            >
+              {t.contactUs}
+            </Button>
           </div>
-        </div>
+        </Paper>
 
-        <div
-          className="mt-6 sm:mt-8 md:mt-12 lg:mt-16 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 w-full"
-          style={{ animation: "fadeIn 1s ease-out 1s both" }}
-        >
-          {statsData.map((stat, index) => (
-            <div
-              key={index}
-              className="text-center p-3 sm:p-4 md:p-6 bg-white/50 backdrop-blur-sm rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 box-border"
+        {/* Stats grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
+          {statsData.map((stat) => (
+            <Paper
+              key={stat.label}
+              elevation={1}
+              className="text-center p-5 lg:p-8 rounded-xl hover:shadow-md transition-shadow"
             >
-              <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600 mb-1 sm:mb-2">
+              <Typography
+                variant="h3"
+                component="p"
+                className="font-bold mb-1"
+                sx={{ color: "primary.main" }}
+              >
                 {stat.number}
-              </div>
-              <div className="text-gray-600 font-medium text-[10px] sm:text-xs md:text-sm lg:text-base leading-tight px-1">
+              </Typography>
+              <Typography variant="body1" sx={{ color: "text.secondary" }}>
                 {stat.label}
-              </div>
-            </div>
+              </Typography>
+            </Paper>
           ))}
         </div>
       </div>
-    </div>
+    </section>
   );
-};
-
-export default PartnersSection;
+}

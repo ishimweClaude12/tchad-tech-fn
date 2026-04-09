@@ -301,7 +301,7 @@ const DashboardOverview: React.FC = () => {
   const { data: enrollmentsData, isLoading: enrollmentsLoading } =
     useUserEnrollments(userId);
   const { data: paymentsData, isLoading: paymentsLoading } =
-    useGetAllPaymentsMade();
+    useGetAllPaymentsMade({ page: 1, limit: 500 });
 
   // â”€â”€ Derived data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const totalCourses =

@@ -63,10 +63,13 @@ export const useGetAllPayments = (enrollmentId: string) => {
   });
 };
 
-export const useGetAllPaymentsMade = () => {
+export const useGetAllPaymentsMade = (params: {
+  page: number;
+  limit: number;
+}) => {
   return useQuery({
-    queryKey: ["all-payments"],
-    queryFn: () => enrollmentApi.getAllPaymentsMade(),
+    queryKey: ["all-payments", params.page, params.limit],
+    queryFn: () => enrollmentApi.getAllPaymentsMade(params),
   });
 };
 

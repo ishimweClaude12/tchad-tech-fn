@@ -1,9 +1,24 @@
+import type React from "react";
 import HeroSection from "../../components/HeroSection";
-import React from "react";
 import ServicesSection from "../../components/Services";
 import PartnersSection from "../../components/OurPartners";
 import { useLanguage } from "../../contexts/LanguageContext";
 import TeamSection from "../../layouts/Team";
+import {
+  Typography,
+  Card,
+  CardContent,
+  Button,
+  Chip,
+} from "@mui/material";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import SchoolIcon from "@mui/icons-material/School";
+import ApartmentIcon from "@mui/icons-material/Apartment";
+import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
+import EmojiObjectsIcon from "@mui/icons-material/EmojiObjects";
+import BusinessCenterIcon from "@mui/icons-material/BusinessCenter";
+import { Link } from "react-router-dom";
 
 const translations = {
   en: {
@@ -18,22 +33,26 @@ const translations = {
         description:
           "Shop products from local businesses and service providers.",
         cta: "Explore Shop",
+        href: "/shop",
       },
       elearning: {
         title: "E-learning",
         description: "Learn new skills with our comprehensive course catalog.",
         cta: "Start Learning",
+        href: "/learn",
       },
       hub: {
         title: "Hub Management",
         description: "Book co-working spaces and manage your projects.",
         cta: "Access Hub",
+        href: "/hub",
       },
       techHub: {
         title: "Tech Hub",
         description:
           "Connect with the tech community and collaborate on projects.",
         cta: "Access Community",
+        href: "/tech_hub",
       },
     },
     innovators: {
@@ -58,15 +77,6 @@ const translations = {
         "Business networking events",
       ],
     },
-
-    // TODO: Remove these commented codes if no feedback about them
-    // cta: {
-    //   title: "Ready to Start Your Journey?",
-    //   description:
-    //     "Join hundreds of entrepreneurs, innovators, and businesses already thriving in our ecosystem.",
-    //   primary: "Get Started Today",
-    //   secondary: "Learn More",
-    // },
   },
   fr: {
     explore: {
@@ -80,23 +90,27 @@ const translations = {
         description:
           "Achetez des produits auprès d'entreprises locales et de prestataires de services.",
         cta: "Explorer la Boutique",
+        href: "/shop",
       },
       elearning: {
         title: "E-learning",
         description:
           "Apprenez de nouvelles compétences avec notre catalogue complet de cours.",
         cta: "Commencer à Apprendre",
+        href: "/learn",
       },
       hub: {
         title: "Gestion du Hub",
         description: "Réservez des espaces de coworking et gérez vos projets.",
         cta: "Accéder au Hub",
+        href: "/hub",
       },
       techHub: {
         title: "Tech Hub",
         description:
           "Connectez-vous avec la communauté tech et collaborez sur des projets.",
         cta: "Accéder à la Communauté",
+        href: "/tech_hub",
       },
     },
     innovators: {
@@ -121,13 +135,6 @@ const translations = {
         "Événements de réseautage d'affaires",
       ],
     },
-    cta: {
-      title: "Prêt à Commencer Votre Parcours?",
-      description:
-        "Rejoignez des centaines d'entrepreneurs, innovateurs et entreprises qui prospèrent déjà dans notre écosystème.",
-      primary: "Commencer Aujourd'hui",
-      secondary: "En Savoir Plus",
-    },
   },
   ar: {
     explore: {
@@ -139,21 +146,25 @@ const translations = {
         title: "التجارة الإلكترونية",
         description: "تسوق المنتجات من الشركات المحلية ومقدمي الخدمات.",
         cta: "استكشف المتجر",
+        href: "/shop",
       },
       elearning: {
         title: "التعلم الإلكتروني",
         description: "تعلم مهارات جديدة مع كتالوج الدورات الشامل لدينا.",
         cta: "ابدأ التعلم",
+        href: "/learn",
       },
       hub: {
         title: "إدارة المركز",
         description: "احجز مساحات العمل المشترك وأدر مشاريعك.",
         cta: "الوصول إلى المركز",
+        href: "/hub",
       },
       techHub: {
         title: "المركز التقني",
         description: "تواصل مع مجتمع التكنولوجيا وتعاون في المشاريع.",
         cta: "الوصول إلى المجتمع",
+        href: "/tech_hub",
       },
     },
     innovators: {
@@ -178,153 +189,156 @@ const translations = {
         "فعاليات التواصل التجاري",
       ],
     },
-    cta: {
-      title: "هل أنت مستعد لبدء رحلتك؟",
-      description:
-        "انضم إلى مئات من رواد الأعمال والمبتكرين والشركات الذين يزدهرون بالفعل في نظامنا البيئي.",
-      primary: "ابدأ اليوم",
-      secondary: "تعرف على المزيد",
-    },
   },
 };
 
-const HomePage: React.FC = () => {
-  //   useScrollToTop({ smooth: true });
-  const { language } = useLanguage();
+type FeatureKey = "ecommerce" | "elearning" | "hub" | "techHub";
+
+const featureIcons: Record<FeatureKey, React.ReactNode> = {
+  ecommerce: <ShoppingCartIcon sx={{ fontSize: 36 }} />,
+  elearning: <SchoolIcon sx={{ fontSize: 36 }} />,
+  hub: <ApartmentIcon sx={{ fontSize: 36 }} />,
+  techHub: <RocketLaunchIcon sx={{ fontSize: 36 }} />,
+};
+
+const featureColors: Record<FeatureKey, "primary" | "success" | "secondary" | "warning"> = {
+  ecommerce: "primary",
+  elearning: "success",
+  hub: "secondary",
+  techHub: "warning",
+};
+
+export default function HomePage() {
+  const { language, isRTL } = useLanguage();
   const t = translations[language];
 
+  const featureKeys: FeatureKey[] = ["ecommerce", "elearning", "hub", "techHub"];
+
   return (
-    <div>
-      {/* Hero Section with Video Background */}
-      <HeroSection videoSrc={"/videos/hero-background-v2.mp4"} />
-      {/* Existing Content */}
-      <div className="lg:p-8 pt-8 bg-gray-50">
-        <div className=" mx-auto px-4 sm:px-6 lg:px-8">
+    <div dir={isRTL ? "rtl" : "ltr"}>
+      {/* Hero Section */}
+      <HeroSection videoSrc="/videos/hero-background-v2.mp4" />
+
+      {/* Platform Overview */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          {/* Section header */}
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <Typography variant="h3" component="h2" className="font-bold mb-3" sx={{ color: "text.primary" }}>
               {t.explore.title}
-            </h2>
-            <p className="text-lg text-gray-600">{t.explore.subtitle}</p>
+            </Typography>
+            <Typography variant="subtitle1" sx={{ color: "text.secondary" }} className="max-w-2xl mx-auto">
+              {t.explore.subtitle}
+            </Typography>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            <div className="bg-white p-6 rounded-xl shadow-lg border hover:shadow-xl transition-shadow duration-300 group">
-              <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">
-                🛒
-              </div>
-              <h3 className="text-lg font-semibold mb-3">
-                {t.features.ecommerce.title}
-              </h3>
-              <p className="text-gray-600 mb-4 text-sm">
-                {t.features.ecommerce.description}
-              </p>
-              <a
-                href="/shop"
-                className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-              >
-                {t.features.ecommerce.cta}
-              </a>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-lg border hover:shadow-xl transition-shadow duration-300 group">
-              <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">
-                📚
-              </div>
-              <h3 className="text-lg font-semibold mb-3">
-                {t.features.elearning.title}
-              </h3>
-              <p className="text-gray-600 mb-4 text-sm">
-                {t.features.elearning.description}
-              </p>
-              <a
-                href="/learn"
-                className="inline-block px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-              >
-                {t.features.elearning.cta}
-              </a>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-lg border hover:shadow-xl transition-shadow duration-300 group">
-              <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">
-                🏢
-              </div>
-              <h3 className="text-lg font-semibold mb-3">
-                {t.features.hub.title}
-              </h3>
-              <p className="text-gray-600 mb-4 text-sm">
-                {t.features.hub.description}
-              </p>
-              <a
-                href="/hub"
-                className="inline-block px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
-              >
-                {t.features.hub.cta}
-              </a>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-lg border hover:shadow-xl transition-shadow duration-300 group">
-              <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">
-                🚀
-              </div>
-              <h3 className="text-lg font-semibold mb-3">
-                {t.features.techHub.title}
-              </h3>
-              <p className="text-gray-600 mb-4 text-sm">
-                {t.features.techHub.description}
-              </p>
-              <a
-                href="/tech_hub"
-                className="inline-block px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium"
-              >
-                {t.features.techHub.cta}
-              </a>
-            </div>
+          {/* Feature cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-14">
+            {featureKeys.map((key) => {
+              const feature = t.features[key];
+              const color = featureColors[key];
+              return (
+                <Card
+                  key={key}
+                  className="flex flex-col h-full hover:shadow-xl transition-shadow duration-300"
+                  elevation={2}
+                >
+                  <CardContent className="flex flex-col flex-1 gap-3 p-6">
+                    <div className="flex items-center justify-center w-14 h-14 rounded-xl mb-1"
+                      style={{ background: `var(--chad-blue)10` }}
+                    >
+                      <Chip
+                        icon={featureIcons[key] as React.ReactElement}
+                        label=""
+                        color={color}
+                        sx={{ width: 52, height: 52, borderRadius: 3, "& .MuiChip-icon": { margin: 0 }, "& .MuiChip-label": { display: "none" } }}
+                      />
+                    </div>
+                    <Typography variant="h6" component="h3" className="font-semibold">
+                      {feature.title}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: "text.secondary" }} className="flex-1">
+                      {feature.description}
+                    </Typography>
+                    <Button
+                      component={Link}
+                      to={feature.href}
+                      variant="contained"
+                      color={color}
+                      size="small"
+                      className="self-start mt-2"
+                    >
+                      {feature.cta}
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
 
-          {/* Additional sections */}
-          <div className="grid md:grid-cols-2 gap-8 mb-12">
-            <div className="bg-white p-8 rounded-xl shadow-lg border">
-              <h3 className="text-xl font-semibold mb-4 text-gray-900 flex items-center">
-                <span className="text-2xl mr-3">🎯</span>
-                {t.innovators.title}
-              </h3>
-              <p className="text-gray-600 mb-4">{t.innovators.description}</p>
-              <ul className="text-sm text-gray-600 space-y-2">
-                {t.innovators.features.map((feature, index) => (
-                  <li key={index} className="flex items-center">
-                    <span className="text-green-500 mr-2">✓</span>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {/* Audience cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Innovators */}
+            <Card elevation={2} className="p-2">
+              <CardContent className="flex flex-col gap-4">
+                <div className="flex items-center gap-3">
+                  <EmojiObjectsIcon sx={{ color: "secondary.main", fontSize: 32 }} />
+                  <Typography variant="h5" component="h3" className="font-semibold">
+                    {t.innovators.title}
+                  </Typography>
+                </div>
+                <Typography variant="body1" sx={{ color: "text.secondary" }}>
+                  {t.innovators.description}
+                </Typography>
+                <ul className="flex flex-col gap-2">
+                  {t.innovators.features.map((feature) => (
+                    <li key={feature} className="flex items-center gap-2">
+                      <CheckCircleOutlineIcon sx={{ color: "success.main", fontSize: 20 }} />
+                      <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                        {feature}
+                      </Typography>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
 
-            <div className="bg-white p-8 rounded-xl shadow-lg border">
-              <h3 className="text-xl font-semibold mb-4 text-gray-900 flex items-center">
-                <span className="text-2xl mr-3">💼</span>
-                {t.businesses.title}
-              </h3>
-              <p className="text-gray-600 mb-4">{t.businesses.description}</p>
-              <ul className="text-sm text-gray-600 space-y-2">
-                {t.businesses.features.map((feature, index) => (
-                  <li key={index} className="flex items-center">
-                    <span className="text-green-500 mr-2">✓</span>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {/* Businesses */}
+            <Card elevation={2} className="p-2">
+              <CardContent className="flex flex-col gap-4">
+                <div className="flex items-center gap-3">
+                  <BusinessCenterIcon sx={{ color: "primary.main", fontSize: 32 }} />
+                  <Typography variant="h5" component="h3" className="font-semibold">
+                    {t.businesses.title}
+                  </Typography>
+                </div>
+                <Typography variant="body1" sx={{ color: "text.secondary" }}>
+                  {t.businesses.description}
+                </Typography>
+                <ul className="flex flex-col gap-2">
+                  {t.businesses.features.map((feature) => (
+                    <li key={feature} className="flex items-center gap-2">
+                      <CheckCircleOutlineIcon sx={{ color: "success.main", fontSize: 20 }} />
+                      <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                        {feature}
+                      </Typography>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
           </div>
-
         </div>
-      </div>
-      {/* Our services Section */}
+      </section>
+
+      {/* Services Section */}
       <ServicesSection />
-      {/* Team members section */}
+
+      {/* Team Section */}
       <TeamSection />
+
+      {/* Partners Section */}
       <PartnersSection />
     </div>
   );
-};
-
-export default HomePage;
+}

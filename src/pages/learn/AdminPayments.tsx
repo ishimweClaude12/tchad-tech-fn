@@ -6,7 +6,9 @@ import {
   TableBody,
   TableCell,
   TableContainer,
+  TableFooter,
   TableHead,
+  TablePagination,
   TableRow,
   Paper,
   IconButton,
@@ -24,7 +26,6 @@ import {
   Button,
   Skeleton,
   Alert,
-  Pagination,
   Snackbar,
 } from "@mui/material";
 import {
@@ -331,16 +332,12 @@ const SkeletonRow = () => (
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export const AdminPayments: React.FC = () => {
-  const { data, isLoading, error } = useGetAllPaymentsMade();
-  const updatePaymentMutation = useUpdatePayment();
-  const deletePaymentMutation = useDeletePayment();
-  const refundPaymentMutation = useRefundPayment();
+  const ROWS_PER_PAGE = 8;
 
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(0);
   const [editPayment, setEditPayment] = useState<Payment | null>(null);
   const [deletePayment, setDeletePayment] = useState<Payment | null>(null);
   const [refundPayment, setRefundPayment] = useState<Payment | null>(null);
-  const [payments, setPayments] = useState<Payment[]>([]);
   const [toast, setToast] = useState<{
     open: boolean;
     message: string;
@@ -351,11 +348,16 @@ export const AdminPayments: React.FC = () => {
     severity: "success",
   });
 
-  const ROWS_PER_PAGE = 8;
+  const { data, isLoading, error } = useGetAllPaymentsMade({
+    page,
+    limit: ROWS_PER_PAGE,
+  });
+  const updatePaymentMutation = useUpdatePayment();
+  const deletePaymentMutation = useDeletePayment();
+  const refundPaymentMutation = useRefundPayment();
 
-  React.useEffect(() => {
-    if (data?.data?.payments) setPayments(data?.data?.payments);
-  }, [data]);
+  const payments = data?.data?.payments ?? [];
+  const meta = data?.data?.meta;
 
   const handleDelete = (p: Payment) => {
     deletePaymentMutation.mutate(p.id, {
@@ -387,12 +389,6 @@ export const AdminPayments: React.FC = () => {
       },
     );
   };
-
-  const paginated = payments.slice(
-    (page - 1) * ROWS_PER_PAGE,
-    page * ROWS_PER_PAGE,
-  );
-  const totalPages = Math.ceil(payments.length / ROWS_PER_PAGE);
 
   // Stats
   const totalRevenue = payments
@@ -508,7 +504,7 @@ export const AdminPayments: React.FC = () => {
                   <SkeletonRow key={`skeleton-${i + 1}`} />
                 ))
               : null}
-            {!isLoading && paginated.length === 0 && (
+            {!isLoading && payments.length === 0 && (
               <TableRow>
                 <TableCell colSpan={7} className="py-12! text-center!">
                   <Box className="flex flex-col items-center gap-2 text-gray-400">
@@ -520,7 +516,7 @@ export const AdminPayments: React.FC = () => {
                 </TableCell>
               </TableRow>
             )}
-            {paginated.map((payment) => (
+            {payments.map((payment) => (
               <TableRow
                 key={payment.id}
                 hover
@@ -540,7 +536,7 @@ export const AdminPayments: React.FC = () => {
                 </TableCell>
                 <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
                   <Typography className="text-xs! text-gray-700 max-w-40 truncate">
-                    Course Title
+                    {payment.enrollment.course.title}
                   </Typography>
                 </TableCell>
                 <TableCell>
@@ -618,32 +614,30 @@ export const AdminPayments: React.FC = () => {
               </TableRow>
             ))}
           </TableBody>
+          <TableFooter>
+            <TableRow>
+              <TablePagination
+                colSpan={7}
+                count={meta?.totalItems ?? 0}
+                page={page}
+                rowsPerPage={ROWS_PER_PAGE}
+                rowsPerPageOptions={[ROWS_PER_PAGE]}
+                onPageChange={(_, newPage) => setPage(newPage)}
+                sx={{
+                  borderTop: "1px solid #dbeafe",
+                  "& .MuiTablePagination-toolbar": { color: "#374151" },
+                  "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows":
+                    { fontSize: "0.75rem" },
+                  "& .MuiIconButton-root": {
+                    color: "#1d4ed8",
+                    "&.Mui-disabled": { color: "#9ca3af" },
+                  },
+                }}
+              />
+            </TableRow>
+          </TableFooter>
         </Table>
       </TableContainer>
-
-      {/* ── Pagination ── */}
-      {!isLoading && totalPages > 1 && (
-        <Box className="flex items-center justify-between mt-4 flex-wrap gap-2">
-          <Typography className="text-xs! text-gray-500">
-            Showing {Math.min((page - 1) * ROWS_PER_PAGE + 1, payments.length)}–
-            {Math.min(page * ROWS_PER_PAGE, payments.length)} of{" "}
-            {payments.length} transactions
-          </Typography>
-          <Pagination
-            count={totalPages}
-            page={page}
-            onChange={(_, v) => setPage(v)}
-            size="small"
-            sx={{
-              "& .MuiPaginationItem-root": { borderRadius: "8px" },
-              "& .Mui-selected": {
-                background: "#1d4ed8 !important",
-                color: "#fff",
-              },
-            }}
-          />
-        </Box>
-      )}
 
       {/* ── Dialogs ── */}
       <EditDialog
