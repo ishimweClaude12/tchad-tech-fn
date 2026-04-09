@@ -10,7 +10,7 @@ import type {
   UserEnrollment,
 } from "src/types/Enrollment.types";
 import axiosInstance from "../../lib/axios";
-import type { ApiResponse } from "../../types/Api.types";
+import type { ApiResponse, PaginationMeta } from "../../types/Api.types";
 
 export const enrollmentApi = {
   enrollInCourse: async (courseId: string, userId: string) => {
@@ -47,10 +47,10 @@ export const enrollmentApi = {
     >(`/payment-transactions/enrollment/${enrollmentId}`);
     return data;
   },
-  getAllPaymentsMade: async () => {
+  getAllPaymentsMade: async (params: { page: number; limit: number }) => {
     const { data } = await axiosInstance.get<
-      ApiResponse<{ payments: Payment[] }>
-    >(`/payment-transactions`);
+      ApiResponse<{ payments: Payment[]; meta: PaginationMeta }>
+    >(`/payment-transactions?page=${params.page}&limit=${params.limit}`);
     return data;
   },
   updatePayment: async (

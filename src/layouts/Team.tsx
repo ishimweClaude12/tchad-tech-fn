@@ -1,6 +1,15 @@
-import { useState } from "react";
 import { Linkedin, Twitter, Mail, Phone } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
+import {
+  Card,
+  CardContent,
+  CardMedia,
+  Typography,
+  IconButton,
+  Chip,
+  Button,
+} from "@mui/material";
+import { Link } from "react-router-dom";
 
 // Translation object
 const translations = {
@@ -204,185 +213,191 @@ const teamMembersData = [
   },
 ];
 
-interface TeamMemberProps {
-  member: {
-    id: number;
-    image: string;
-    linkedin: string;
-    twitter: string;
-    email: string;
-    phoneNumber: string;
-    name: string;
-    role: string;
-    description: string;
-  };
-  index: number;
-  isRTL: boolean;
+interface TeamMemberData {
+  id: number;
+  image: string;
+  linkedin: string;
+  twitter: string;
+  email: string;
+  phoneNumber: string;
+  name: string;
+  role: string;
+  description: string;
 }
 
-const TeamMember = ({ member, index, isRTL }: TeamMemberProps) => {
-  const [isHovered, setIsHovered] = useState(false);
+interface TeamMemberProps {
+  readonly member: TeamMemberData;
+  readonly isRTL: boolean;
+}
 
+function TeamMember({ member, isRTL }: TeamMemberProps) {
   return (
-    <div
-      className="group relative"
-      style={{
-        animation: `fadeInUp 0.6s ease-out ${index * 0.1}s both`,
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+    <Card
+      className="flex flex-col h-full hover:shadow-xl transition-shadow duration-300"
+      elevation={3}
     >
-      <div className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-        {/* Image Container */}
-        <div className="relative h-80 overflow-hidden bg-linear-to-br from-blue-50 to-purple-50">
-          <img
-            src={member.image}
-            alt={member.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-          <div
-            className={`absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent transition-opacity duration-300 ${
-              isHovered ? "opacity-100" : "opacity-0"
-            }`}
-          />
-
-          {/* Social Links - appear on hover */}
-          <div
-            className={`absolute bottom-4 left-0 right-0 flex justify-center gap-3 transition-all duration-300 ${
-              isHovered
-                ? "translate-y-0 opacity-100"
-                : "translate-y-4 opacity-0"
-            }`}
-          >
-            <a
+      <div className="relative overflow-hidden group">
+        <CardMedia
+          component="img"
+          image={member.image}
+          alt={member.name}
+          className="h-72 object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+        {/* Social overlay */}
+        <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
+          <div className="flex gap-2">
+            <IconButton
+              component="a"
               href={member.linkedin}
-              className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors"
+              target="_blank"
+              rel="noopener noreferrer"
+              size="small"
+              sx={{
+                bgcolor: "white",
+                "&:hover": { bgcolor: "primary.main", color: "white" },
+              }}
+              aria-label={`${member.name} LinkedIn`}
             >
-              <Linkedin size={18} />
-            </a>
-            <a
+              <Linkedin size={16} />
+            </IconButton>
+            <IconButton
+              component="a"
               href={member.twitter}
-              className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-blue-400 hover:text-white transition-colors"
+              target="_blank"
+              rel="noopener noreferrer"
+              size="small"
+              sx={{
+                bgcolor: "white",
+                "&:hover": { bgcolor: "#1da1f2", color: "white" },
+              }}
+              aria-label={`${member.name} Twitter`}
             >
-              <Twitter size={18} />
-            </a>
-            <a
+              <Twitter size={16} />
+            </IconButton>
+            <IconButton
+              component="a"
               href={`mailto:${member.email}`}
-              className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-purple-600 hover:text-white transition-colors"
+              size="small"
+              sx={{
+                bgcolor: "white",
+                "&:hover": { bgcolor: "secondary.main", color: "white" },
+              }}
+              aria-label={`Email ${member.name}`}
             >
-              <Mail size={18} />
-            </a>
-
-            <a
-              href={member.phoneNumber ? `tel:${member.phoneNumber}` : "#"}
-              className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors"
-            >
-              <Phone size={18} />
-            </a>
+              <Mail size={16} />
+            </IconButton>
+            {member.phoneNumber && (
+              <IconButton
+                component="a"
+                href={`tel:${member.phoneNumber}`}
+                size="small"
+                sx={{
+                  bgcolor: "white",
+                  "&:hover": { bgcolor: "success.main", color: "white" },
+                }}
+                aria-label={`Call ${member.name}`}
+              >
+                <Phone size={16} />
+              </IconButton>
+            )}
           </div>
         </div>
-
-        {/* Content */}
-        <div className={`p-6 ${isRTL ? "text-right" : ""}`}>
-          <h3 className="text-2xl font-bold text-gray-900 mb-1">
-            {member.name}
-          </h3>
-          <p className="text-sm font-semibold text-blue-600 mb-3 uppercase tracking-wide">
-            {member.role}
-          </p>
-          <p className="text-gray-600 leading-relaxed">{member.description}</p>
-        </div>
-
-        {/* Decorative Corner */}
-        <div
-          className={`absolute top-0 ${
-            isRTL ? "left-0" : "right-0"
-          } w-20 h-20 bg-linear-to-bl from-blue-500/10 to-transparent ${
-            isRTL ? "rounded-br-full" : "rounded-bl-full"
-          }`}
-        />
       </div>
-    </div>
+
+      <CardContent
+        className={`flex flex-col gap-1 p-5 flex-1 ${isRTL ? "text-right" : ""}`}
+      >
+        <Typography variant="h6" component="h3" className="font-bold">
+          {member.name}
+        </Typography>
+        <Typography
+          variant="caption"
+          component="p"
+          className="font-semibold uppercase tracking-wide"
+          sx={{ color: "primary.main" }}
+        >
+          {member.role}
+        </Typography>
+        <Typography
+          variant="body2"
+          sx={{ color: "text.secondary" }}
+          className="mt-1 leading-relaxed"
+        >
+          {member.description}
+        </Typography>
+      </CardContent>
+    </Card>
   );
-};
+}
 
 export default function TeamSection() {
   const { language } = useLanguage();
   const t = translations[language] || translations.en;
   const isRTL = language === "ar";
 
-  // Merge translated data with static data
-  const teamMembers = teamMembersData.map((member, index) => ({
+  const teamMembers: TeamMemberData[] = teamMembersData.map((member, index) => ({
     ...member,
     ...t.teamMembers[index],
   }));
 
   return (
-    <div
-      className={`min-h-screen bg-linear-to-br from-gray-50 via-blue-50 to-purple-50 pt-20 px-4 ${
-        isRTL ? "rtl" : "ltr"
-      }`}
+    <section
+      className="py-16 px-4 sm:px-6 lg:px-8 bg-linear-to-br from-gray-50 via-blue-50 to-purple-50"
+      dir={isRTL ? "rtl" : "ltr"}
     >
-      <style>
-        {`
-          @keyframes fadeInUp {
-            from {
-              opacity: 0;
-              transform: translateY(30px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-          
-          @keyframes slideIn {
-            from {
-              opacity: 0;
-              transform: translateX(-30px);
-            }
-            to {
-              opacity: 1;
-              transform: translateX(0);
-            }
-          }
-        `}
-      </style>
-
-      <div className="max-w-7xl lg:px-8 mx-auto pb-8">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div
-          className="text-center mb-16"
-          style={{ animation: "slideIn 0.8s ease-out" }}
-        >
-          <div className="inline-block mb-4">
-            <span className="bg-linear-to-r from-blue-600 to-purple-600 text-white text-sm font-semibold px-4 py-2 rounded-full">
-              {t.ourLeadership}
-            </span>
-          </div>
-          <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+        <div className="text-center mb-14">
+          <Chip
+            label={t.ourLeadership}
+            color="primary"
+            size="small"
+            className="mb-4 font-semibold"
+          />
+          <Typography
+            variant="h3"
+            component="h2"
+            className="font-bold mb-4"
+            sx={{ color: "text.primary" }}
+          >
             {t.meetOurTeam}{" "}
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600">
-              {t.team}
-            </span>
-          </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            <span style={{ color: "var(--chad-blue)" }}>{t.team}</span>
+          </Typography>
+          <Typography
+            variant="subtitle1"
+            className="max-w-3xl mx-auto"
+            sx={{ color: "text.secondary" }}
+          >
             {t.tagline}
-          </p>
+          </Typography>
         </div>
 
         {/* Team Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {teamMembers.map((member, index) => (
-            <TeamMember
-              key={member.id}
-              member={member}
-              index={index}
-              isRTL={isRTL}
-            />
+          {teamMembers.map((member) => (
+            <TeamMember key={member.id} member={member} isRTL={isRTL} />
           ))}
         </div>
+
+        {/* Join CTA */}
+        <div className="text-center mt-16 py-10 px-6 rounded-2xl bg-white shadow-md max-w-2xl mx-auto">
+          <Typography variant="h5" component="h3" className="font-bold mb-2">
+            {t.joinTeam}
+          </Typography>
+          <Typography variant="body1" sx={{ color: "text.secondary" }} className="mb-6">
+            {t.joinDescription}
+          </Typography>
+          <Button
+            component={Link}
+            to="/contact-us"
+            variant="contained"
+            color="primary"
+            size="large"
+          >
+            {t.viewPositions}
+          </Button>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
