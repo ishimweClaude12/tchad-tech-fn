@@ -51,6 +51,53 @@ export interface PayCoursePayload {
   phoneNumber: string;
 }
 
+export enum MobileNetwork {
+  MTN = "MTN",
+  AIRTELL = "AIRTEL",
+  TIGO = "TIGO",
+}
+
+export type MomoCountry =
+  | "rwanda"
+  | "uganda"
+  | "kenya"
+  | "ghana"
+  | "zambia"
+  | "tanzania"
+  | "cameroon"
+  | "senegal";
+
+export interface MobileMoneyPaymentPayload {
+  courseId: string;
+  email: string;
+  fullname: string;
+  phone_number: string;
+  country: MomoCountry;
+  network: MobileNetwork;
+}
+
+export interface CardPaymentPayload {
+  courseId: string;
+  email: string;
+  fullname: string;
+}
+
+export interface CardPaymentResponse {
+  tx_ref: string;
+  payment_link: string;
+  amount_local: number;
+  currency: string;
+  amount_usd: number;
+}
+
+export interface MomoPaymentResponse {
+  tx_ref: string;
+  redirect_url: string;
+  amount_local: number;
+  currency: string;
+  amount_usd: number;
+}
+
 export type UserEnrollment = Enrollment & {
   user: {
     userId: string;

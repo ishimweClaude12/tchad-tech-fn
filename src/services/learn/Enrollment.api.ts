@@ -1,9 +1,13 @@
 import type {
+  CardPaymentPayload,
+  CardPaymentResponse,
+  MomoPaymentResponse,
   CourseEnrollment,
   Enrollment,
   EnrollmentProgress,
   EnrollmentStatus,
   EnrollmentType,
+  MobileMoneyPaymentPayload,
   ModuleProgress,
   PayCoursePayload,
   Payment,
@@ -137,6 +141,20 @@ export const enrollmentApi = {
     const { data } = await axiosInstance.get<
       ApiResponse<{ progress: EnrollmentProgress[] }>
     >(`/progress/enrollment/${enrollmentId}`);
+    return data;
+  },
+  payWithMobileMoney: async (payload: MobileMoneyPaymentPayload) => {
+    const { data } = await axiosInstance.post<ApiResponse<MomoPaymentResponse>>(
+      `/payments/momo`,
+      payload,
+    );
+    return data;
+  },
+  payWithCard: async (payload: CardPaymentPayload) => {
+    const { data } = await axiosInstance.post<ApiResponse<CardPaymentResponse>>(
+      `/payments/card`,
+      payload,
+    );
     return data;
   },
 };

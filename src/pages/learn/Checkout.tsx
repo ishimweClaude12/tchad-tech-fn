@@ -1,5 +1,6 @@
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useMemo, useState } from "react";
+import { useUser } from "@clerk/clerk-react";
 import {
   Card,
   CardContent,
@@ -27,32 +28,33 @@ import {
   School,
   CheckCircle,
 } from "lucide-react";
-import type { CourseEnrollment } from "src/types/Enrollment.types";
+import { MobileNetwork } from "src/types/Enrollment.types";
+import type { CourseEnrollment, MomoCountry } from "src/types/Enrollment.types";
 
 import {
   useGetAllPayments,
-  usePayCourse,
+  usePayWithCard,
+  usePayWithMobileMoney,
 } from "src/hooks/learn/useEnrollmentApi";
 import { PaymentHistorySection } from "src/components/learn/PaymentHistory";
 
 interface FormErrors {
-  cardNumber?: string;
   cardName?: string;
-  expiryDate?: string;
-  cvv?: string;
+  cardEmail?: string;
   phoneNumber?: string;
+  network?: string;
 }
-
-// ─── Payment Status Badge ────────────────────────────────────────────────────
-
-// ─── Payment History Section ─────────────────────────────────────────────────
 
 // ─── Main CheckoutPage ────────────────────────────────────────────────────────
 
 const CheckoutPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { mutate: payCourse, isPending: isPaymentProcessing } = usePayCourse();
+  const { user } = useUser();
+  const { mutate: payWithMobileMoney, isPending: isPaymentProcessing } =
+    usePayWithMobileMoney();
+  const { mutate: payWithCard, isPending: isCardPaymentProcessing } =
+    usePayWithCard();
 
   const enrollment = useMemo(() => {
     const enrollmentData = searchParams.get("data");
@@ -75,31 +77,21 @@ const CheckoutPage = () => {
     error: errorLoadingPayments,
   } = useGetAllPayments(enrollment?.id ?? "");
 
-  const [paymentMethod, setPaymentMethod] = useState<"card" | "mobile">("card");
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardName, setCardName] = useState("");
-  const [expiryDate, setExpiryDate] = useState("");
-  const [cvv, setCvv] = useState("");
-  const [countryCode, setCountryCode] = useState("+235");
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "mobile">(
+    "mobile",
+  );
+  const [cardName, setCardName] = useState(
+    user ? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() : "",
+  );
+  const [cardEmail, setCardEmail] = useState(
+    user?.primaryEmailAddress?.emailAddress ?? "",
+  );
+  const [country, setCountry] = useState<MomoCountry>("rwanda");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [network, setNetwork] = useState<MobileNetwork>(MobileNetwork.MTN);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [isProcessing, setIsProcessing] = useState(false);
 
   const coursePrice = enrollment?.course.price || 0;
-
-  const formatCardNumber = (value: string) => {
-    const cleaned = value.replaceAll(/\s/g, "");
-    const formatted = cleaned.match(/.{1,4}/g)?.join(" ") || cleaned;
-    return formatted.substring(0, 19);
-  };
-
-  const formatExpiryDate = (value: string) => {
-    const cleaned = value.replaceAll(/\D/g, "");
-    if (cleaned.length >= 2) {
-      return cleaned.substring(0, 2) + "/" + cleaned.substring(2, 4);
-    }
-    return cleaned;
-  };
 
   const formatPhoneNumber = (value: string) => {
     return value.replaceAll(/\D/g, "").substring(0, 15);
@@ -108,15 +100,18 @@ const CheckoutPage = () => {
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
     if (paymentMethod === "card") {
-      if (!cardNumber || cardNumber.replaceAll(/\s/g, "").length < 13)
-        newErrors.cardNumber = "Enter a valid card number";
       if (!cardName || cardName.trim().length < 3)
-        newErrors.cardName = "Enter the cardholder name";
-      if (!expiryDate || expiryDate.length < 5)
-        newErrors.expiryDate = "Enter expiry date (MM/YY)";
-      if (!cvv || cvv.length < 3) newErrors.cvv = "Enter CVV";
-    } else if (!phoneNumber || phoneNumber.length < 8) {
-      newErrors.phoneNumber = "Enter a valid phone number";
+        newErrors.cardName = "Enter your full name";
+      if (!cardEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cardEmail))
+        newErrors.cardEmail = "Enter a valid email address";
+    } else {
+      if (!cardName || cardName.trim().length < 3)
+        newErrors.cardName = "Enter your full name";
+      if (!cardEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cardEmail))
+        newErrors.cardEmail = "Enter a valid email address";
+      if (!phoneNumber || phoneNumber.length < 8)
+        newErrors.phoneNumber = "Enter a valid phone number";
+      if (!network) newErrors.network = "Select a mobile network";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -128,17 +123,19 @@ const CheckoutPage = () => {
 
     if (paymentMethod === "mobile") {
       if (!enrollment) return;
-      const formattedPhoneNumber = countryCode.replace("+", "") + phoneNumber;
-      payCourse(
+      payWithMobileMoney(
         {
-          enrollmentId: enrollment.id,
-          amount: coursePrice,
-          phoneNumber: formattedPhoneNumber,
+          courseId: enrollment.course.id,
+          email: cardEmail.trim(),
+          fullname: cardName.trim(),
+          phone_number: phoneNumber,
+          country,
+          network,
         },
         {
           onSuccess: (response) => {
-            if (response.data?.paymentUrl) {
-              globalThis.location.href = response.data.paymentUrl;
+            if (response.data?.redirect_url) {
+              globalThis.location.href = response.data.redirect_url;
             } else {
               navigate(`/learn/course/${enrollment.course.slug}`);
             }
@@ -146,19 +143,29 @@ const CheckoutPage = () => {
         },
       );
     } else {
-      setIsProcessing(true);
-      setTimeout(() => {
-        setIsProcessing(false);
-        alert(
-          "Card payment integration coming soon. Please use Mobile Money for now.",
-        );
-      }, 1000);
+      if (!enrollment) return;
+      payWithCard(
+        {
+          courseId: enrollment.course.id,
+          fullname: cardName.trim(),
+          email: cardEmail.trim(),
+        },
+        {
+          onSuccess: (response) => {
+            if (response.data?.payment_link) {
+              globalThis.location.href = response.data.payment_link;
+            } else {
+              navigate(`/learn/course/${enrollment.course.slug}`);
+            }
+          },
+        },
+      );
     }
   };
 
   if (!enrollment) {
     return (
-      <Box className="flex items-center justify-center min-h-screen">
+      <Box className="flex items-center justify-center min-h-screen px-4">
         <CircularProgress size={48} />
         <Typography className="ml-4">Loading checkout...</Typography>
       </Box>
@@ -166,27 +173,35 @@ const CheckoutPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8 min-w-screen">
+    <div className="min-h-screen bg-gray-50 py-6 sm:py-8 px-3 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <Typography variant="h3" className="font-bold text-gray-900 mb-2">
+        <div className="mb-6 sm:mb-8">
+          <Typography
+            variant="h3"
+            className="font-bold text-gray-900 mb-2 text-2xl! sm:text-3xl! lg:text-4xl!"
+          >
             Complete Your Enrollment
           </Typography>
-          <Typography className="text-gray-600">
+          <Typography className="text-gray-600 text-sm sm:text-base">
             Secure checkout for your course enrollment
           </Typography>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
           {/* Payment Form Section */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 min-w-0">
             <Card elevation={1}>
-              <CardContent className="p-6">
+              {/* Increased card padding on desktop for more overall breathing room */}
+              <CardContent className="p-4! sm:p-8!">
                 <form onSubmit={handleSubmit}>
                   {/* Payment Method Selection */}
-                  <Box className="mb-6">
-                    <Typography variant="h6" className="mb-4 font-semibold">
+                  {/* mb-8 instead of mb-6 — more separation before the form fields */}
+                  <Box className="mb-8">
+                    <Typography
+                      variant="h6"
+                      className="mb-4 font-semibold text-base! sm:text-lg!"
+                    >
                       Payment Method
                     </Typography>
                     <RadioGroup
@@ -195,10 +210,10 @@ const CheckoutPage = () => {
                         setPaymentMethod(e.target.value as "card" | "mobile")
                       }
                     >
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         <Paper
                           elevation={paymentMethod === "card" ? 3 : 0}
-                          className={`p-4 cursor-pointer transition-all border-2 relative ${
+                          className={`p-3 sm:p-4 cursor-pointer transition-all border-2 ${
                             paymentMethod === "card"
                               ? "border-blue-600 bg-blue-50"
                               : "border-gray-200 hover:border-gray-300"
@@ -210,24 +225,18 @@ const CheckoutPage = () => {
                             control={<Radio />}
                             label={
                               <Box className="flex items-center gap-2">
-                                <CreditCard className="w-5 h-5" />
-                                <span className="font-medium">
+                                <CreditCard className="w-4 h-4 sm:w-5 sm:h-5" />
+                                <span className="font-medium text-sm sm:text-base">
                                   Card Payment
                                 </span>
                               </Box>
                             }
                           />
-                          <Chip
-                            label="Coming Soon"
-                            size="small"
-                            color="default"
-                            className="absolute top-2 right-2"
-                          />
                         </Paper>
 
                         <Paper
                           elevation={paymentMethod === "mobile" ? 3 : 0}
-                          className={`p-4 cursor-pointer transition-all border-2 ${
+                          className={`p-3 sm:p-4 cursor-pointer transition-all border-2 ${
                             paymentMethod === "mobile"
                               ? "border-blue-600 bg-blue-50"
                               : "border-gray-200 hover:border-gray-300"
@@ -239,8 +248,8 @@ const CheckoutPage = () => {
                             control={<Radio />}
                             label={
                               <Box className="flex items-center gap-2">
-                                <Smartphone className="w-5 h-5" />
-                                <span className="font-medium">
+                                <Smartphone className="w-4 h-4 sm:w-5 sm:h-5" />
+                                <span className="font-medium text-sm sm:text-base">
                                   Mobile Money
                                 </span>
                               </Box>
@@ -251,82 +260,120 @@ const CheckoutPage = () => {
                     </RadioGroup>
                   </Box>
 
-                  {/* Payment Form */}
                   {paymentMethod === "card" ? (
-                    <Box className="space-y-4">
-                      <Typography variant="h6" className="mb-4 font-semibold">
-                        Card Details
+                    <Box>
+                      <Typography
+                        variant="h6"
+                        className="font-semibold text-base! sm:text-lg!"
+                      >
+                        Card Payment Details
                       </Typography>
-                      <TextField
-                        fullWidth
-                        label="Card Number"
-                        value={cardNumber}
-                        onChange={(e) =>
-                          setCardNumber(formatCardNumber(e.target.value))
-                        }
-                        placeholder="1234 5678 9012 3456"
-                        error={!!errors.cardNumber}
-                        helperText={errors.cardNumber}
-                      />
-                      <TextField
-                        fullWidth
-                        label="Cardholder Name"
-                        value={cardName}
-                        onChange={(e) => setCardName(e.target.value)}
-                        placeholder="John Doe"
-                        error={!!errors.cardName}
-                        helperText={errors.cardName}
-                      />
-                      <div className="grid grid-cols-2 gap-4">
+                      <Box className="flex flex-col gap-7 mt-4">
                         <TextField
                           fullWidth
-                          label="Expiry Date"
-                          value={expiryDate}
-                          onChange={(e) =>
-                            setExpiryDate(formatExpiryDate(e.target.value))
-                          }
-                          placeholder="MM/YY"
-                          error={!!errors.expiryDate}
-                          helperText={errors.expiryDate}
+                          label="Full Name"
+                          value={cardName}
+                          onChange={(e) => setCardName(e.target.value)}
+                          placeholder="John Doe"
+                          error={!!errors.cardName}
+                          helperText={errors.cardName}
+                          slotProps={{ inputLabel: { shrink: true } }}
                         />
                         <TextField
                           fullWidth
-                          label="CVV"
-                          value={cvv}
-                          onChange={(e) =>
-                            setCvv(
-                              e.target.value
-                                .replaceAll(/\D/g, "")
-                                .substring(0, 4),
-                            )
-                          }
-                          placeholder="123"
-                          error={!!errors.cvv}
-                          helperText={errors.cvv}
-                          type="password"
+                          label="Email Address"
+                          type="email"
+                          value={cardEmail}
+                          onChange={(e) => setCardEmail(e.target.value)}
+                          placeholder="you@example.com"
+                          error={!!errors.cardEmail}
+                          helperText={errors.cardEmail}
+                          slotProps={{ inputLabel: { shrink: true } }}
                         />
-                      </div>
+                      </Box>
                     </Box>
                   ) : (
-                    <Box className="space-y-4">
-                      <Typography variant="h6" className="mb-4 font-semibold">
+                    <Box>
+                      <Typography
+                        variant="h6"
+                        className="mb-8 font-semibold text-base! sm:text-lg!"
+                      >
                         Mobile Money Details
                       </Typography>
-                      <Alert severity="info" icon={<Smartphone />}>
-                        A payment request will be sent to your phone. Please
-                        confirm the transaction on your device.
-                      </Alert>
-                      <Box className="flex gap-2">
-                        <FormControl className="w-32">
-                          <InputLabel>Code</InputLabel>
+                      <Box className="flex flex-col gap-7">
+                        <Alert severity="info" icon={<Smartphone />}>
+                          You will be redirected to complete your payment.
+                          Please have your mobile money account ready.
+                        </Alert>
+                        <TextField
+                          fullWidth
+                          label="Full Name"
+                          value={cardName}
+                          onChange={(e) => setCardName(e.target.value)}
+                          placeholder="John Doe"
+                          error={!!errors.cardName}
+                          helperText={errors.cardName}
+                          slotProps={{ inputLabel: { shrink: true } }}
+                        />
+                        <TextField
+                          fullWidth
+                          label="Email Address"
+                          type="email"
+                          value={cardEmail}
+                          onChange={(e) => setCardEmail(e.target.value)}
+                          placeholder="you@example.com"
+                          error={!!errors.cardEmail}
+                          helperText={errors.cardEmail}
+                          slotProps={{ inputLabel: { shrink: true } }}
+                        />
+                        <FormControl fullWidth error={!!errors.network}>
+                          <InputLabel shrink>Mobile Network</InputLabel>
                           <Select
-                            value={countryCode}
-                            onChange={(e) => setCountryCode(e.target.value)}
-                            label="Code"
+                            value={network}
+                            onChange={(e) =>
+                              setNetwork(e.target.value as MobileNetwork)
+                            }
+                            label="Mobile Network"
+                            notched
                           >
-                            <MenuItem value="+235">+235</MenuItem>
-                            <MenuItem value="+237">+237</MenuItem>
-                            <MenuItem value="+250">+250</MenuItem>
+                            <MenuItem value={MobileNetwork.MTN}>
+                              MTN Mobile Money
+                            </MenuItem>
+                            <MenuItem value={MobileNetwork.AIRTELL}>
+                              Airtel Money
+                            </MenuItem>
+                            <MenuItem value={MobileNetwork.TIGO}>
+                              Tigo Cash
+                            </MenuItem>
+                          </Select>
+                          {errors.network && (
+                            <Typography
+                              variant="caption"
+                              color="error"
+                              className="ml-3.5 mt-0.5"
+                            >
+                              {errors.network}
+                            </Typography>
+                          )}
+                        </FormControl>
+                        <FormControl fullWidth>
+                          <InputLabel shrink>Country</InputLabel>
+                          <Select
+                            value={country}
+                            onChange={(e) =>
+                              setCountry(e.target.value as MomoCountry)
+                            }
+                            label="Country"
+                            notched
+                          >
+                            <MenuItem value="rwanda">Rwanda</MenuItem>
+                            <MenuItem value="uganda">Uganda</MenuItem>
+                            <MenuItem value="kenya">Kenya</MenuItem>
+                            <MenuItem value="ghana">Ghana</MenuItem>
+                            <MenuItem value="zambia">Zambia</MenuItem>
+                            <MenuItem value="tanzania">Tanzania</MenuItem>
+                            <MenuItem value="cameroon">Cameroon</MenuItem>
+                            <MenuItem value="senegal">Senegal</MenuItem>
                           </Select>
                         </FormControl>
                         <TextField
@@ -336,31 +383,20 @@ const CheckoutPage = () => {
                           onChange={(e) =>
                             setPhoneNumber(formatPhoneNumber(e.target.value))
                           }
-                          placeholder="912345678"
+                          placeholder="0780322379"
                           error={!!errors.phoneNumber}
                           helperText={errors.phoneNumber}
+                          slotProps={{ inputLabel: { shrink: true } }}
                         />
                       </Box>
-                      <Paper className="bg-gray-50 p-4">
-                        <Typography
-                          variant="body2"
-                          className="font-medium mb-2"
-                        >
-                          Supported Providers:
-                        </Typography>
-                        <Box className="flex flex-wrap gap-2">
-                          <Chip label="MTN Mobile Money" size="small" />
-                          <Chip label="Airtell Money" size="small" />
-                        </Box>
-                      </Paper>
                     </Box>
                   )}
 
-                  {/* Security Notice */}
+                  {/* Security Notice — mt-8 gives extra separation from the last field */}
                   <Alert
                     severity="success"
-                    icon={<Lock className="w-5 h-5" />}
-                    className="mt-6"
+                    icon={<Lock className="w-4 h-4 sm:w-5 sm:h-5" />}
+                    className="mt-8"
                   >
                     <Typography variant="body2" className="font-medium">
                       Secure Payment
@@ -378,23 +414,21 @@ const CheckoutPage = () => {
                     variant="contained"
                     size="large"
                     disabled={
-                      isProcessing ||
-                      (paymentMethod === "mobile" && isPaymentProcessing)
+                      (paymentMethod === "mobile" && isPaymentProcessing) ||
+                      (paymentMethod === "card" && isCardPaymentProcessing)
                     }
-                    className="mt-6 py-4"
+                    className="mt-6 py-3! sm:py-4!"
                     startIcon={
-                      isProcessing || isPaymentProcessing ? (
+                      isPaymentProcessing || isCardPaymentProcessing ? (
                         <CircularProgress size={20} color="inherit" />
                       ) : (
-                        <CheckCircle className="w-5 h-5" />
+                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                       )
                     }
                   >
                     {(() => {
-                      if (isProcessing || isPaymentProcessing) {
-                        return paymentMethod === "mobile"
-                          ? "Processing payment..."
-                          : "Processing...";
+                      if (isPaymentProcessing || isCardPaymentProcessing) {
+                        return "Processing payment...";
                       }
                       return `Pay ${coursePrice.toLocaleString()} CFA`;
                     })()}
@@ -412,12 +446,15 @@ const CheckoutPage = () => {
           </div>
 
           {/* Order Summary Section */}
-          <div className="lg:col-span-1">
-            <Card elevation={2} className="sticky top-8">
-              <CardContent className="p-6">
+          <div className="lg:col-span-1 min-w-0">
+            <Card elevation={2} className="lg:sticky lg:top-8">
+              <CardContent className="p-4! sm:p-6!">
                 <Box className="flex items-center gap-2 mb-4">
-                  <School className="w-5 h-5 text-blue-600" />
-                  <Typography variant="h6" className="font-semibold">
+                  <School className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 shrink-0" />
+                  <Typography
+                    variant="h6"
+                    className="font-semibold text-base! sm:text-lg!"
+                  >
                     Enrollment Summary
                   </Typography>
                 </Box>
@@ -427,17 +464,17 @@ const CheckoutPage = () => {
                   <img
                     src={enrollment.course.thumbnailUrl}
                     alt={enrollment.course.title}
-                    className="w-full h-40 object-cover rounded-lg mb-4"
+                    className="w-full h-36 sm:h-40 object-cover rounded-lg mb-4"
                   />
                   <Typography
                     variant="h6"
-                    className="font-bold text-gray-900 mb-2"
+                    className="font-bold text-gray-900 mb-2 text-base! sm:text-lg!"
                   >
                     {enrollment.course.title}
                   </Typography>
                   <Typography
                     variant="body2"
-                    className="text-gray-600 mb-3 line-clamp-3"
+                    className="text-gray-600 mb-3 line-clamp-3 text-xs sm:text-sm"
                   >
                     {enrollment.course.description}
                   </Typography>
@@ -453,22 +490,28 @@ const CheckoutPage = () => {
 
                 {/* Price Breakdown */}
                 <Box className="space-y-3">
-                  <Box className="flex justify-between">
+                  <Box className="flex justify-between items-center gap-2">
                     <Typography variant="body2" className="text-gray-600">
                       Course Price
                     </Typography>
-                    <Typography variant="body2" className="font-medium">
+                    <Typography
+                      variant="body2"
+                      className="font-medium whitespace-nowrap"
+                    >
                       {coursePrice.toLocaleString()} CFA
                     </Typography>
                   </Box>
                   <Divider />
-                  <Box className="flex justify-between items-center">
-                    <Typography variant="h6" className="font-bold">
+                  <Box className="flex justify-between items-center gap-2">
+                    <Typography
+                      variant="h6"
+                      className="font-bold text-base! sm:text-lg!"
+                    >
                       Total
                     </Typography>
                     <Typography
                       variant="h6"
-                      className="font-bold text-blue-600"
+                      className="font-bold text-blue-600 whitespace-nowrap text-base! sm:text-lg!"
                     >
                       {coursePrice.toLocaleString()} CFA
                     </Typography>
@@ -476,24 +519,24 @@ const CheckoutPage = () => {
                 </Box>
 
                 {/* Benefits */}
-                <Paper className="bg-blue-50 p-4 mt-6">
+                <Paper className="bg-blue-50! p-3 sm:p-4 mt-6">
                   <Typography
                     variant="body2"
-                    className="font-medium text-blue-900 mb-2"
+                    className="font-medium text-blue-900 mb-2 text-xs sm:text-sm"
                   >
                     What's included:
                   </Typography>
-                  <ul className="space-y-1 text-sm text-blue-800">
+                  <ul className="space-y-1.5 text-xs sm:text-sm text-blue-800">
                     <li className="flex items-start gap-2">
-                      <CheckCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                      <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 mt-0.5 shrink-0" />
                       <span>Lifetime access to course content</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <CheckCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                      <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 mt-0.5 shrink-0" />
                       <span>Certificate upon completion</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <CheckCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                      <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 mt-0.5 shrink-0" />
                       <span>Access to course materials</span>
                     </li>
                   </ul>

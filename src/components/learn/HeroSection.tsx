@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { Button, IconButton, Chip, Box } from "@mui/material";
 import {
@@ -9,120 +9,25 @@ import {
   NavigateBefore,
 } from "@mui/icons-material";
 import { useGlobalAnnouncements } from "src/hooks/learn/useAnnouncementsApi";
-
-// Types
-interface HeroTranslations {
-  en: {
-    tagline: string;
-    headline: string;
-    subheadline: string;
-    ctaPrimary: string;
-    ctaSecondary: string;
-    stats: {
-      students: string;
-      courses: string;
-      instructors: string;
-      satisfaction: string;
-    };
-    imageAlt: string;
-  };
-  fr: {
-    tagline: string;
-    headline: string;
-    subheadline: string;
-    ctaPrimary: string;
-    ctaSecondary: string;
-    stats: {
-      students: string;
-      courses: string;
-      instructors: string;
-      satisfaction: string;
-    };
-    imageAlt: string;
-  };
-  ar: {
-    tagline: string;
-    headline: string;
-    subheadline: string;
-    ctaPrimary: string;
-    ctaSecondary: string;
-    stats: {
-      students: string;
-      courses: string;
-      instructors: string;
-      satisfaction: string;
-    };
-    imageAlt: string;
-  };
-}
+import { heroTranslations } from "src/utils/constants/learn/translations";
 
 interface HeroProps {
   onExploreClick?: () => void;
   onViewCoursesClick?: () => void;
-  heroImageSrc?: string; // Allow custom image path
+  heroImageSrc?: string;
 }
 
-// Translations
-const translations: HeroTranslations = {
-  en: {
-    tagline: "Transform Your Future",
-    headline: "Master New Skills with Expert-Led Courses",
-    subheadline:
-      "Join thousands of learners advancing their careers through industry-relevant courses, hands-on projects, and globally recognized certifications.",
-    ctaPrimary: "Explore Courses",
-    ctaSecondary: "View Learning Paths",
-    stats: {
-      students: "500+ Active Students",
-      courses: "50+ Courses",
-      instructors: "100+ Expert Instructors",
-      satisfaction: "95% Satisfaction Rate",
-    },
-    imageAlt: "Students learning online with expert instructors",
-  },
-  fr: {
-    tagline: "Transformez Votre Avenir",
-    headline: "Maîtrisez de Nouvelles Compétences avec des Cours d'Experts",
-    subheadline:
-      "Rejoignez des milliers d'apprenants qui font progresser leur carrière grâce à des cours pertinents, des projets pratiques et des certifications reconnues mondialement.",
-    ctaPrimary: "Explorer les Cours",
-    ctaSecondary: "Voir les Parcours",
-    stats: {
-      students: "10 000+ Étudiants Actifs",
-      courses: "50+ Cours",
-      instructors: "100+ Instructeurs Experts",
-      satisfaction: "95% de Satisfaction",
-    },
-    imageAlt: "Étudiants apprenant en ligne avec des instructeurs experts",
-  },
-  ar: {
-    tagline: "حوّل مستقبلك",
-    headline: "أتقن مهارات جديدة مع دورات يقودها خبراء",
-    subheadline:
-      "انضم إلى آلاف المتعلمين الذين يطورون مسيرتهم المهنية من خلال دورات ذات صلة بالصناعة ومشاريع عملية وشهادات معترف بها عالميًا.",
-    ctaPrimary: "استكشف الدورات",
-    ctaSecondary: "عرض مسارات التعلم",
-    stats: {
-      students: "أكثر من 10,000 طالب نشط",
-      courses: "أكثر من 500 دورة",
-      instructors: "أكثر من 100 مدرب خبير",
-      satisfaction: "معدل رضا 95%",
-    },
-    imageAlt: "طلاب يتعلمون عبر الإنترنت مع مدربين خبراء",
-  },
-};
-
-export const Hero: React.FC<HeroProps> = ({
+export function Hero({
   onExploreClick,
   onViewCoursesClick,
   heroImageSrc,
-}) => {
-  const { language } = useLanguage();
+}: Readonly<HeroProps>) {
+  const { language, isRTL } = useLanguage();
 
   const [imageLoaded, setImageLoaded] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showAnnouncement, setShowAnnouncement] = useState(true);
-  const content = translations[language];
-  const isRTL = language === "ar";
+  const content = heroTranslations[language];
   const { data: announcements } = useGlobalAnnouncements();
 
   const publishedAnnouncements =
@@ -235,7 +140,7 @@ export const Hero: React.FC<HeroProps> = ({
                         <div className="flex items-center gap-2 bg-blue-500/20 px-3 lg:px-4 py-1.5 lg:py-2 rounded-full border border-blue-300/30">
                           <Campaign
                             sx={{
-                              color: "#60a5fa",
+                              color: "primary.light",
                               fontSize: { xs: 18, lg: 22 },
                               animation: "pulse 2s infinite",
                               "@keyframes pulse": {
@@ -266,7 +171,7 @@ export const Hero: React.FC<HeroProps> = ({
                         onClick={handleAnnouncementClose}
                         size="small"
                         sx={{
-                          color: "#93c5fd",
+                          color: "primary.contrastText",
                           background: "rgba(96, 165, 250, 0.1)",
                           "&:hover": {
                             background: "rgba(96, 165, 250, 0.2)",
@@ -358,7 +263,7 @@ export const Hero: React.FC<HeroProps> = ({
                               size="small"
                               sx={{
                                 background: "rgba(255, 255, 255, 0.9)",
-                                color: "#1e40af",
+                                color: "primary.main",
                                 padding: { xs: "6px", lg: "8px" },
                                 "&:hover": {
                                   background: "#ffffff",
@@ -366,7 +271,7 @@ export const Hero: React.FC<HeroProps> = ({
                                 },
                                 "&:disabled": {
                                   background: "rgba(255, 255, 255, 0.3)",
-                                  color: "rgba(30, 64, 175, 0.3)",
+                                  color: "primary.light",
                                 },
                                 transition: "all 0.3s ease",
                                 border: "1px solid rgba(59, 130, 246, 0.3)",
@@ -385,7 +290,7 @@ export const Hero: React.FC<HeroProps> = ({
                               size="small"
                               sx={{
                                 background: "rgba(255, 255, 255, 0.9)",
-                                color: "#1e40af",
+                                color: "primary.main",
                                 padding: { xs: "6px", lg: "8px" },
                                 "&:hover": {
                                   background: "#ffffff",
@@ -393,7 +298,7 @@ export const Hero: React.FC<HeroProps> = ({
                                 },
                                 "&:disabled": {
                                   background: "rgba(255, 255, 255, 0.3)",
-                                  color: "rgba(30, 64, 175, 0.3)",
+                                  color: "primary.light",
                                 },
                                 transition: "all 0.3s ease",
                                 border: "1px solid rgba(59, 130, 246, 0.3)",
@@ -563,7 +468,7 @@ export const Hero: React.FC<HeroProps> = ({
                           size="small"
                           sx={{
                             background: "rgba(255, 255, 255, 0.9)",
-                            color: "#1e40af",
+                            color: "primary.main",
                             padding: "4px",
                           }}
                         >
@@ -577,7 +482,7 @@ export const Hero: React.FC<HeroProps> = ({
                           size="small"
                           sx={{
                             background: "rgba(255, 255, 255, 0.9)",
-                            color: "#1e40af",
+                            color: "primary.main",
                             padding: "4px",
                           }}
                         >
@@ -807,4 +712,4 @@ export const Hero: React.FC<HeroProps> = ({
       `}</style>
     </section>
   );
-};
+}
