@@ -4,45 +4,45 @@ import { useUserEnrollments } from "src/hooks/learn/useEnrollmentApi";
 import CourseEnrollmentCard from "./CourseEnrollmentCard";
 import { useNavigate } from "react-router-dom";
 import type { CourseEnrollment } from "src/types/Enrollment.types";
+import { useLanguage } from "../../contexts/LanguageContext";
+import { enrolledSectionTranslations } from "src/utils/constants/learn/translations";
 
-export const EnrolledCourseSection: React.FC = () => {
+export function EnrolledCourseSection() {
   const { userId, isSignedIn } = useAuth();
+  const { language } = useLanguage();
+  const t = enrolledSectionTranslations[language];
   const { data: enrollments } = useUserEnrollments(userId || "");
   const navigate = useNavigate();
 
-  // Handlers
-
   const handleContinueLearning = (enrollmentId: string, courseId: string) => {
-    ///learn/enrollment/:enrollmentId/course/:courseId
     navigate(`/learn/enrollment/${enrollmentId}/course/${courseId}`);
   };
 
   const handleCompletePayment = (enrollment: CourseEnrollment) => {
     navigate(
       `/learn/${enrollment.id}/checkout?data=${encodeURIComponent(
-        JSON.stringify(enrollment)
-      )}`
+        JSON.stringify(enrollment),
+      )}`,
     );
   };
 
-  const handleViewCertificate = (courseId: string) => {
-    console.log("View certificate for course:", courseId);
-    alert(`Viewing certificate for course: ${courseId}`);
+  const handleViewCertificate = (_courseId: string) => {
+    // certificate viewer not yet implemented
   };
-
 
   if (!isSignedIn || !enrollments) {
     return null;
   }
+
   return (
     <div className="bg-gray-50 w-full">
       {enrollments.data.enrollments.length > 0 && (
         <div className="max-w-7xl p-2 mx-auto">
           <Typography variant="h4" className="mb-2 font-bold text-gray-800">
-            My Courses
+            {t.heading}
           </Typography>
           <Typography variant="body1" className="mb-8 text-gray-600">
-            Track your learning progress and manage your enrollments
+            {t.subheading}
           </Typography>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
@@ -60,4 +60,4 @@ export const EnrolledCourseSection: React.FC = () => {
       )}
     </div>
   );
-};
+}

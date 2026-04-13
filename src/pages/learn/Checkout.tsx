@@ -1,5 +1,6 @@
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useMemo, useState } from "react";
+import { useUser } from "@clerk/clerk-react";
 import {
   Card,
   CardContent,
@@ -27,32 +28,33 @@ import {
   School,
   CheckCircle,
 } from "lucide-react";
-import type { CourseEnrollment } from "src/types/Enrollment.types";
+import { MobileNetwork } from "src/types/Enrollment.types";
+import type { CourseEnrollment, MomoCountry } from "src/types/Enrollment.types";
 
 import {
   useGetAllPayments,
-  usePayCourse,
+  usePayWithCard,
+  usePayWithMobileMoney,
 } from "src/hooks/learn/useEnrollmentApi";
 import { PaymentHistorySection } from "src/components/learn/PaymentHistory";
 
 interface FormErrors {
-  cardNumber?: string;
   cardName?: string;
-  expiryDate?: string;
-  cvv?: string;
+  cardEmail?: string;
   phoneNumber?: string;
+  network?: string;
 }
-
-// ─── Payment Status Badge ────────────────────────────────────────────────────
-
-// ─── Payment History Section ─────────────────────────────────────────────────
 
 // ─── Main CheckoutPage ────────────────────────────────────────────────────────
 
 const CheckoutPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { mutate: payCourse, isPending: isPaymentProcessing } = usePayCourse();
+  const { user } = useUser();
+  const { mutate: payWithMobileMoney, isPending: isPaymentProcessing } =
+    usePayWithMobileMoney();
+  const { mutate: payWithCard, isPending: isCardPaymentProcessing } =
+    usePayWithCard();
 
   const enrollment = useMemo(() => {
     const enrollmentData = searchParams.get("data");
@@ -75,31 +77,21 @@ const CheckoutPage = () => {
     error: errorLoadingPayments,
   } = useGetAllPayments(enrollment?.id ?? "");
 
-  const [paymentMethod, setPaymentMethod] = useState<"card" | "mobile">("card");
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardName, setCardName] = useState("");
-  const [expiryDate, setExpiryDate] = useState("");
-  const [cvv, setCvv] = useState("");
-  const [countryCode, setCountryCode] = useState("+235");
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "mobile">(
+    "mobile",
+  );
+  const [cardName, setCardName] = useState(
+    user ? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() : "",
+  );
+  const [cardEmail, setCardEmail] = useState(
+    user?.primaryEmailAddress?.emailAddress ?? "",
+  );
+  const [country, setCountry] = useState<MomoCountry>("rwanda");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [network, setNetwork] = useState<MobileNetwork>(MobileNetwork.MTN);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [isProcessing, setIsProcessing] = useState(false);
 
   const coursePrice = enrollment?.course.price || 0;
-
-  const formatCardNumber = (value: string) => {
-    const cleaned = value.replaceAll(/\s/g, "");
-    const formatted = cleaned.match(/.{1,4}/g)?.join(" ") || cleaned;
-    return formatted.substring(0, 19);
-  };
-
-  const formatExpiryDate = (value: string) => {
-    const cleaned = value.replaceAll(/\D/g, "");
-    if (cleaned.length >= 2) {
-      return cleaned.substring(0, 2) + "/" + cleaned.substring(2, 4);
-    }
-    return cleaned;
-  };
 
   const formatPhoneNumber = (value: string) => {
     return value.replaceAll(/\D/g, "").substring(0, 15);
@@ -108,15 +100,18 @@ const CheckoutPage = () => {
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
     if (paymentMethod === "card") {
-      if (!cardNumber || cardNumber.replaceAll(/\s/g, "").length < 13)
-        newErrors.cardNumber = "Enter a valid card number";
       if (!cardName || cardName.trim().length < 3)
-        newErrors.cardName = "Enter the cardholder name";
-      if (!expiryDate || expiryDate.length < 5)
-        newErrors.expiryDate = "Enter expiry date (MM/YY)";
-      if (!cvv || cvv.length < 3) newErrors.cvv = "Enter CVV";
-    } else if (!phoneNumber || phoneNumber.length < 8) {
-      newErrors.phoneNumber = "Enter a valid phone number";
+        newErrors.cardName = "Enter your full name";
+      if (!cardEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cardEmail))
+        newErrors.cardEmail = "Enter a valid email address";
+    } else {
+      if (!cardName || cardName.trim().length < 3)
+        newErrors.cardName = "Enter your full name";
+      if (!cardEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cardEmail))
+        newErrors.cardEmail = "Enter a valid email address";
+      if (!phoneNumber || phoneNumber.length < 8)
+        newErrors.phoneNumber = "Enter a valid phone number";
+      if (!network) newErrors.network = "Select a mobile network";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -128,17 +123,19 @@ const CheckoutPage = () => {
 
     if (paymentMethod === "mobile") {
       if (!enrollment) return;
-      const formattedPhoneNumber = countryCode.replace("+", "") + phoneNumber;
-      payCourse(
+      payWithMobileMoney(
         {
-          enrollmentId: enrollment.id,
-          amount: coursePrice,
-          phoneNumber: formattedPhoneNumber,
+          courseId: enrollment.course.id,
+          email: cardEmail.trim(),
+          fullname: cardName.trim(),
+          phone_number: phoneNumber,
+          country,
+          network,
         },
         {
           onSuccess: (response) => {
-            if (response.data?.paymentUrl) {
-              globalThis.location.href = response.data.paymentUrl;
+            if (response.data?.redirect_url) {
+              globalThis.location.href = response.data.redirect_url;
             } else {
               navigate(`/learn/course/${enrollment.course.slug}`);
             }
@@ -146,13 +143,23 @@ const CheckoutPage = () => {
         },
       );
     } else {
-      setIsProcessing(true);
-      setTimeout(() => {
-        setIsProcessing(false);
-        alert(
-          "Card payment integration coming soon. Please use Mobile Money for now.",
-        );
-      }, 1000);
+      if (!enrollment) return;
+      payWithCard(
+        {
+          courseId: enrollment.course.id,
+          fullname: cardName.trim(),
+          email: cardEmail.trim(),
+        },
+        {
+          onSuccess: (response) => {
+            if (response.data?.payment_link) {
+              globalThis.location.href = response.data.payment_link;
+            } else {
+              navigate(`/learn/course/${enrollment.course.slug}`);
+            }
+          },
+        },
+      );
     }
   };
 
@@ -217,12 +224,6 @@ const CheckoutPage = () => {
                               </Box>
                             }
                           />
-                          <Chip
-                            label="Coming Soon"
-                            size="small"
-                            color="default"
-                            className="absolute top-2 right-2"
-                          />
                         </Paper>
 
                         <Paper
@@ -255,57 +256,27 @@ const CheckoutPage = () => {
                   {paymentMethod === "card" ? (
                     <Box className="space-y-4">
                       <Typography variant="h6" className="mb-4 font-semibold">
-                        Card Details
+                        Card Payment Details
                       </Typography>
                       <TextField
                         fullWidth
-                        label="Card Number"
-                        value={cardNumber}
-                        onChange={(e) =>
-                          setCardNumber(formatCardNumber(e.target.value))
-                        }
-                        placeholder="1234 5678 9012 3456"
-                        error={!!errors.cardNumber}
-                        helperText={errors.cardNumber}
-                      />
-                      <TextField
-                        fullWidth
-                        label="Cardholder Name"
+                        label="Full Name"
                         value={cardName}
                         onChange={(e) => setCardName(e.target.value)}
                         placeholder="John Doe"
                         error={!!errors.cardName}
                         helperText={errors.cardName}
                       />
-                      <div className="grid grid-cols-2 gap-4">
-                        <TextField
-                          fullWidth
-                          label="Expiry Date"
-                          value={expiryDate}
-                          onChange={(e) =>
-                            setExpiryDate(formatExpiryDate(e.target.value))
-                          }
-                          placeholder="MM/YY"
-                          error={!!errors.expiryDate}
-                          helperText={errors.expiryDate}
-                        />
-                        <TextField
-                          fullWidth
-                          label="CVV"
-                          value={cvv}
-                          onChange={(e) =>
-                            setCvv(
-                              e.target.value
-                                .replaceAll(/\D/g, "")
-                                .substring(0, 4),
-                            )
-                          }
-                          placeholder="123"
-                          error={!!errors.cvv}
-                          helperText={errors.cvv}
-                          type="password"
-                        />
-                      </div>
+                      <TextField
+                        fullWidth
+                        label="Email Address"
+                        type="email"
+                        value={cardEmail}
+                        onChange={(e) => setCardEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        error={!!errors.cardEmail}
+                        helperText={errors.cardEmail}
+                      />
                     </Box>
                   ) : (
                     <Box className="space-y-4">
@@ -313,46 +284,87 @@ const CheckoutPage = () => {
                         Mobile Money Details
                       </Typography>
                       <Alert severity="info" icon={<Smartphone />}>
-                        A payment request will be sent to your phone. Please
-                        confirm the transaction on your device.
+                        You will be redirected to complete your payment. Please
+                        have your mobile money account ready.
                       </Alert>
-                      <Box className="flex gap-2">
-                        <FormControl className="w-32">
-                          <InputLabel>Code</InputLabel>
-                          <Select
-                            value={countryCode}
-                            onChange={(e) => setCountryCode(e.target.value)}
-                            label="Code"
-                          >
-                            <MenuItem value="+235">+235</MenuItem>
-                            <MenuItem value="+237">+237</MenuItem>
-                            <MenuItem value="+250">+250</MenuItem>
-                          </Select>
-                        </FormControl>
-                        <TextField
-                          fullWidth
-                          label="Phone Number"
-                          value={phoneNumber}
+                      <TextField
+                        fullWidth
+                        label="Full Name"
+                        value={cardName}
+                        onChange={(e) => setCardName(e.target.value)}
+                        placeholder="John Doe"
+                        error={!!errors.cardName}
+                        helperText={errors.cardName}
+                      />
+                      <TextField
+                        fullWidth
+                        label="Email Address"
+                        type="email"
+                        value={cardEmail}
+                        onChange={(e) => setCardEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        error={!!errors.cardEmail}
+                        helperText={errors.cardEmail}
+                      />
+                      <FormControl fullWidth error={!!errors.network}>
+                        <InputLabel>Mobile Network</InputLabel>
+                        <Select
+                          value={network}
                           onChange={(e) =>
-                            setPhoneNumber(formatPhoneNumber(e.target.value))
+                            setNetwork(e.target.value as MobileNetwork)
                           }
-                          placeholder="912345678"
-                          error={!!errors.phoneNumber}
-                          helperText={errors.phoneNumber}
-                        />
-                      </Box>
-                      <Paper className="bg-gray-50 p-4">
-                        <Typography
-                          variant="body2"
-                          className="font-medium mb-2"
+                          label="Mobile Network"
                         >
-                          Supported Providers:
-                        </Typography>
-                        <Box className="flex flex-wrap gap-2">
-                          <Chip label="MTN Mobile Money" size="small" />
-                          <Chip label="Airtell Money" size="small" />
-                        </Box>
-                      </Paper>
+                          <MenuItem value={MobileNetwork.MTN}>
+                            MTN Mobile Money
+                          </MenuItem>
+                          <MenuItem value={MobileNetwork.AIRTELL}>
+                            Airtel Money
+                          </MenuItem>
+                          <MenuItem value={MobileNetwork.TIGO}>
+                            Tigo Cash
+                          </MenuItem>
+                        </Select>
+                        {errors.network && (
+                          <Typography
+                            variant="caption"
+                            color="error"
+                            className="ml-3.5 mt-0.5"
+                          >
+                            {errors.network}
+                          </Typography>
+                        )}
+                      </FormControl>
+                      <FormControl fullWidth>
+                        <InputLabel>Country</InputLabel>
+                        <Select
+                          value={country}
+                          onChange={(e) =>
+                            setCountry(e.target.value as MomoCountry)
+                          }
+                          label="Country"
+                        >
+                          <MenuItem value="rwanda">Rwanda</MenuItem>
+                          <MenuItem value="uganda">Uganda</MenuItem>
+                          <MenuItem value="kenya">Kenya</MenuItem>
+                          <MenuItem value="ghana">Ghana</MenuItem>
+                          <MenuItem value="zambia">Zambia</MenuItem>
+                          <MenuItem value="tanzania">Tanzania</MenuItem>
+                          <MenuItem value="cameroon">Cameroon</MenuItem>
+                          <MenuItem value="senegal">Senegal</MenuItem>
+                        </Select>
+                      </FormControl>
+                      <TextField
+                        fullWidth
+                        label="Phone Number"
+                        value={phoneNumber}
+                        onChange={(e) =>
+                          setPhoneNumber(formatPhoneNumber(e.target.value))
+                        }
+                        placeholder="0780322379"
+                        error={!!errors.phoneNumber}
+                        helperText={errors.phoneNumber}
+                      />
                     </Box>
                   )}
 
@@ -378,12 +390,12 @@ const CheckoutPage = () => {
                     variant="contained"
                     size="large"
                     disabled={
-                      isProcessing ||
-                      (paymentMethod === "mobile" && isPaymentProcessing)
+                      (paymentMethod === "mobile" && isPaymentProcessing) ||
+                      (paymentMethod === "card" && isCardPaymentProcessing)
                     }
                     className="mt-6 py-4"
                     startIcon={
-                      isProcessing || isPaymentProcessing ? (
+                      isPaymentProcessing || isCardPaymentProcessing ? (
                         <CircularProgress size={20} color="inherit" />
                       ) : (
                         <CheckCircle className="w-5 h-5" />
@@ -391,10 +403,8 @@ const CheckoutPage = () => {
                     }
                   >
                     {(() => {
-                      if (isProcessing || isPaymentProcessing) {
-                        return paymentMethod === "mobile"
-                          ? "Processing payment..."
-                          : "Processing...";
+                      if (isPaymentProcessing || isCardPaymentProcessing) {
+                        return "Processing payment...";
                       }
                       return `Pay ${coursePrice.toLocaleString()} CFA`;
                     })()}

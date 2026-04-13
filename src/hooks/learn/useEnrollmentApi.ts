@@ -2,8 +2,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { enrollmentApi } from "../../services/learn/Enrollment.api";
 import type {
+  CardPaymentPayload,
   EnrollmentStatus,
   EnrollmentType,
+  MobileMoneyPaymentPayload,
   PayCoursePayload,
 } from "src/types/Enrollment.types";
 
@@ -51,6 +53,31 @@ export const usePayCourse = () => {
     onError: (error) => {
       toast.error("Failed to initiate payment.");
       console.error("Pay Course Error:", error);
+    },
+  });
+};
+
+export const usePayWithCard = () => {
+  return useMutation({
+    mutationFn: (payload: CardPaymentPayload) =>
+      enrollmentApi.payWithCard(payload),
+    onSuccess: () => toast.success("Card payment initiated successfully."),
+    onError: (error) => {
+      toast.error("Failed to initiate card payment.");
+      console.error("Pay With Card Error:", error);
+    },
+  });
+};
+
+export const usePayWithMobileMoney = () => {
+  return useMutation({
+    mutationFn: (payload: MobileMoneyPaymentPayload) =>
+      enrollmentApi.payWithMobileMoney(payload),
+    onSuccess: () =>
+      toast.success("Mobile money payment initiated successfully."),
+    onError: (error) => {
+      toast.error("Failed to initiate mobile money payment.");
+      console.error("Pay With Mobile Money Error:", error);
     },
   });
 };
