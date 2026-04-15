@@ -1,6 +1,9 @@
 import { useAuth } from "@clerk/clerk-react";
 import { Typography } from "@mui/material";
-import { useUserEnrollments } from "src/hooks/learn/useEnrollmentApi";
+import {
+  useGetCertificate,
+  useUserEnrollments,
+} from "src/hooks/learn/useEnrollmentApi";
 import CourseEnrollmentCard from "./CourseEnrollmentCard";
 import { useNavigate } from "react-router-dom";
 import type { CourseEnrollment } from "src/types/Enrollment.types";
@@ -12,6 +15,9 @@ export function EnrolledCourseSection() {
   const { language } = useLanguage();
   const t = enrolledSectionTranslations[language];
   const { data: enrollments } = useUserEnrollments(userId || "");
+  const { data: certificateData } = useGetCertificate(
+    enrollments?.data.enrollments[0]?.id || "",
+  );
   const navigate = useNavigate();
 
   const handleContinueLearning = (enrollmentId: string, courseId: string) => {
@@ -26,8 +32,10 @@ export function EnrolledCourseSection() {
     );
   };
 
-  const handleViewCertificate = (_courseId: string) => {
-    // certificate viewer not yet implemented
+  const handleViewCertificate = () => {
+    if (certificateData?.data.certificateUrl) {
+      window.open(certificateData.data.certificateUrl, "_blank");
+    }
   };
 
   if (!isSignedIn || !enrollments) {

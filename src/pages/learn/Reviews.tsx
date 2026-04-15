@@ -7,7 +7,6 @@ import {
   Star,
   CheckCircle,
   XCircle,
-  Clock,
   ThumbsUp,
   Flag,
   Check,
@@ -19,6 +18,7 @@ import UserCard from "src/components/learn/UserCard";
 import { useUser } from "@clerk/clerk-react";
 import {
   Button,
+  Chip,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -73,7 +73,7 @@ const Reviews = () => {
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-chad-blue mx-auto"></div>
           <p className="mt-4 text-gray-600 text-sm sm:text-base">
             Loading reviews...
           </p>
@@ -100,37 +100,23 @@ const Reviews = () => {
 
   const getStatusBadge = (status: ReviewModerationStatus) => {
     const statusConfig = {
-      approved: {
-        icon: CheckCircle,
-        bgColor: "bg-green-100",
-        textColor: "text-green-700",
-        label: "Approved",
-      },
-      rejected: {
-        icon: XCircle,
-        bgColor: "bg-red-100",
-        textColor: "text-red-700",
-        label: "Rejected",
-      },
-      pending: {
-        icon: Clock,
-        bgColor: "bg-yellow-100",
-        textColor: "text-yellow-700",
-        label: "Pending",
-      },
+      approved: { color: "success" as const, label: "Approved" },
+      rejected: { color: "error" as const, label: "Rejected" },
+      pending: { color: "warning" as const, label: "Pending" },
     };
-
-    const config = statusConfig[status];
-    const IconComponent = config.icon;
-
+    const { color, label } = statusConfig[status];
     return (
-      <span
-        className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${config.bgColor} ${config.textColor}`}
-      >
-        <IconComponent className="h-3 w-3 sm:h-4 sm:w-4" />
-        <span className="hidden xs:inline">{config.label}</span>
-      </span>
+      <Chip label={label} color={color} size="small" sx={{ fontWeight: 600 }} />
     );
+  };
+
+  const getCardAccentClass = (status: ReviewModerationStatus) => {
+    const classes = {
+      approved: "border-chad-green",
+      rejected: "border-red-500",
+      pending: "border-chad-gold",
+    };
+    return classes[status] ?? "border-chad-blue";
   };
 
   const renderStars = (rating: number) => {
@@ -155,15 +141,15 @@ const Reviews = () => {
       <div className="">
         {/* Header */}
         <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-900 mb-1 sm:mb-2">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
             Course Reviews Management
           </h1>
           <p className="text-sm sm:text-base text-gray-600">
             Monitor and manage all course reviews across the platform
           </p>
           <div className="mt-3 sm:mt-4 flex items-center gap-2 sm:gap-4">
-            <div className="bg-blue-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg">
-              <span className="text-xs sm:text-sm text-blue-600 font-medium">
+            <div className="bg-blue-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border border-blue-200">
+              <span className="text-xs sm:text-sm text-chad-blue font-medium">
                 Total Reviews: {reviewsData?.data.reviews.length || 0}
               </span>
             </div>
@@ -175,7 +161,7 @@ const Reviews = () => {
           {reviewsData?.data.reviews.map((review: Review) => (
             <div
               key={review.id}
-              className="bg-white rounded-lg sm:rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 p-4 sm:p-6 border-l-4 border-blue-500"
+              className={`bg-white rounded-lg sm:rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 p-4 sm:p-6 border-l-4 ${getCardAccentClass(review.moderationStatus)}`}
             >
               {/* Review Header */}
               <div className="flex flex-col xs:flex-row justify-between items-start gap-3 mb-4">
@@ -207,9 +193,9 @@ const Reviews = () => {
 
               {/* Course Info */}
               <div className="bg-blue-50 rounded-lg p-2.5 sm:p-3 mb-3 sm:mb-4">
-                <p className="text-xs sm:text-sm text-blue-600 font-medium wrap-break-words">
+                <p className="text-xs sm:text-sm text-chad-blue font-medium wrap-break-words">
                   Course:{" "}
-                  <span className="text-blue-900">{review.course.title}</span>
+                  <span className="text-gray-900">{review.course.title}</span>
                 </p>
               </div>
 
@@ -221,7 +207,7 @@ const Reviews = () => {
               {/* Badges Row */}
               <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3 sm:mb-4">
                 {review.isVerifiedPurchase && (
-                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-chad-blue text-xs font-medium rounded-full border border-blue-200">
                     <CheckCircle className="h-3 w-3" />
                     <span className="hidden xs:inline">Verified Purchase</span>
                     <span className="xs:hidden">Verified</span>
@@ -238,7 +224,7 @@ const Reviews = () => {
               <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2 text-xs sm:text-sm border-t pt-3 sm:pt-4">
                 <div className="flex gap-3 sm:gap-4">
                   <div className="flex items-center gap-1 text-gray-600">
-                    <ThumbsUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-500" />
+                    <ThumbsUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-chad-blue" />
                     <span className="font-medium">{review.helpfulCount}</span>
                     <span className="text-xs hidden xs:inline">helpful</span>
                   </div>
@@ -272,15 +258,12 @@ const Reviews = () => {
                       }
                       disabled={moderateReview.isPending}
                       variant="contained"
+                      color="success"
                       startIcon={
                         <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       }
                       fullWidth
                       sx={{
-                        bgcolor: "#059669",
-                        "&:hover": { bgcolor: "#047857" },
-                        "&:disabled": { bgcolor: "#6ee7b7" },
-                        textTransform: "none",
                         fontWeight: 600,
                         fontSize: { xs: "0.813rem", sm: "0.875rem" },
                         py: { xs: 1, sm: 1.25 },
@@ -297,13 +280,10 @@ const Reviews = () => {
                       }
                       disabled={moderateReview.isPending}
                       variant="contained"
+                      color="error"
                       startIcon={<X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
                       fullWidth
                       sx={{
-                        bgcolor: "#e11d48",
-                        "&:hover": { bgcolor: "#be123c" },
-                        "&:disabled": { bgcolor: "#fda4af" },
-                        textTransform: "none",
                         fontWeight: 600,
                         fontSize: { xs: "0.813rem", sm: "0.875rem" },
                         py: { xs: 1, sm: 1.25 },
@@ -324,13 +304,10 @@ const Reviews = () => {
                     }
                     disabled={moderateReview.isPending}
                     variant="contained"
+                    color="warning"
                     startIcon={<X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
                     fullWidth
                     sx={{
-                      bgcolor: "#ea580c",
-                      "&:hover": { bgcolor: "#c2410c" },
-                      "&:disabled": { bgcolor: "#fdba74" },
-                      textTransform: "none",
                       fontWeight: 600,
                       fontSize: { xs: "0.813rem", sm: "0.875rem" },
                       py: { xs: 1, sm: 1.25 },
@@ -350,13 +327,10 @@ const Reviews = () => {
                     }
                     disabled={moderateReview.isPending}
                     variant="contained"
+                    color="success"
                     startIcon={<Check className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
                     fullWidth
                     sx={{
-                      bgcolor: "#0d9488",
-                      "&:hover": { bgcolor: "#0f766e" },
-                      "&:disabled": { bgcolor: "#5eead4" },
-                      textTransform: "none",
                       fontWeight: 600,
                       fontSize: { xs: "0.813rem", sm: "0.875rem" },
                       py: { xs: 1, sm: 1.25 },

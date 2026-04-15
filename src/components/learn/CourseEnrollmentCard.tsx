@@ -243,7 +243,7 @@ const CourseEnrollmentCard: React.FC<CourseEnrollmentCardProps> = ({
               variant="body2"
               className="text-orange-700 font-semibold mb-3"
             >
-              Amount Due: ${course.price.toFixed(2)}
+              Amount Due: {course.price}
             </Typography>
           )}
         </div>
