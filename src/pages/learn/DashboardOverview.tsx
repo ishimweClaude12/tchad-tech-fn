@@ -21,6 +21,7 @@ import {
 import { UserRole } from "../../types/Users.types";
 import { EnrollmentStatus } from "../../types/Enrollment.types";
 import type { Payment, CourseEnrollment } from "../../types/Enrollment.types";
+import { Link } from "react-router-dom";
 
 // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -383,7 +384,7 @@ const DashboardOverview: React.FC = () => {
               }).format(new Date())}
             </p>
             <h1 className="text-2xl font-bold mb-1">
-              Welcome back, {userName} ðŸ‘‹
+              Welcome back, {userName}
             </h1>
             <p className="text-blue-100 text-sm">
               {isAdmin
@@ -437,8 +438,8 @@ const DashboardOverview: React.FC = () => {
             <h3 className="font-semibold text-gray-900">Quick Actions</h3>
           </div>
           <div className="p-5 space-y-2">
-            <a
-              href="/learn/dashboard/courses"
+            <Link
+              to="/learn/dashboard/courses"
               className="flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:bg-blue-50 hover:border-blue-100 group transition-colors"
             >
               <div className="flex items-center gap-3">
@@ -450,10 +451,10 @@ const DashboardOverview: React.FC = () => {
                 </span>
               </div>
               <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-blue-500 transition-colors" />
-            </a>
+            </Link>
             {isAdmin ? (
-              <a
-                href="/learn/dashboard/payments"
+              <Link
+                to="/learn/dashboard/payments"
                 className="flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:bg-emerald-50 hover:border-emerald-100 group transition-colors"
               >
                 <div className="flex items-center gap-3">
@@ -465,10 +466,10 @@ const DashboardOverview: React.FC = () => {
                   </span>
                 </div>
                 <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-emerald-500 transition-colors" />
-              </a>
+              </Link>
             ) : (
-              <a
-                href="/learn/dashboard/my-learning"
+              <Link
+                to="/learn/dashboard/my-learning"
                 className="flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:bg-emerald-50 hover:border-emerald-100 group transition-colors"
               >
                 <div className="flex items-center gap-3">
@@ -480,25 +481,12 @@ const DashboardOverview: React.FC = () => {
                   </span>
                 </div>
                 <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-emerald-500 transition-colors" />
-              </a>
+              </Link>
             )}
-            <a
-              href="/learn/dashboard/instructors"
-              className="flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:bg-violet-50 hover:border-violet-100 group transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center">
-                  <Users className="h-4 w-4 text-violet-600" />
-                </div>
-                <span className="text-sm font-medium text-gray-800">
-                  {isAdmin ? "Manage Instructors" : "Find Instructors"}
-                </span>
-              </div>
-              <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-violet-500 transition-colors" />
-            </a>
+
             {isAdmin && (
-              <a
-                href="/learn/dashboard/users"
+              <Link
+                to="/learn/dashboard/users"
                 className="flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:bg-amber-50 hover:border-amber-100 group transition-colors"
               >
                 <div className="flex items-center gap-3">
@@ -510,7 +498,7 @@ const DashboardOverview: React.FC = () => {
                   </span>
                 </div>
                 <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-amber-500 transition-colors" />
-              </a>
+              </Link>
             )}
           </div>
         </div>

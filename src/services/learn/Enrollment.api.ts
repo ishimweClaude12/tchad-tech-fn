@@ -157,4 +157,10 @@ export const enrollmentApi = {
     );
     return data;
   },
+  getCertificate: async (enrollmentId: string) => {
+    const { data } = await axiosInstance.get<
+      ApiResponse<{ certificateUrl: string }>
+    >(`/certificates/${enrollmentId}`);
+    return data;
+  },
 };

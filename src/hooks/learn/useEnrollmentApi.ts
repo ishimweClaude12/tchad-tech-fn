@@ -342,3 +342,11 @@ export const useRefundPayment = () => {
     },
   });
 };
+
+export const useGetCertificate = (enrollmentId: string) => {
+  return useQuery({
+    queryKey: ["certificate", enrollmentId],
+    queryFn: () => enrollmentApi.getCertificate(enrollmentId),
+    enabled: !!enrollmentId,
+  });
+};

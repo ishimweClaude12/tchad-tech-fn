@@ -228,13 +228,15 @@ const CourseLayout = () => {
       </div>
 
       {/* Overlay for mobile */}
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={closeSidebar}
-          aria-hidden="true"
-        />
-      )}
+      <div
+        className={`fixed inset-0 bg-black/70 z-40 lg:hidden transition-opacity duration-700 ease-in-out ${
+          isSidebarOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
+        }`}
+        onClick={closeSidebar}
+        aria-hidden="true"
+      />
 
       {/* Sidebar Navigation */}
       <aside
@@ -245,7 +247,7 @@ const CourseLayout = () => {
           shrink-0 bg-white border-r border-gray-200
           flex flex-col h-screen
           z-50
-          transform transition-transform duration-300 ease-in-out
+          transform transition-transform duration-350 ease-[cubic-bezier(0.32,0.72,0,1)]
           ${isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}
       >
