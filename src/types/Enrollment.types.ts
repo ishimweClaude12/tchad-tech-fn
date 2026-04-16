@@ -151,8 +151,8 @@ export interface ProgressLesson {
   description: string;
   contentType: LessonContentType;
   sortOrder: number;
-  moduleId: string;
-  module: LessonModule;
+  moduleId?: string;
+  module?: LessonModule;
 }
 
 export interface Payment {

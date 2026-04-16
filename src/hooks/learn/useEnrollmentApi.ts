@@ -243,11 +243,11 @@ export const useStartLessonProgress = () => {
   });
 };
 
-export const useLessonProgress = (enrollmentId: string) => {
+export const useLessonProgress = (enrollmentId: string, lessonId: string) => {
   return useQuery({
-    queryKey: ["lesson-progress", enrollmentId],
-    queryFn: () => enrollmentApi.getLessonProgress(enrollmentId),
-    enabled: !!enrollmentId,
+    queryKey: ["lesson-progress", enrollmentId, lessonId],
+    queryFn: () => enrollmentApi.getLessonProgress(enrollmentId, lessonId),
+    enabled: !!enrollmentId && !!lessonId,
   });
 };
 

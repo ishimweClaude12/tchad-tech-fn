@@ -85,7 +85,10 @@ const Lesson = () => {
   const { mutate: completeLesson, isPending: isCompletingLesson } =
     useCompleteLesson();
 
-  const { data: lessonProgressData } = useLessonProgress(enrollmentId);
+  const { data: lessonProgressData } = useLessonProgress(
+    enrollmentId,
+    lessonId,
+  );
   const { data: moduleLessonsData } = useModuleById(moduleId);
   const { data: moduleProgressData } = useModuleProgress(
     enrollmentId,
@@ -161,15 +164,6 @@ const Lesson = () => {
   const hasMandatoryQuizzes = mandatoryQuizzes.length > 0;
   const canCompleteLesson = !hasMandatoryQuizzes || allMandatoryQuizzesPassed;
 
-  // Helper function to get lesson progress status
-  const getLessonProgressStatus = (lessonId: string) => {
-    if (!lessonProgressData) return null;
-    const progress = lessonProgressData.data.progress.find(
-      (p) => p.lessonId === lessonId,
-    );
-    return progress?.status || null;
-  };
-
   const handleQuizClick = (quizId: string) => {
     if (!userId || !isSignedIn) {
       return;
@@ -198,7 +192,7 @@ const Lesson = () => {
   }
 
   const lesson = lessonData.data.lesson;
-  const lessonStatus = getLessonProgressStatus(lessonId);
+  const lessonStatus = lessonProgressData?.data?.progress?.status ?? null;
 
   return (
     <div className="mx-auto px-6 py-6 space-y-6">

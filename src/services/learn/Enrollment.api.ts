@@ -137,10 +137,10 @@ export const enrollmentApi = {
     >(`/progress/lesson/start`, { enrollmentId, lessonId });
     return data;
   },
-  getLessonProgress: async (enrollmentId: string) => {
+  getLessonProgress: async (enrollmentId: string, lessonId: string) => {
     const { data } = await axiosInstance.get<
-      ApiResponse<{ progress: EnrollmentProgress[] }>
-    >(`/progress/enrollment/${enrollmentId}`);
+      ApiResponse<{ progress: EnrollmentProgress }>
+    >(`/progress/enrollment/${enrollmentId}/lesson/${lessonId}`);
     return data;
   },
   payWithMobileMoney: async (payload: MobileMoneyPaymentPayload) => {
