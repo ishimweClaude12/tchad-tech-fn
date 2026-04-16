@@ -68,7 +68,7 @@ export type MomoCountry =
   | "senegal";
 
 export interface MobileMoneyPaymentPayload {
-  courseId: string;
+  enrollmentId: string;
   email: string;
   fullname: string;
   phone_number: string;
@@ -77,7 +77,7 @@ export interface MobileMoneyPaymentPayload {
 }
 
 export interface CardPaymentPayload {
-  courseId: string;
+  enrollmentId: string;
   email: string;
   fullname: string;
 }

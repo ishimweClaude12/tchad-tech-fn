@@ -33,6 +33,7 @@ export function EnrolledCourseSection() {
   };
 
   const handleViewCertificate = () => {
+    console.log("Certificate URL:", certificateData?.data.certificateUrl);
     if (certificateData?.data.certificateUrl) {
       window.open(certificateData.data.certificateUrl, "_blank");
     }

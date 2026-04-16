@@ -157,10 +157,10 @@ export const enrollmentApi = {
     );
     return data;
   },
-  getCertificate: async (enrollmentId: string) => {
-    const { data } = await axiosInstance.get<
-      ApiResponse<{ certificateUrl: string }>
-    >(`/certificates/${enrollmentId}`);
+  getCertificate: async (enrollmentId: string): Promise<File> => {
+    const { data } = await axiosInstance.get<Promise<File>>(
+      `/certificates/${enrollmentId}`,
+    );
     return data;
   },
 };
