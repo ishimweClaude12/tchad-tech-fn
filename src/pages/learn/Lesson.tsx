@@ -11,7 +11,10 @@ import {
   Button,
   Card,
   CardContent,
+  Chip,
   Divider,
+  LinearProgress,
+  Skeleton,
   Typography,
 } from "@mui/material";
 import { useLessonQuizzes, useQuizAttempts } from "src/hooks/learn/useQuizApi";
@@ -20,7 +23,15 @@ import type { Quiz } from "src/types/Quiz.types";
 import QuizAttemptCard from "src/components/learn/QuizAttemptCard";
 import { useCourseModules } from "src/hooks/learn/useCourseApi";
 import { useModuleById } from "src/hooks/learn/useModulesApi";
-import { ArrowBack } from "@mui/icons-material";
+import {
+  AccessTime,
+  ArrowBack,
+  ArrowForward,
+  Article,
+  CheckCircle,
+  Description,
+  PlayCircle,
+} from "@mui/icons-material";
 
 // Component to handle individual quiz card with attempts check
 export const QuizCardWithAttempts: React.FC<{
@@ -195,7 +206,37 @@ const Lesson = () => {
   const completeLessonButtonText = getCompleteLessonButtonText();
 
   if (isLoading) {
-    return <div className="p-6">Loading lesson...</div>;
+    return (
+      <div className="mx-auto px-6 py-6 space-y-6">
+        <Skeleton
+          variant="rectangular"
+          width={140}
+          height={36}
+          sx={{ borderRadius: 1 }}
+        />
+        <Card className="shadow-sm">
+          <CardContent className="p-6 space-y-4">
+            <Skeleton width="35%" height={18} />
+            <div className="flex gap-2">
+              <Skeleton variant="rounded" width={80} height={24} />
+            </div>
+            <Skeleton width="70%" height={44} />
+            <Skeleton width="85%" height={20} />
+            <Divider />
+            <Skeleton width="20%" height={16} />
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm">
+          <CardContent className="p-6">
+            <Skeleton
+              variant="rectangular"
+              height={300}
+              sx={{ borderRadius: 1 }}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   if (error || !lessonData) {
@@ -205,30 +246,119 @@ const Lesson = () => {
   const lesson = lessonData.data.lesson;
   const lessonStatus = lessonProgressData?.data?.progress?.status ?? null;
 
+  const totalLessonsInModule = moduleLessonsData?.lessons.length ?? 0;
+  const lessonIndexInModule = moduleLessonsData
+    ? moduleLessonsData.lessons.findIndex((l) => l.id === lessonId) + 1
+    : lesson.sortOrder;
+  const lessonProgressPercent =
+    totalLessonsInModule > 0
+      ? (lessonIndexInModule / totalLessonsInModule) * 100
+      : 0;
+
+  const getContentTypeIcon = () => {
+    switch (lesson.contentType) {
+      case "VIDEO":
+        return <PlayCircle fontSize="small" />;
+      case "TEXT":
+        return <Article fontSize="small" />;
+      default:
+        return <Description fontSize="small" />;
+    }
+  };
+
   return (
     <div className="mx-auto px-6 py-6 space-y-6">
-      {/* Navigation */}
-      <Button variant="outlined" onClick={() => navigate(-1)}>
-        <ArrowBack />
-        Back
+      {/* Back Button */}
+      <Button
+        variant="text"
+        startIcon={<ArrowBack />}
+        onClick={() => navigate(-1)}
+      >
+        Back to Course
       </Button>
 
       {/* Lesson Header */}
       <Card className="shadow-sm">
-        <CardContent className="space-y-2">
-          <Typography variant="h4" fontWeight={600}>
+        <CardContent className="p-6 space-y-4">
+          {/* Module name + lesson position */}
+          <div className="flex flex-wrap items-center gap-2">
+            <Typography
+              variant="caption"
+              className="font-semibold uppercase tracking-wide text-gray-500"
+            >
+              {moduleLessonsData?.title ?? lesson.module?.title}
+            </Typography>
+            {totalLessonsInModule > 0 && (
+              <>
+                <span className="text-gray-300">•</span>
+                <Typography
+                  variant="caption"
+                  color="primary"
+                  className="font-semibold"
+                >
+                  Lesson {lessonIndexInModule} of {totalLessonsInModule}
+                </Typography>
+              </>
+            )}
+          </div>
+
+          {/* Content type + completion chips */}
+          <div className="flex flex-wrap gap-2">
+            <Chip
+              icon={getContentTypeIcon()}
+              label={lesson.contentType}
+              size="small"
+              variant="outlined"
+              color="primary"
+            />
+            {lessonStatus === "completed" && (
+              <Chip
+                icon={<CheckCircle fontSize="small" />}
+                label="Completed"
+                size="small"
+                color="success"
+              />
+            )}
+          </div>
+
+          {/* Title */}
+          <Typography variant="h4" fontWeight={700}>
             {lesson.title}
           </Typography>
 
-          <Typography variant="body2" color="text.secondary">
-            {lesson.description}
-          </Typography>
+          {/* Description */}
+          {lesson.description && (
+            <Typography variant="body1" color="text.secondary">
+              {lesson.description}
+            </Typography>
+          )}
 
           <Divider />
 
-          <Typography variant="caption" color="text.secondary">
-            {lesson.durationMinutes} minutes
-          </Typography>
+          {/* Meta row: duration + progress */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-1 text-gray-500">
+              <AccessTime fontSize="small" />
+              <Typography variant="caption">
+                {lesson.durationMinutes} min
+              </Typography>
+            </div>
+            {totalLessonsInModule > 0 && (
+              <div className="flex items-center gap-3 flex-1 justify-end max-w-xs">
+                <Typography
+                  variant="caption"
+                  className="text-gray-400 shrink-0"
+                >
+                  {lessonIndexInModule} / {totalLessonsInModule}
+                </Typography>
+                <LinearProgress
+                  variant="determinate"
+                  value={lessonProgressPercent}
+                  sx={{ flex: 1, height: 6, borderRadius: 3 }}
+                />
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -319,6 +449,7 @@ const Lesson = () => {
               <Button
                 variant="outlined"
                 size="large"
+                startIcon={<ArrowBack />}
                 onClick={() => openPreviousLesson(lessonId)}
               >
                 Previous Lesson
@@ -370,6 +501,7 @@ const Lesson = () => {
               <Button
                 variant="outlined"
                 size="large"
+                startIcon={<ArrowBack />}
                 onClick={() => openPreviousLesson(lessonId)}
               >
                 Previous Lesson
@@ -377,10 +509,11 @@ const Lesson = () => {
             )}
             {!isLastLessonInModule && (
               <Button
-                variant="outlined"
+                variant="contained"
                 color="primary"
                 size="large"
                 className="ml-auto"
+                endIcon={<ArrowForward />}
                 disabled={!canCompleteLesson}
                 onClick={() => {
                   if (enrollmentId && lessonId) {
@@ -388,7 +521,7 @@ const Lesson = () => {
                   }
                 }}
               >
-                Go to Next Lesson
+                Next Lesson
               </Button>
             )}
           </div>
