@@ -119,6 +119,14 @@ const Lesson = () => {
     return currentIndex === lessons.length - 1;
   }, [moduleLessonsData, lessonId]);
 
+  // Check if current lesson is the first in the module
+  const isFirstLessonInModule = React.useMemo(() => {
+    if (!moduleLessonsData) return true;
+    const lessons = moduleLessonsData.lessons;
+    const currentIndex = lessons.findIndex((l) => l.id === lessonId);
+    return currentIndex === 0;
+  }, [moduleLessonsData, lessonId]);
+
   // Check if current module is the last in the course
   const isLastModule = React.useMemo(() => {
     if (!courseModulesData || !moduleId) return false;
@@ -138,19 +146,22 @@ const Lesson = () => {
     if (!moduleLessonsData) return;
     const lessons = moduleLessonsData.lessons;
     const currentIndex = lessons.findIndex((l) => l.id === currentLessonId);
-    console.log(
-      "Current lesson index:",
-      currentIndex,
-      "Total lessons:",
-      lessons,
-    );
-    if (currentIndex === -1 || currentIndex === lessons.length) {
-      console.warn("Current lesson not found or it's the last lesson");
-      return;
-    }
+    if (currentIndex === -1 || currentIndex === lessons.length - 1) return;
     const nextLesson = lessons[currentIndex + 1];
     navigate(
       `/learn/enrollment/${enrollmentId}/course/${courseId}/module/${moduleId}/lesson/${nextLesson.id}`,
+    );
+  };
+
+  // Function to open the previous lesson in the module
+  const openPreviousLesson = (currentLessonId: string) => {
+    if (!moduleLessonsData) return;
+    const lessons = moduleLessonsData.lessons;
+    const currentIndex = lessons.findIndex((l) => l.id === currentLessonId);
+    if (currentIndex <= 0) return;
+    const prevLesson = lessons[currentIndex - 1];
+    navigate(
+      `/learn/enrollment/${enrollmentId}/course/${courseId}/module/${moduleId}/lesson/${prevLesson.id}`,
     );
   };
 
@@ -303,11 +314,21 @@ const Lesson = () => {
               next module after completion.
             </Alert>
           )}
-          <div className="flex justify-end">
+          <div className="flex justify-between items-center">
+            {!isFirstLessonInModule && (
+              <Button
+                variant="outlined"
+                size="large"
+                onClick={() => openPreviousLesson(lessonId)}
+              >
+                Previous Lesson
+              </Button>
+            )}
             <Button
               variant="contained"
               color="primary"
               size="large"
+              className="ml-auto"
               disabled={isCompletingLesson || !canCompleteLesson}
               onClick={() => {
                 if (enrollmentId && lessonId) {
@@ -344,27 +365,37 @@ const Lesson = () => {
                 : "Please use the sidebar to continue with the next module."}
             </Alert>
           )}
-          {!isLastLessonInModule && (
-            <div className="flex justify-end">
+          <div className="flex justify-between items-center">
+            {!isFirstLessonInModule && (
+              <Button
+                variant="outlined"
+                size="large"
+                onClick={() => openPreviousLesson(lessonId)}
+              >
+                Previous Lesson
+              </Button>
+            )}
+            {!isLastLessonInModule && (
               <Button
                 variant="outlined"
                 color="primary"
                 size="large"
-                disabled={isCompletingLesson || !canCompleteLesson}
+                className="ml-auto"
+                disabled={!canCompleteLesson}
                 onClick={() => {
                   if (enrollmentId && lessonId) {
                     openNextLesson(lessonId);
                   }
                 }}
               >
-                {isCompletingLesson ? "Navigating..." : "Go to Next Lesson"}
+                Go to Next Lesson
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
     </div>
   );
-};
+};;
 
 export default Lesson;

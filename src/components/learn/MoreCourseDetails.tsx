@@ -7,8 +7,6 @@ import {
   Tooltip,
 } from "@mui/material";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import SchoolIcon from "@mui/icons-material/School";
-import QuizIcon from "@mui/icons-material/Quiz";
 import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
@@ -287,10 +285,6 @@ const MoreCourseDetails = () => {
                   ({course.ratingCount} ratings)
                 </span>
               </div>
-              <div className="flex items-center gap-1 text-xs text-gray-400">
-                <PeopleIcon sx={{ fontSize: 14 }} />
-                {course.enrollmentCount} enrolled
-              </div>
             </div>
           </div>
 
@@ -302,20 +296,11 @@ const MoreCourseDetails = () => {
                 value: `${course.estimatedDurationHours}h`,
                 label: "Duration",
               },
-              {
-                icon: <SchoolIcon sx={{ fontSize: 18 }} />,
-                value: course.totalLessons,
-                label: "Lessons",
-              },
-              {
-                icon: <QuizIcon sx={{ fontSize: 18 }} />,
-                value: course.totalQuizzes,
-                label: "Quizzes",
-              },
+
               {
                 icon: <PeopleIcon sx={{ fontSize: 18 }} />,
                 value: course.targetAudience,
-                label: "For",
+                label: "Audience",
               },
             ].map(({ icon, value, label }) => (
               <div
@@ -366,15 +351,9 @@ const MoreCourseDetails = () => {
           <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
             <h2 className="font-semibold text-gray-900 mb-3">Instructor</h2>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
-                J
-              </div>
               <div>
                 <p className="font-medium text-gray-800 text-sm">
-                  Instructor Jeff
-                </p>
-                <p className="text-xs text-gray-400">
-                  Experienced educator & practitioner
+                  <UserCard userId={course.instructorId} />
                 </p>
               </div>
             </div>
