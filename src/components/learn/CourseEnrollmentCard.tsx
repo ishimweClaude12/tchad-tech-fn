@@ -29,7 +29,8 @@ interface CourseEnrollmentCardProps {
   enrollment: CourseEnrollment;
   onContinueLearning?: (enrollmentId: string, courseId: string) => void;
   onCompletePayment?: (enrollmentId: string) => void;
-  onViewCertificate?: (courseId: string) => void;
+  onViewCertificate?: (enrollmentId: string) => void;
+  isDownloadingCertificate?: boolean;
 }
 
 const CourseEnrollmentCard: React.FC<CourseEnrollmentCardProps> = ({
@@ -37,6 +38,7 @@ const CourseEnrollmentCard: React.FC<CourseEnrollmentCardProps> = ({
   onContinueLearning,
   onCompletePayment,
   onViewCertificate,
+  isDownloadingCertificate = false,
 }) => {
   const navigate = useNavigate();
   const { course, status, enrollmentType, enrolledAt, completedAt } =
@@ -109,7 +111,7 @@ const CourseEnrollmentCard: React.FC<CourseEnrollmentCardProps> = ({
         onCompletePayment?.(enrollment.id);
         break;
       case EnrollmentStatus.COMPLETED:
-        onViewCertificate?.(course.id);
+        onViewCertificate?.(enrollment.id);
         break;
       default:
         break;
@@ -134,7 +136,7 @@ const CourseEnrollmentCard: React.FC<CourseEnrollmentCardProps> = ({
         };
       case EnrollmentStatus.COMPLETED:
         return {
-          label: "View Certificate",
+          label: "Download Certificate",
           variant: "outlined" as const,
           color: "primary" as const,
           icon: <CheckCircle className="mr-2" />,
@@ -256,9 +258,20 @@ const CourseEnrollmentCard: React.FC<CourseEnrollmentCardProps> = ({
               fullWidth
               onClick={handlePrimaryAction}
               startIcon={primaryAction.icon}
-              disabled={status === EnrollmentStatus.CANCELLED}
+              loading={
+                status === EnrollmentStatus.COMPLETED &&
+                isDownloadingCertificate
+              }
+              loadingPosition="start"
+              disabled={
+                status === EnrollmentStatus.CANCELLED ||
+                (status === EnrollmentStatus.COMPLETED &&
+                  isDownloadingCertificate)
+              }
             >
-              {primaryAction.label}
+              {status === EnrollmentStatus.COMPLETED && isDownloadingCertificate
+                ? "Downloading..."
+                : primaryAction.label}
             </Button>
           )}
 

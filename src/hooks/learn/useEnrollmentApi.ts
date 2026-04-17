@@ -243,11 +243,11 @@ export const useStartLessonProgress = () => {
   });
 };
 
-export const useLessonProgress = (enrollmentId: string) => {
+export const useLessonProgress = (enrollmentId: string, lessonId: string) => {
   return useQuery({
-    queryKey: ["lesson-progress", enrollmentId],
-    queryFn: () => enrollmentApi.getLessonProgress(enrollmentId),
-    enabled: !!enrollmentId,
+    queryKey: ["lesson-progress", enrollmentId, lessonId],
+    queryFn: () => enrollmentApi.getLessonProgress(enrollmentId, lessonId),
+    enabled: !!enrollmentId && !!lessonId,
   });
 };
 
@@ -343,10 +343,24 @@ export const useRefundPayment = () => {
   });
 };
 
-export const useGetCertificate = (enrollmentId: string) => {
-  return useQuery({
-    queryKey: ["certificate", enrollmentId],
-    queryFn: () => enrollmentApi.getCertificate(enrollmentId),
-    enabled: !!enrollmentId,
+export const useDownloadCertificate = () => {
+  return useMutation({
+    mutationFn: (enrollmentId: string) =>
+      enrollmentApi.getCertificate(enrollmentId),
+    onSuccess: (blob) => {
+      const pdfBlob = new Blob([blob], { type: "application/pdf" });
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "certificate.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    },
+    onError: (error) => {
+      toast.error("Failed to download certificate.");
+      console.error("Download Certificate Error:", error);
+    },
   });
 };

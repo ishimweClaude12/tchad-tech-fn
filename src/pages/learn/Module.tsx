@@ -39,7 +39,6 @@ const QuizCardWithAttempts: React.FC<{
   const latestAttempt = hasAttempts ? attempts.at(-1) : undefined;
 
   const handleQuizClick = () => {
-    // Navigate to quiz page
     navigate(
       `/learn/enrollment/${enrollmentId}/course/${courseId}/module/${moduleId}/quiz/${quiz.id}`,
     );
@@ -54,8 +53,94 @@ const QuizCardWithAttempts: React.FC<{
   );
 };
 
-const Module = () => {
+interface LessonListItemProps {
+  lesson: {
+    id: string;
+    title: string;
+    description: string;
+    contentType: string;
+    durationMinutes: number;
+  };
+  enrollmentId: string;
+  courseId: string;
+  moduleId: string;
+}
+
+const LessonListItem: React.FC<LessonListItemProps> = ({
+  lesson,
+  enrollmentId,
+  courseId,
+  moduleId,
+}) => {
   const navigate = useNavigate();
+  const { mutate: startLessonProgress } = useStartLessonProgress();
+  const { data: lessonProgressData } = useLessonProgress(
+    enrollmentId,
+    lesson.id,
+  );
+
+  const progressStatus = lessonProgressData?.data?.progress?.status ?? null;
+
+  let progressLabel = "Not Started";
+  let progressColor: "default" | "primary" | "success" = "default";
+
+  if (progressStatus === ModuleProgressStatus.COMPLETED) {
+    progressLabel = "Completed";
+    progressColor = "success";
+  } else if (progressStatus === ModuleProgressStatus.IN_PROGRESS) {
+    progressLabel = "In Progress";
+    progressColor = "primary";
+  }
+
+  const handleClick = () => {
+    if (
+      enrollmentId &&
+      progressStatus !== ModuleProgressStatus.COMPLETED &&
+      progressStatus !== ModuleProgressStatus.IN_PROGRESS
+    ) {
+      startLessonProgress({ enrollmentId, lessonId: lesson.id });
+    }
+    navigate(
+      `/learn/enrollment/${enrollmentId}/course/${courseId}/module/${moduleId}/lesson/${lesson.id}`,
+    );
+  };
+
+  const icon =
+    lesson.contentType === "VIDEO" ? (
+      <PlayCircleOutlineIcon fontSize="small" />
+    ) : (
+      <DescriptionOutlinedIcon fontSize="small" />
+    );
+
+  return (
+    <ListItemButton className="rounded-lg mb-1" onClick={handleClick}>
+      <div className="flex items-start gap-3 w-full">
+        {icon}
+        <ListItemText
+          primary={
+            <div className="flex items-center gap-2">
+              <span>{lesson.title}</span>
+              {progressStatus && (
+                <Chip
+                  label={progressLabel}
+                  size="small"
+                  color={progressColor}
+                />
+              )}
+            </div>
+          }
+          secondary={
+            <span className="text-sm text-gray-500">
+              {lesson.description} · {lesson.durationMinutes} min
+            </span>
+          }
+        />
+      </div>
+    </ListItemButton>
+  );
+};
+
+const Module = () => {
   const {
     moduleId = "",
     courseId = "",
@@ -68,40 +153,8 @@ const Module = () => {
 
   const { data: moduleData, isLoading, error } = useModuleById(moduleId);
   const { userId } = useAuth();
-  const { data: lessonProgressData } = useLessonProgress(enrollmentId);
-  const { mutate: startLessonProgress } = useStartLessonProgress();
   const { data: moduleQuizzes, isLoading: isQuizLoading } =
     useModuleQuizzes(moduleId);
-  // Helper function to get lesson progress status
-  const getLessonProgressStatus = (lessonId: string) => {
-    if (!lessonProgressData) return null;
-    const progress = lessonProgressData.data.progress.find(
-      (p) => p.lessonId === lessonId,
-    );
-    return progress?.status || null;
-  };
-
-  const handleLessonNavigate = (lessonId: string) => {
-    const progressStatus = getLessonProgressStatus(lessonId);
-
-    // Start lesson progress tracking only if not completed or in progress
-    if (
-      enrollmentId &&
-      lessonId &&
-      progressStatus !== ModuleProgressStatus.COMPLETED &&
-      progressStatus !== ModuleProgressStatus.IN_PROGRESS
-    ) {
-      startLessonProgress({
-        enrollmentId,
-        lessonId,
-      });
-    }
-
-    // Navigate to lesson
-    navigate(
-      `/learn/enrollment/${enrollmentId}/course/${courseId}/module/${moduleId}/lesson/${lessonId}`,
-    );
-  };
 
   if (isLoading) {
     return <div className="p-6">Loading module...</div>;
@@ -113,11 +166,6 @@ const Module = () => {
 
   const { title, description, estimatedDurationMinutes, lessons, isPreview } =
     moduleData;
-
-  const getLessonIcon = (type: string) => {
-    if (type === "VIDEO") return <PlayCircleOutlineIcon fontSize="small" />;
-    return <DescriptionOutlinedIcon fontSize="small" />;
-  };
 
   return (
     <div className=" mx-auto px-4 py-6 space-y-6">
@@ -153,55 +201,15 @@ const Module = () => {
 
           {lessons.length ? (
             <List disablePadding>
-              {lessons.map((lesson) => {
-                const progressStatus = getLessonProgressStatus(lesson.id);
-
-                // derive label and color without nested ternary
-                let progressLabel = "Not Started";
-                let progressColor: "default" | "primary" | "success" =
-                  "default";
-
-                if (progressStatus === ModuleProgressStatus.COMPLETED) {
-                  progressLabel = "Completed";
-                  progressColor = "success";
-                } else if (
-                  progressStatus === ModuleProgressStatus.IN_PROGRESS
-                ) {
-                  progressLabel = "In Progress";
-                  progressColor = "primary";
-                }
-
-                return (
-                  <ListItemButton
-                    key={lesson.id}
-                    className="rounded-lg mb-1"
-                    onClick={() => handleLessonNavigate(lesson.id)}
-                  >
-                    <div className="flex items-start gap-3 w-full">
-                      {getLessonIcon(lesson.contentType)}
-                      <ListItemText
-                        primary={
-                          <div className="flex items-center gap-2">
-                            <span>{lesson.title}</span>
-                            {progressStatus && (
-                              <Chip
-                                label={progressLabel}
-                                size="small"
-                                color={progressColor}
-                              />
-                            )}
-                          </div>
-                        }
-                        secondary={
-                          <span className="text-sm text-gray-500">
-                            {lesson.description} · {lesson.durationMinutes} min
-                          </span>
-                        }
-                      />
-                    </div>
-                  </ListItemButton>
-                );
-              })}
+              {lessons.map((lesson) => (
+                <LessonListItem
+                  key={lesson.id}
+                  lesson={lesson}
+                  enrollmentId={enrollmentId}
+                  courseId={courseId}
+                  moduleId={moduleId}
+                />
+              ))}
             </List>
           ) : (
             <Typography variant="body2" color="text.secondary">

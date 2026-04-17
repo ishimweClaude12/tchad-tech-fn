@@ -137,10 +137,10 @@ export const enrollmentApi = {
     >(`/progress/lesson/start`, { enrollmentId, lessonId });
     return data;
   },
-  getLessonProgress: async (enrollmentId: string) => {
+  getLessonProgress: async (enrollmentId: string, lessonId: string) => {
     const { data } = await axiosInstance.get<
-      ApiResponse<{ progress: EnrollmentProgress[] }>
-    >(`/progress/enrollment/${enrollmentId}`);
+      ApiResponse<{ progress: EnrollmentProgress }>
+    >(`/progress/enrollment/${enrollmentId}/lesson/${lessonId}`);
     return data;
   },
   payWithMobileMoney: async (payload: MobileMoneyPaymentPayload) => {
@@ -157,10 +157,18 @@ export const enrollmentApi = {
     );
     return data;
   },
-  getCertificate: async (enrollmentId: string) => {
-    const { data } = await axiosInstance.get<
-      ApiResponse<{ certificateUrl: string }>
-    >(`/certificates/${enrollmentId}`);
-    return data;
+  getCertificate: async (enrollmentId: string): Promise<Blob> => {
+    const baseURL =
+      import.meta.env.VITE_API_BASE_URL ||
+      "https://tech-hub-eleaning.onrender.com/api/v1";
+    const response = await fetch(`${baseURL}/certificates/${enrollmentId}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch certificate: ${response.status}`);
+    }
+    const blob = await response.blob();
+    if (blob.size === 0) {
+      throw new Error("Certificate response was empty.");
+    }
+    return blob;
   },
 };

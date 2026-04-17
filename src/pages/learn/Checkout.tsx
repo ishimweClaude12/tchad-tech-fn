@@ -125,7 +125,7 @@ const CheckoutPage = () => {
       if (!enrollment) return;
       payWithMobileMoney(
         {
-          courseId: enrollment.course.id,
+          enrollmentId: enrollment.id,
           email: cardEmail.trim(),
           fullname: cardName.trim(),
           phone_number: phoneNumber,
@@ -146,7 +146,7 @@ const CheckoutPage = () => {
       if (!enrollment) return;
       payWithCard(
         {
-          courseId: enrollment.course.id,
+          enrollmentId: enrollment.id,
           fullname: cardName.trim(),
           email: cardEmail.trim(),
         },

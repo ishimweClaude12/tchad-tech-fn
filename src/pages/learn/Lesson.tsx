@@ -11,7 +11,10 @@ import {
   Button,
   Card,
   CardContent,
+  Chip,
   Divider,
+  LinearProgress,
+  Skeleton,
   Typography,
 } from "@mui/material";
 import { useLessonQuizzes, useQuizAttempts } from "src/hooks/learn/useQuizApi";
@@ -20,7 +23,15 @@ import type { Quiz } from "src/types/Quiz.types";
 import QuizAttemptCard from "src/components/learn/QuizAttemptCard";
 import { useCourseModules } from "src/hooks/learn/useCourseApi";
 import { useModuleById } from "src/hooks/learn/useModulesApi";
-import { ArrowBack } from "@mui/icons-material";
+import {
+  AccessTime,
+  ArrowBack,
+  ArrowForward,
+  Article,
+  CheckCircle,
+  Description,
+  PlayCircle,
+} from "@mui/icons-material";
 
 // Component to handle individual quiz card with attempts check
 export const QuizCardWithAttempts: React.FC<{
@@ -85,7 +96,10 @@ const Lesson = () => {
   const { mutate: completeLesson, isPending: isCompletingLesson } =
     useCompleteLesson();
 
-  const { data: lessonProgressData } = useLessonProgress(enrollmentId);
+  const { data: lessonProgressData } = useLessonProgress(
+    enrollmentId,
+    lessonId,
+  );
   const { data: moduleLessonsData } = useModuleById(moduleId);
   const { data: moduleProgressData } = useModuleProgress(
     enrollmentId,
@@ -116,6 +130,14 @@ const Lesson = () => {
     return currentIndex === lessons.length - 1;
   }, [moduleLessonsData, lessonId]);
 
+  // Check if current lesson is the first in the module
+  const isFirstLessonInModule = React.useMemo(() => {
+    if (!moduleLessonsData) return true;
+    const lessons = moduleLessonsData.lessons;
+    const currentIndex = lessons.findIndex((l) => l.id === lessonId);
+    return currentIndex === 0;
+  }, [moduleLessonsData, lessonId]);
+
   // Check if current module is the last in the course
   const isLastModule = React.useMemo(() => {
     if (!courseModulesData || !moduleId) return false;
@@ -135,19 +157,22 @@ const Lesson = () => {
     if (!moduleLessonsData) return;
     const lessons = moduleLessonsData.lessons;
     const currentIndex = lessons.findIndex((l) => l.id === currentLessonId);
-    console.log(
-      "Current lesson index:",
-      currentIndex,
-      "Total lessons:",
-      lessons,
-    );
-    if (currentIndex === -1 || currentIndex === lessons.length) {
-      console.warn("Current lesson not found or it's the last lesson");
-      return;
-    }
+    if (currentIndex === -1 || currentIndex === lessons.length - 1) return;
     const nextLesson = lessons[currentIndex + 1];
     navigate(
       `/learn/enrollment/${enrollmentId}/course/${courseId}/module/${moduleId}/lesson/${nextLesson.id}`,
+    );
+  };
+
+  // Function to open the previous lesson in the module
+  const openPreviousLesson = (currentLessonId: string) => {
+    if (!moduleLessonsData) return;
+    const lessons = moduleLessonsData.lessons;
+    const currentIndex = lessons.findIndex((l) => l.id === currentLessonId);
+    if (currentIndex <= 0) return;
+    const prevLesson = lessons[currentIndex - 1];
+    navigate(
+      `/learn/enrollment/${enrollmentId}/course/${courseId}/module/${moduleId}/lesson/${prevLesson.id}`,
     );
   };
 
@@ -160,15 +185,6 @@ const Lesson = () => {
   );
   const hasMandatoryQuizzes = mandatoryQuizzes.length > 0;
   const canCompleteLesson = !hasMandatoryQuizzes || allMandatoryQuizzesPassed;
-
-  // Helper function to get lesson progress status
-  const getLessonProgressStatus = (lessonId: string) => {
-    if (!lessonProgressData) return null;
-    const progress = lessonProgressData.data.progress.find(
-      (p) => p.lessonId === lessonId,
-    );
-    return progress?.status || null;
-  };
 
   const handleQuizClick = (quizId: string) => {
     if (!userId || !isSignedIn) {
@@ -190,7 +206,37 @@ const Lesson = () => {
   const completeLessonButtonText = getCompleteLessonButtonText();
 
   if (isLoading) {
-    return <div className="p-6">Loading lesson...</div>;
+    return (
+      <div className="mx-auto px-6 py-6 space-y-6">
+        <Skeleton
+          variant="rectangular"
+          width={140}
+          height={36}
+          sx={{ borderRadius: 1 }}
+        />
+        <Card className="shadow-sm">
+          <CardContent className="p-6 space-y-4">
+            <Skeleton width="35%" height={18} />
+            <div className="flex gap-2">
+              <Skeleton variant="rounded" width={80} height={24} />
+            </div>
+            <Skeleton width="70%" height={44} />
+            <Skeleton width="85%" height={20} />
+            <Divider />
+            <Skeleton width="20%" height={16} />
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm">
+          <CardContent className="p-6">
+            <Skeleton
+              variant="rectangular"
+              height={300}
+              sx={{ borderRadius: 1 }}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   if (error || !lessonData) {
@@ -198,32 +244,121 @@ const Lesson = () => {
   }
 
   const lesson = lessonData.data.lesson;
-  const lessonStatus = getLessonProgressStatus(lessonId);
+  const lessonStatus = lessonProgressData?.data?.progress?.status ?? null;
+
+  const totalLessonsInModule = moduleLessonsData?.lessons.length ?? 0;
+  const lessonIndexInModule = moduleLessonsData
+    ? moduleLessonsData.lessons.findIndex((l) => l.id === lessonId) + 1
+    : lesson.sortOrder;
+  const lessonProgressPercent =
+    totalLessonsInModule > 0
+      ? (lessonIndexInModule / totalLessonsInModule) * 100
+      : 0;
+
+  const getContentTypeIcon = () => {
+    switch (lesson.contentType) {
+      case "VIDEO":
+        return <PlayCircle fontSize="small" />;
+      case "TEXT":
+        return <Article fontSize="small" />;
+      default:
+        return <Description fontSize="small" />;
+    }
+  };
 
   return (
     <div className="mx-auto px-6 py-6 space-y-6">
-      {/* Navigation */}
-      <Button variant="outlined" onClick={() => navigate(-1)}>
-        <ArrowBack />
-        Back
+      {/* Back Button */}
+      <Button
+        variant="text"
+        startIcon={<ArrowBack />}
+        onClick={() => navigate(-1)}
+      >
+        Back to Course
       </Button>
 
       {/* Lesson Header */}
       <Card className="shadow-sm">
-        <CardContent className="space-y-2">
-          <Typography variant="h4" fontWeight={600}>
+        <CardContent className="p-6 space-y-4">
+          {/* Module name + lesson position */}
+          <div className="flex flex-wrap items-center gap-2">
+            <Typography
+              variant="caption"
+              className="font-semibold uppercase tracking-wide text-gray-500"
+            >
+              {moduleLessonsData?.title ?? lesson.module?.title}
+            </Typography>
+            {totalLessonsInModule > 0 && (
+              <>
+                <span className="text-gray-300">•</span>
+                <Typography
+                  variant="caption"
+                  color="primary"
+                  className="font-semibold"
+                >
+                  Lesson {lessonIndexInModule} of {totalLessonsInModule}
+                </Typography>
+              </>
+            )}
+          </div>
+
+          {/* Content type + completion chips */}
+          <div className="flex flex-wrap gap-2">
+            <Chip
+              icon={getContentTypeIcon()}
+              label={lesson.contentType}
+              size="small"
+              variant="outlined"
+              color="primary"
+            />
+            {lessonStatus === "completed" && (
+              <Chip
+                icon={<CheckCircle fontSize="small" />}
+                label="Completed"
+                size="small"
+                color="success"
+              />
+            )}
+          </div>
+
+          {/* Title */}
+          <Typography variant="h4" fontWeight={700}>
             {lesson.title}
           </Typography>
 
-          <Typography variant="body2" color="text.secondary">
-            {lesson.description}
-          </Typography>
+          {/* Description */}
+          {lesson.description && (
+            <Typography variant="body1" color="text.secondary">
+              {lesson.description}
+            </Typography>
+          )}
 
           <Divider />
 
-          <Typography variant="caption" color="text.secondary">
-            {lesson.durationMinutes} minutes
-          </Typography>
+          {/* Meta row: duration + progress */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-1 text-gray-500">
+              <AccessTime fontSize="small" />
+              <Typography variant="caption">
+                {lesson.durationMinutes} min
+              </Typography>
+            </div>
+            {totalLessonsInModule > 0 && (
+              <div className="flex items-center gap-3 flex-1 justify-end max-w-xs">
+                <Typography
+                  variant="caption"
+                  className="text-gray-400 shrink-0"
+                >
+                  {lessonIndexInModule} / {totalLessonsInModule}
+                </Typography>
+                <LinearProgress
+                  variant="determinate"
+                  value={lessonProgressPercent}
+                  sx={{ flex: 1, height: 6, borderRadius: 3 }}
+                />
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -309,11 +444,22 @@ const Lesson = () => {
               next module after completion.
             </Alert>
           )}
-          <div className="flex justify-end">
+          <div className="flex justify-between items-center">
+            {!isFirstLessonInModule && (
+              <Button
+                variant="outlined"
+                size="large"
+                startIcon={<ArrowBack />}
+                onClick={() => openPreviousLesson(lessonId)}
+              >
+                Previous Lesson
+              </Button>
+            )}
             <Button
               variant="contained"
               color="primary"
               size="large"
+              className="ml-auto"
               disabled={isCompletingLesson || !canCompleteLesson}
               onClick={() => {
                 if (enrollmentId && lessonId) {
@@ -350,27 +496,39 @@ const Lesson = () => {
                 : "Please use the sidebar to continue with the next module."}
             </Alert>
           )}
-          {!isLastLessonInModule && (
-            <div className="flex justify-end">
+          <div className="flex justify-between items-center">
+            {!isFirstLessonInModule && (
               <Button
                 variant="outlined"
+                size="large"
+                startIcon={<ArrowBack />}
+                onClick={() => openPreviousLesson(lessonId)}
+              >
+                Previous Lesson
+              </Button>
+            )}
+            {!isLastLessonInModule && (
+              <Button
+                variant="contained"
                 color="primary"
                 size="large"
-                disabled={isCompletingLesson || !canCompleteLesson}
+                className="ml-auto"
+                endIcon={<ArrowForward />}
+                disabled={!canCompleteLesson}
                 onClick={() => {
                   if (enrollmentId && lessonId) {
                     openNextLesson(lessonId);
                   }
                 }}
               >
-                {isCompletingLesson ? "Navigating..." : "Go to Next Lesson"}
+                Next Lesson
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
     </div>
   );
-};
+};;
 
 export default Lesson;
