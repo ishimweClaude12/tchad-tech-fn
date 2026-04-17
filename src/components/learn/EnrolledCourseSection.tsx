@@ -1,7 +1,8 @@
 import { useAuth } from "@clerk/clerk-react";
 import { Typography } from "@mui/material";
+import { useState } from "react";
 import {
-  useGetCertificate,
+  useDownloadCertificate,
   useUserEnrollments,
 } from "src/hooks/learn/useEnrollmentApi";
 import CourseEnrollmentCard from "./CourseEnrollmentCard";
@@ -15,9 +16,11 @@ export function EnrolledCourseSection() {
   const { language } = useLanguage();
   const t = enrolledSectionTranslations[language];
   const { data: enrollments } = useUserEnrollments(userId || "");
-  const { data: certificateData } = useGetCertificate(
-    enrollments?.data.enrollments[0]?.id || "",
-  );
+  const { mutate: downloadCertificate, isPending: isDownloading } =
+    useDownloadCertificate();
+  const [downloadingEnrollmentId, setDownloadingEnrollmentId] = useState<
+    string | null
+  >(null);
   const navigate = useNavigate();
 
   const handleContinueLearning = (enrollmentId: string, courseId: string) => {
@@ -32,11 +35,11 @@ export function EnrolledCourseSection() {
     );
   };
 
-  const handleViewCertificate = () => {
-    console.log("Certificate URL:", certificateData?.data.certificateUrl);
-    if (certificateData?.data.certificateUrl) {
-      window.open(certificateData.data.certificateUrl, "_blank");
-    }
+  const handleViewCertificate = (enrollmentId: string) => {
+    setDownloadingEnrollmentId(enrollmentId);
+    downloadCertificate(enrollmentId, {
+      onSettled: () => setDownloadingEnrollmentId(null),
+    });
   };
 
   if (!isSignedIn || !enrollments) {
@@ -62,6 +65,9 @@ export function EnrolledCourseSection() {
                 onContinueLearning={handleContinueLearning}
                 onCompletePayment={() => handleCompletePayment(enrollment)}
                 onViewCertificate={handleViewCertificate}
+                isDownloadingCertificate={
+                  isDownloading && downloadingEnrollmentId === enrollment.id
+                }
               />
             ))}
           </div>

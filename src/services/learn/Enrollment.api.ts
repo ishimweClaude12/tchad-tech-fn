@@ -157,10 +157,18 @@ export const enrollmentApi = {
     );
     return data;
   },
-  getCertificate: async (enrollmentId: string): Promise<File> => {
-    const { data } = await axiosInstance.get<Promise<File>>(
-      `/certificates/${enrollmentId}`,
-    );
-    return data;
+  getCertificate: async (enrollmentId: string): Promise<Blob> => {
+    const baseURL =
+      import.meta.env.VITE_API_BASE_URL ||
+      "https://tech-hub-eleaning.onrender.com/api/v1";
+    const response = await fetch(`${baseURL}/certificates/${enrollmentId}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch certificate: ${response.status}`);
+    }
+    const blob = await response.blob();
+    if (blob.size === 0) {
+      throw new Error("Certificate response was empty.");
+    }
+    return blob;
   },
 };
