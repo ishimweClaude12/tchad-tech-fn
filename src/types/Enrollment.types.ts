@@ -162,11 +162,11 @@ export interface Payment {
   currency: string;
   status: "pending" | "completed" | "failed" | "refunded";
   provider: string;
-  providerTransactionId: string;
+  providerTransactionId: string | null;
   failureReason: string | null;
-  paidAt: string;
+  paidAt: string | null;
   refundedAt: string | null;
   createdAt: string;
   updatedAt: string;
-  enrollment: CourseEnrollment;
+  enrollment: CourseEnrollment | null;
 }
