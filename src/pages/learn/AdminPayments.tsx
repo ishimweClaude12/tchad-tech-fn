@@ -527,16 +527,16 @@ export const AdminPayments: React.FC = () => {
                 }}
               >
                 <TableCell>
-                  {payment.enrollment.userId && (
+                  {payment.enrollment?.userId && (
                     <UserCard
-                      userId={payment?.enrollment?.userId ?? ""}
+                      userId={payment.enrollment.userId}
                       variant="compact"
                     />
                   )}
                 </TableCell>
                 <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
                   <Typography className="text-xs! text-gray-700 max-w-40 truncate">
-                    {payment.enrollment.course.title}
+                    {payment.enrollment?.course.title ?? "—"}
                   </Typography>
                 </TableCell>
                 <TableCell>
